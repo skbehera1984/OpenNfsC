@@ -136,15 +136,14 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getRootFH failed\n", __func__);
-    cout << "NFSV4 getRootFH Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getRootFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_GETFH);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_GETFH"<< endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH\n");
     return false;
   }
 
@@ -220,14 +219,14 @@ bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call failed\n", __func__);
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_GETFH);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_GETFH" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH\n");
     return false;
   }
 
@@ -272,14 +271,14 @@ bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files)
     res = compCall.getResult();
     if (res.status != NFS4_OK)
     {
-      syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call failed\n", __func__);
+      syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call failed. NFS ERR - %ld\n", __func__, (long)res.status);
       return false;
     }
 
     index = compCall.findOPIndex(OP_READDIR);
     if (index == -1)
     {
-      cout << "Failed to find op index for - OP_READDIR" << endl;
+      syslog(LOG_ERR, "Failed to find op index for - OP_READDIR\n");
       return false;
     }
 
@@ -289,7 +288,7 @@ bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files)
 
     if (!parseReadDir(dir_res->reply.entries, mask[0], mask[1], files))
     {
-      cout << "Failed to parse READDIR entries" << endl;
+      syslog(LOG_ERR, "Failed to parse READDIR entries\n");
       return false;
     }
 
@@ -341,15 +340,14 @@ bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, Nf
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getDirFh failed\n", __func__);
-    cout << "NFSV4 getDirFh Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getDirFh failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_GETFH);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_GETFH" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH\n");
     return false;
   }
 
@@ -398,15 +396,14 @@ bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getRootFH failed\n", __func__);
-    cout << "NFSV4 getRootFH Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getRootFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_GETFH);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_GETFH" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH\n");
     return false;
   }
 
@@ -495,8 +492,7 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call RENAME failed\n", __func__);
-    cout << "NFSV4 rename Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call RENAME failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -531,15 +527,14 @@ bool Nfs4ApiHandle::commit(NfsFh             &fh,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call COMMIT failed\n", __func__);
-    cout << "NFSV4 access Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call COMMIT failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_COMMIT);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_COMMIT" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_COMMIT\n");
     return false;
   }
 
@@ -586,15 +581,14 @@ bool Nfs4ApiHandle::access(const std::string &filePath,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call ACCESS failed\n", __func__);
-    cout << "NFSV4 access Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call ACCESS failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_ACCESS);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_ACCESS" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_ACCESS\n");
     return false;
   }
 
@@ -624,7 +618,7 @@ bool Nfs4ApiHandle::open(const std::string filePath,
   NfsFh dirFH;
   if (!getDirFh(dirPath, dirFH))
   {
-    cout << "Failed to get parent directory FH" << endl;
+    syslog(LOG_ERR, "Failed to get parent directory FH\n");
     return false;
   }
 
@@ -676,15 +670,14 @@ bool Nfs4ApiHandle::open(const std::string filePath,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call OPEN failed\n", __func__);
-    cout << "NFSV4 open Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call OPEN failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_GETFH);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_GETFH" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH\n");
     return false;
   }
 
@@ -694,7 +687,7 @@ bool Nfs4ApiHandle::open(const std::string filePath,
   index = compCall.findOPIndex(OP_OPEN);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_OPEN" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_OPEN\n");
     return false;
   }
 
@@ -747,15 +740,14 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call READ failed\n", __func__);
-    cout << "NFSV4 read Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call READ failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_READ);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_READ" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_READ\n");
     return false;
   }
 
@@ -815,15 +807,14 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call WRITE failed\n", __func__);
-    cout << "NFSV4 write Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_WRITE);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_WRITE" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_WRITE\n");
     return false;
   }
 
@@ -876,15 +867,14 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call WRITE failed\n", __func__);
-    cout << "NFSV4 write Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_WRITE);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_WRITE" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_WRITE\n");
     return false;
   }
 
@@ -930,22 +920,21 @@ bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CLOSE failed\n", __func__);
-    cout << "NFSV4 close Failed" << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CLOSE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_GETATTR);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_GETATTR" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETATTR\n");
     return false;
   }
 
   GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
   if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, mask[0], mask[1], postAttr) < 0)
   {
-    cout << "Failed to decode OP_GETATTR result" << endl;
+    syslog(LOG_ERR, "Failed to decode OP_GETATTR result\n");
     return false;
   }
 
@@ -969,7 +958,7 @@ bool Nfs4ApiHandle::remove(std::string path)
   NfsFh parentFH;
   if (!getDirFh(parentPath, parentFH))
   {
-    cout << "Failed to get parent directory FH" << endl;
+    syslog(LOG_ERR, "Failed to get parent directory FH\n");
     return false;
   }
 
@@ -994,8 +983,7 @@ bool Nfs4ApiHandle::remove(std::string path)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call REMOVE failed\n", __func__);
-    cout << "NFSV4 remove Failed. ERROR - " << res.status << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call REMOVE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -1035,15 +1023,14 @@ bool Nfs4ApiHandle::setattr( NfsFh &fh, NfsAttr &attr )
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call SETATTR failed\n", __func__);
-    cout << "NFSV4 setattr Failed. ERROR - " << res.status << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call SETATTR failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_SETATTR);
   if (index == -1)
   {
-    cout << "Failed to find op index for - " << OP_ACCESS << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_ACCESS\n");
     return false;
   }
 
@@ -1083,8 +1070,7 @@ bool Nfs4ApiHandle::truncate(NfsFh &fh, uint64_t size)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call TRUNCATE failed\n", __func__);
-    cout << "NFSV4 truncate Failed. ERROR - " << res.status << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call TRUNCATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -1096,20 +1082,20 @@ bool Nfs4ApiHandle::truncate(const std::string &path, uint64_t size)
   NfsFh fh;
   if (open(path, ACCESS4_MODIFY, SHARE_ACCESS_READ|SHARE_ACCESS_WRITE, SHARE_DENY_BOTH, fh) == false)
   {
-    cout << "Nfs4ApiHandle::truncate: Failed to open file handle" << endl;
+    syslog(LOG_ERR, "Nfs4ApiHandle::truncate: Failed to open file handle\n");
     return false;
   }
 
   if (truncate(fh, size) == false)
   {
-    cout << "Nfs4ApiHandle::truncate: Failed to set size for file path " << path << endl;
+    syslog(LOG_ERR, "Nfs4ApiHandle::truncate: Failed to set size for file path - %s\n", path.c_str());
     return false;
   }
 
   NfsAttr attr;
   if (close(fh, attr) == false)
   {
-    cout << "Nfs4ApiHandle::truncate: Failed to close file handle" << path << endl;
+    syslog(LOG_ERR, "Nfs4ApiHandle::truncate: Failed to close file handle\n");
     return false;
   }
 
@@ -1145,8 +1131,7 @@ bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH, const std::string dirName, uint
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CREATE failed\n", __func__);
-    cout << "NFSV4 mkdir Failed. ERROR - " << res.status << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CREATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -1169,7 +1154,7 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPat
     NfsFh parentFH;
     if (!getDirFh(parentPath, parentFH))
     {
-      cout << "Failed to get parent directory FH" << endl;
+      syslog(LOG_ERR, "Failed to get parent directory FH\n");
       return false;
     }
 
@@ -1201,8 +1186,7 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPat
     COMPOUND4res res = compCall.getResult();
     if (res.status != NFS4_OK)
     {
-      syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CREATE failed\n", __func__);
-      cout << "NFSV4 mkdir Failed. ERROR - " << res.status << endl;
+      syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CREATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
       return false;
     }
   }
@@ -1262,15 +1246,14 @@ bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call LOCK failed\n", __func__);
-    cout << "NFSV4 lock Failed. ERROR - " << res.status << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call LOCK failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_LOCK);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_LOCK" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_LOCK\n");
     return false;
   }
 
@@ -1317,15 +1300,14 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call LOCKU failed\n", __func__);
-    cout << "NFSV4 unlock Failed. ERROR - " << res.status << endl;
+    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call LOCKU failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
   int index = compCall.findOPIndex(OP_LOCKU);
   if (index == -1)
   {
-    cout << "Failed to find op index for - OP_LOCKU" << endl;
+    syslog(LOG_ERR, "Failed to find op index for - OP_LOCKU\n");
     return false;
   }
 

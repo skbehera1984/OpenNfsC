@@ -120,15 +120,15 @@ bool ConnectionMgr::disable()
   syslog(LOG_DEBUG, "ConnectionMgr::disable()\n");
 
   if (close(m_controlfds[0]) < 0)
-    cout << "ConnectionMgr::disable() failed to close m_controlfds[0]" << endl;
+    syslog(LOG_ERR, "ConnectionMgr::disable() failed to close m_controlfds[0]\n");
   m_controlfds[0] = -1;
 
   if (close(m_controlfds[1]) < 0)
-    cout << "ConnectionMgr::disable() failed to close m_controlfds[1]" << endl;
+    syslog(LOG_ERR, "ConnectionMgr::disable() failed to close m_controlfds[1]\n");
   m_controlfds[1] = -1;
 
   if (close(m_epollfd) < 0)
-    cout << "ConnectionMgr::disable() failed to close m_epollfd" << endl;
+    syslog(LOG_ERR, "ConnectionMgr::disable() failed to close m_epollfd\n");
   m_epollfd = -1;
 
   return true;

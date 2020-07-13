@@ -205,7 +205,7 @@ int RpcPacket::decodeHeader()
     }
   }
 
-  std::cout << "got xid=" << m_header.xid << std::endl;
+  syslog(LOG_DEBUG, "got xid=%ld", (long)m_header.xid);
 
   return 0;
 }

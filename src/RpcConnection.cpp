@@ -122,11 +122,11 @@ RpcConnection::RpcConnection(ConnKey& connKey, uint32 prog, uint32 version, bool
   {
     tInit = true;
 
-    cout << "NFS_UDP_CONCURRENCY : " << NFS_UDP_CONCURRENCY << endl;
-    cout << "NFS_UDP_RETRIES : " << NFS_UDP_RETRIES << endl;
-    cout << "NFS_UDP_TIMEOUT : " << NFS_UDP_TIMEOUT << endl;
-    cout << "NFS_TCP_CONCURRENCY : " << NFS_TCP_CONCURRENCY << endl;
-    cout << "NFS_TCP_TIMEOUT : " << NFS_TCP_TIMEOUT << endl;
+    syslog(LOG_DEBUG, "NFS_UDP_CONCURRENCY : %d\n", NFS_UDP_CONCURRENCY);
+    syslog(LOG_DEBUG, "NFS_UDP_RETRIES : %d\n", NFS_UDP_RETRIES);
+    syslog(LOG_DEBUG, "NFS_UDP_TIMEOUT : %d\n", NFS_UDP_TIMEOUT);
+    syslog(LOG_DEBUG, "NFS_TCP_CONCURRENCY : %d\n", NFS_TCP_CONCURRENCY);
+    syslog(LOG_DEBUG, "NFS_TCP_TIMEOUT : %d\n", NFS_TCP_TIMEOUT);
   }
 }
 
@@ -210,7 +210,7 @@ int RpcConnection::writePacket(RpcPacketPtr pkt)
     int ret = pkt->writeOffset((unsigned char*)&tcpSize, sizeof(tcpSize), 0);
     if (ret <= 0)
     {
-      cout << "RpcConnection::writePacket:Failed to Wtire packet to socket" << endl;
+      syslog(LOG_ERR, "RpcConnection::writePacket:Failed to Wtire packet to socket");
       abort();
     }
   }

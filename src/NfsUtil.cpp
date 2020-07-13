@@ -663,14 +663,14 @@ int decode_fattr4(fattr4 *fattr, uint32_t mask1, uint32_t mask2, NfsAttr &attr)
   RpcPacketPtr attrPacket = new RpcPacket(0);
   if ( attrPacket.empty() )
   {
-    cout << "Failed to allocate attr packet for decoding" <<endl;
+    syslog(LOG_ERR, "Failed to allocate attr packet for decoding\n");
     return -1;
   }
 
   if (attrPacket->append((unsigned char*)fattr->attr_vals.attrlist4_val,
                          fattr->attr_vals.attrlist4_len) < 0)
   {
-    cout << "Failed to append to attr packet for decoding" <<endl;
+    syslog(LOG_ERR, "Failed to append to attr packet for decoding\n");
     return -1;
   }
 
