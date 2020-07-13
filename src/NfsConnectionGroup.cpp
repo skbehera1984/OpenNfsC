@@ -480,6 +480,13 @@ void NfsConnectionGroup::fini()
   }
 }
 
+bool NfsConnectionGroup::setLogLevel(unsigned int level)
+{
+  if (level < LOG_EMERG || level > LOG_DEBUG)
+    return false;
+  setlogmask(LOG_UPTO(level));
+}
+
 uint32_t NfsConnectionGroup::getFileOPSeqId()
 {
   std::lock_guard<std::mutex> guard(m_seqid_mutex);

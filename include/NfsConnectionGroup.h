@@ -116,6 +116,7 @@ class NfsConnectionGroup : public SmartRef
 
   public:
         /* APIs */
+    bool setLogLevel(unsigned int level);
     bool connect(std::string serverIP);
     bool getRootFH(const std::string &nfs_export);
     bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH);
