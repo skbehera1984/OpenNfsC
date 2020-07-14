@@ -62,6 +62,7 @@ class NfsApiHandle : public SmartRef
                                 NfsAttr            &postAttr) = 0;
     virtual bool close(NfsFh &fileFh, NfsAttr &postAttr) = 0;
     virtual bool remove(std::string path) = 0;
+    virtual bool remove(const NfsFh &parentFH, const string &name) = 0;
     virtual bool rename(const std::string  &nfs_export,
                         const std::string  &fromPath,
                         const std::string  &toPath) = 0;

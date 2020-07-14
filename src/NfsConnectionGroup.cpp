@@ -561,6 +561,11 @@ bool NfsConnectionGroup::remove(std::string path)
   return m_NfsApiHandle->remove(path);
 }
 
+bool NfsConnectionGroup::remove(const NfsFh &parentFH, const string &name)
+{
+  return m_NfsApiHandle->remove(parentFH, name);
+}
+
 bool NfsConnectionGroup::rename(const std::string &nfs_export,
                                 const std::string &fromPath,
                                 const std::string &toPath)

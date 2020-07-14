@@ -36,7 +36,7 @@ bool Nfs4ApiHandle::connect(std::string &serverIP)
   enum clnt_stat cst = ncl.call(m_pConn);
   if (cst != ::RPC_SUCCESS)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NULL call failed to serverIP %s\n", __func__, serverIP.c_str());
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NULL call failed to serverIP %s\n", __func__, serverIP.c_str());
     return false;
   }
 
@@ -69,7 +69,7 @@ bool Nfs4ApiHandle::connect(std::string &serverIP)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: SETCLIENTID4 failed to serverIP %s\n", __func__, serverIP.c_str());
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: SETCLIENTID4 failed to serverIP %s\n", __func__, serverIP.c_str());
     return false;
   }
 
@@ -91,7 +91,7 @@ bool Nfs4ApiHandle::connect(std::string &serverIP)
   res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: SETCLIENTID_CONFIRM failed to serverIP %s\n", __func__, serverIP.c_str());
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: SETCLIENTID_CONFIRM failed to serverIP %s\n", __func__, serverIP.c_str());
     return false;
   }
 
@@ -136,7 +136,7 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getRootFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call getRootFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -219,7 +219,7 @@ bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -271,7 +271,7 @@ bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files)
     res = compCall.getResult();
     if (res.status != NFS4_OK)
     {
-      syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call failed. NFS ERR - %ld\n", __func__, (long)res.status);
+      syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call failed. NFS ERR - %ld\n", __func__, (long)res.status);
       return false;
     }
 
@@ -340,7 +340,7 @@ bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, Nf
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getDirFh failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call getDirFh failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -396,7 +396,7 @@ bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call getRootFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call getRootFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -492,7 +492,7 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call RENAME failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call RENAME failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -527,7 +527,7 @@ bool Nfs4ApiHandle::commit(NfsFh             &fh,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call COMMIT failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call COMMIT failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -581,7 +581,7 @@ bool Nfs4ApiHandle::access(const std::string &filePath,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call ACCESS failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call ACCESS failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -670,7 +670,7 @@ bool Nfs4ApiHandle::open(const std::string filePath,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call OPEN failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call OPEN failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -740,7 +740,7 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call READ failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call READ failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -807,7 +807,7 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -867,7 +867,7 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -920,7 +920,7 @@ bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CLOSE failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CLOSE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -940,6 +940,37 @@ bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr)
 
   return true;
 }
+
+bool Nfs4ApiHandle::remove(const NfsFh &parentFH, const string &name)
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = parentFH.getLength();
+  pfhgargs->object.nfs_fh4_val = parentFH.getData();
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_REMOVE;
+  REMOVE4args *rmargs = &carg.nfs_argop4_u.opremove;
+  rmargs->target.utf8string_len = name.length();
+  rmargs->target.utf8string_val = const_cast<char*>(name.c_str());
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call REMOVE using parentFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    return false;
+  }
+
+  return true;
+}
+
 
 /*
  * directory will be removed if it is non-empty
@@ -983,7 +1014,7 @@ bool Nfs4ApiHandle::remove(std::string path)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call REMOVE failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call REMOVE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -1023,7 +1054,7 @@ bool Nfs4ApiHandle::setattr( NfsFh &fh, NfsAttr &attr )
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call SETATTR failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call SETATTR failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -1070,7 +1101,7 @@ bool Nfs4ApiHandle::truncate(NfsFh &fh, uint64_t size)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call TRUNCATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call TRUNCATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -1131,7 +1162,7 @@ bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH, const std::string dirName, uint
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CREATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -1186,7 +1217,7 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPat
     COMPOUND4res res = compCall.getResult();
     if (res.status != NFS4_OK)
     {
-      syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call CREATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
+      syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
       return false;
     }
   }
@@ -1246,7 +1277,7 @@ bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call LOCK failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOCK failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
@@ -1300,7 +1331,7 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "NfsConnectionGroup::%s: NFSV4 call LOCKU failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOCKU failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
 
