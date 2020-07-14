@@ -128,6 +128,32 @@ bool Nfs3ApiHandle::rename(NfsFh &fromDirFh,
                            const std::string toName,
                            NfsError &sts)
 {
+  RENAME3args renameArg = {};
+
+  renameArg.rename3_from.dirop3_dir.fh3_data.fh3_data_len = fromDirFh.getLength();
+  renameArg.rename3_from.dirop3_dir.fh3_data.fh3_data_val = (char*)fromDirFh.getData();
+  string sFromName = fromName;
+  renameArg.rename3_from.dirop3_name = (char*)sFromName.c_str();
+  renameArg.rename3_to.dirop3_dir.fh3_data.fh3_data_len = toDirFh.getLength();
+  renameArg.rename3_to.dirop3_dir.fh3_data.fh3_data_val = (char*)toDirFh.getData();
+  string sToName = toName;
+  renameArg.rename3_to.dirop3_name = (char*)sToName.c_str();
+
+  NFSv3::RenameCall nfsRenameCall(renameArg);
+  enum clnt_stat ret = nfsRenameCall.call(m_pConn);
+  if ( ret != RPC_SUCCESS )
+  {
+    return false;
+  }
+
+  RENAME3res &res = nfsRenameCall.getResult();
+
+  if (res.status != NFS3_OK)
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::rename(): error: %d <%s,%s>\n", res.status, fromName.c_str(), toName.c_str());
+    return false;
+  }
+
   return true;
 }
 
