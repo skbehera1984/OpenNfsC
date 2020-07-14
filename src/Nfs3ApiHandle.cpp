@@ -97,6 +97,28 @@ bool Nfs3ApiHandle::remove(std::string path)
 
 bool Nfs3ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &status)
 {
+  REMOVE3args removeArgs = {};
+
+  removeArgs.remove3_object.dirop3_dir.fh3_data.fh3_data_len = parentFH.getLength();
+  removeArgs.remove3_object.dirop3_dir.fh3_data.fh3_data_val = (char*)parentFH.getData();
+  removeArgs.remove3_object.dirop3_name = (char*)name.c_str();
+
+  NFSv3::RemoveCall nfsRemoveCall(removeArgs);
+  enum clnt_stat ret = nfsRemoveCall.call(m_pConn);
+  if ( ret != RPC_SUCCESS )
+  {
+    return false;
+  }
+
+  REMOVE3res &res = nfsRemoveCall.getResult();
+
+  if ( res.status != NFS3_OK)
+  {
+    status.setError3(res.status, string("NFSV3 remove Failed"));
+    syslog(LOG_ERR, "Nfs3ApiHandle::nfs_remove(): nfs_v3_remove error: %d  <%s>\n", res.status, name.c_str());
+    return false;
+  }
+
   return true;
 }
 
