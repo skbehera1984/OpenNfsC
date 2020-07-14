@@ -122,6 +122,15 @@ bool Nfs3ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &
   return true;
 }
 
+bool Nfs3ApiHandle::rename(NfsFh &fromDirFh,
+                           const std::string &fromName,
+                           NfsFh &toDirFh,
+                           const std::string toName,
+                           NfsError &sts)
+{
+  return true;
+}
+
 bool Nfs3ApiHandle::rename(const std::string &nfs_export,
                            const std::string &fromPath,
                            const std::string &toPath)

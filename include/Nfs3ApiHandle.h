@@ -58,6 +58,11 @@ class Nfs3ApiHandle : public NfsApiHandle
     bool close(NfsFh &fileFh, NfsAttr &postAttr);
     bool remove(std::string path, NfsError &status);
     bool remove(const NfsFh &parentFH, const string &name, NfsError &status);
+    bool rename(NfsFh &fromDirFh,
+                const std::string &fromName,
+                NfsFh &toDirFh,
+                const std::string toName,
+                NfsError &sts);
     bool rename(const std::string  &nfs_export,
                 const std::string  &fromPath,
                 const std::string  &toPath);

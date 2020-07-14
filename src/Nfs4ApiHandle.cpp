@@ -414,6 +414,61 @@ bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH)
   return true;
 }
 
+bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
+                           const std::string &fromName,
+                           NfsFh &toDirFh,
+                           const std::string toName,
+                           NfsError &sts)
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = fromDirFh.getLength();
+  pfhgargs->object.nfs_fh4_val = fromDirFh.getData();
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  uint32_t mask[2];
+  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = mask;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_SAVEFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_PUTFH;
+  pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = toDirFh.getLength();
+  pfhgargs->object.nfs_fh4_val = toDirFh.getData();
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_RENAME;
+  RENAME4args *oprename = &carg.nfs_argop4_u.oprename;
+  oprename->oldname.utf8string_len = fromName.length();
+  oprename->oldname.utf8string_val = const_cast<char *>(fromName.c_str());
+  oprename->newname.utf8string_len = toName.length();
+  oprename->newname.utf8string_val = const_cast<char *>(toName.c_str());
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    sts.setError4(res.status, "NFSV4 call RENAME failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call RENAME failed\n", __func__);
+    return false;
+  }
+
+  //TODO sarat - do we need the source_info and target_info from rename response??
+  return true;
+}
+
 /*
   from path and to paths don't contain the export. they are relative paths
  */
