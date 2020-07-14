@@ -126,7 +126,7 @@ class NfsConnectionGroup : public SmartRef
     bool write(NfsFh &fileFH, uint64_t offset, std::string &data, uint32_t &bytesWritten, NfsAttr &postAttr);
     bool write_unstable(NfsFh &fileFH, uint64_t offset, std::string &data, uint32_t &bytesWritten, NfsAttr &postAttr);
     bool close(NfsFh &fileFh, NfsAttr &postAttr);
-    bool remove(std::string path);
+    bool remove(std::string path, NfsError &status);
     bool remove(const NfsFh &parentFH, const string &name, NfsError &status);
     bool rename(const std::string &nfs_export, const std::string &fromPath, const std::string &toPath);
     bool readDir(const std::string &dirPath, NfsFiles &files);
@@ -135,8 +135,8 @@ class NfsConnectionGroup : public SmartRef
     bool access(const std::string &filePath, uint32_t accessRequested, NfsAccess &acc);
     bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH);
     bool mkdir(const std::string &path, uint32_t mode, bool createPath = false);
-    bool rmdir(const std::string &path);
-    bool rmdir(const NfsFh &parentFH, const string &name);
+    bool rmdir(const std::string &path, NfsError &status);
+    bool rmdir(const NfsFh &parentFH, const string &name, NfsError &status);
     bool commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf);
     bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim = false);
     bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length);

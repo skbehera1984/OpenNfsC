@@ -90,7 +90,7 @@ bool Nfs3ApiHandle::close(NfsFh &fileFh, NfsAttr &postAttr)
   return true;
 }
 
-bool Nfs3ApiHandle::remove(std::string path)
+bool Nfs3ApiHandle::remove(std::string path, NfsError &status)
 {
   return true;
 }
@@ -115,7 +115,7 @@ bool Nfs3ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &
   if ( res.status != NFS3_OK)
   {
     status.setError3(res.status, string("NFSV3 remove Failed"));
-    syslog(LOG_ERR, "Nfs3ApiHandle::nfs_remove(): nfs_v3_remove error: %d  <%s>\n", res.status, name.c_str());
+    syslog(LOG_ERR, "Nfs3ApiHandle::remove(): nfs_v3_remove error: %d  <%s>\n", res.status, name.c_str());
     return false;
   }
 
@@ -210,13 +210,36 @@ bool Nfs3ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPat
   return true;
 }
 
-bool Nfs3ApiHandle::rmdir(const std::string &path)
+bool Nfs3ApiHandle::rmdir(const std::string &path, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::rmdir(const NfsFh &parentFH, const string &name)
+bool Nfs3ApiHandle::rmdir(const NfsFh &parentFH, const string &name, NfsError &status)
 {
+  RMDIR3args rmdirArg = {};
+
+  rmdirArg.rmdir3_object.dirop3_dir.fh3_data.fh3_data_len = parentFH.getLength();
+  rmdirArg.rmdir3_object.dirop3_dir.fh3_data.fh3_data_val = (char*)parentFH.getData();
+  string tName = name;
+  rmdirArg.rmdir3_object.dirop3_name =  (char *) tName.c_str();
+
+  NFSv3::RmdirCall nfsRmdirCall(rmdirArg);
+  enum clnt_stat ret = nfsRmdirCall.call(m_pConn);
+  if ( ret != RPC_SUCCESS )
+  {
+    return false;
+  }
+
+  RMDIR3res &res = nfsRmdirCall.getResult();
+
+  if (res.status != NFS3_OK)
+  {
+    status.setError3(res.status, string("NFSV3 rmdir Failed"));
+    syslog(LOG_ERR, "Nfs3ApiHandle::rmdir(): nfs_v3_rmdir error: %d  <%s>\n", res.status, name.c_str());
+    return false;
+  }
+
   return true;
 }
 bool Nfs3ApiHandle::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf)

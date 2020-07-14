@@ -556,9 +556,9 @@ bool NfsConnectionGroup::close(NfsFh &fileFH, NfsAttr &postAttr)
   return m_NfsApiHandle->close(fileFH, postAttr);
 }
 
-bool NfsConnectionGroup::remove(std::string path)
+bool NfsConnectionGroup::remove(std::string path, NfsError &status)
 {
-  return m_NfsApiHandle->remove(path);
+  return m_NfsApiHandle->remove(path, status);
 }
 
 bool NfsConnectionGroup::remove(const NfsFh &parentFH, const string &name, NfsError &status)
@@ -603,14 +603,14 @@ bool NfsConnectionGroup::mkdir(const std::string &path, uint32_t mode, bool crea
   return m_NfsApiHandle->mkdir(path, mode, createPath);
 }
 
-bool NfsConnectionGroup::rmdir(const std::string &path)
+bool NfsConnectionGroup::rmdir(const std::string &path, NfsError &status)
 {
-  return m_NfsApiHandle->rmdir(path);
+  return m_NfsApiHandle->rmdir(path, status);
 }
 
-bool NfsConnectionGroup::rmdir(const NfsFh &parentFH, const string &name)
+bool NfsConnectionGroup::rmdir(const NfsFh &parentFH, const string &name, NfsError &status)
 {
-  return m_NfsApiHandle->rmdir(parentFH, name);
+  return m_NfsApiHandle->rmdir(parentFH, name, status);
 }
 
 bool NfsConnectionGroup::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf)
