@@ -95,7 +95,7 @@ bool Nfs3ApiHandle::remove(std::string path)
   return true;
 }
 
-bool Nfs3ApiHandle::remove(const NfsFh &parentFH , const string &name)
+bool Nfs3ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &status)
 {
   return true;
 }

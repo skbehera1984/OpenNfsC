@@ -312,3 +312,77 @@ void NfsAttr::print() const
   }
   cout << "==================================================" << endl;
 }
+
+NfsError::NfsError(const NfsError &obj)
+{
+  this->etype = obj.etype;
+  this->err   = obj.err;
+  this->err3  = obj.err3;
+  this->err4  = obj.err4;
+  this->msg   = obj.msg;
+}
+
+NfsError& NfsError::operator=(const NfsError &obj)
+{
+  etype = obj.etype;
+  err   = obj.err;
+  err3  = obj.err3;
+  err4  = obj.err4;
+  msg   =   obj.msg;
+
+  return (*this);
+}
+
+bool NfsError::operator==(const NfsError &obj)const
+{
+  if((this->etype  == obj.etype)  &&
+      (this->err   == obj.err)    &&
+      (this->err3  == obj.err3)  &&
+      (this->err4  == obj.err4)  &&
+      (this->msg   == obj.msg))
+    return true;
+  else
+    return false;
+}
+
+void NfsError::clear()
+{
+  etype = EType::ETYPE_INTERNAL;
+  err   = 0;
+  err3  = nfsstat3::NFS3_OK;
+  err4  = nfsstat4::NFS4_OK;
+  msg.clear();
+}
+
+void NfsError::setError4(nfsstat4 code, const std::string &err)
+{
+  etype = ETYPE_V4;
+  err4  = code;
+  msg   = err;
+}
+
+void NfsError::setError3(nfsstat3 code, const std::string &err)
+{
+  etype = ETYPE_V3;
+  err3  = code;
+  msg   = err;
+}
+
+void NfsError::setError(uint32_t code, const std::string &emsg)
+{
+  etype = ETYPE_INTERNAL;
+  err   = code;
+  msg   = emsg;
+}
+
+uint32_t NfsError::getErrorCode()
+{
+  if (etype == ETYPE_INTERNAL)
+    return err;
+  else if (etype == ETYPE_V3)
+    return err3;
+  else if (etype == ETYPE_V4)
+    return err4;
+  else
+    return 0;
+}

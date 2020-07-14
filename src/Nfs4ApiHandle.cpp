@@ -941,7 +941,7 @@ bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr)
   return true;
 }
 
-bool Nfs4ApiHandle::remove(const NfsFh &parentFH, const string &name)
+bool Nfs4ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -964,6 +964,7 @@ bool Nfs4ApiHandle::remove(const NfsFh &parentFH, const string &name)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, string("NFSV4 remove Failed"));
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call REMOVE using parentFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1230,7 +1231,8 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPat
 
 bool Nfs4ApiHandle::rmdir(const NfsFh &parentFH, const string &name)
 {
-  return remove(parentFH, name);
+  NfsError err;
+  return remove(parentFH, name, err);
 }
 
 bool Nfs4ApiHandle::rmdir(const std::string &path)

@@ -22,6 +22,8 @@
 #include <vector>
 #include <mutex>
 #include <string.h>
+#include<nfsrpc/nfs4.h>
+#include<nfsrpc/nfs.h>
 
 namespace OpenNfsC {
 
@@ -153,6 +155,41 @@ enum NfsLockType
   WRITE_LOCK = 2,
   READ_LOCK_BLOCKING = 3,  // the client will wait till sever grants it
   WRIT_WLOCK_BLOCKING = 4, // the client will wait till sever grants it
+};
+
+class NfsError
+{
+  public:
+    enum EType
+    {
+      ETYPE_INTERNAL = 0,
+      ETYPE_V3 = 3,
+      ETYPE_V4 = 4,
+    };
+
+    void clear();
+    NfsError() { clear(); }
+    NfsError(EType type) { clear(); etype = type; }
+
+    void setError4(nfsstat4 code, const std::string &msg);
+    void setError3(nfsstat3 code, const std::string &msg);
+    void setError(uint32_t code, const std::string &err); // set internal error
+
+    uint32_t getErrorCode();
+    nfsstat3 getV3ErrorCode() { return err3; }
+    nfsstat4 getV4ErrorCode() { return err4; }
+    std::string& getErrorMsg() { return msg; }
+
+    NfsError(const NfsError &obj);
+    NfsError& operator=(const NfsError &obj);
+    bool operator==(const NfsError &obj)const;
+
+  private:
+    enum EType  etype;
+    uint32_t    err;  // internal error code
+    nfsstat3    err3; // nfs v3 error code
+    nfsstat4    err4; // nfs v4 error code
+    std::string msg;
 };
 
 } // end of namespace

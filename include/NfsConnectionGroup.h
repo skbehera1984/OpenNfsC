@@ -127,7 +127,7 @@ class NfsConnectionGroup : public SmartRef
     bool write_unstable(NfsFh &fileFH, uint64_t offset, std::string &data, uint32_t &bytesWritten, NfsAttr &postAttr);
     bool close(NfsFh &fileFh, NfsAttr &postAttr);
     bool remove(std::string path);
-    bool remove(const NfsFh &parentFH, const string &name);
+    bool remove(const NfsFh &parentFH, const string &name, NfsError &status);
     bool rename(const std::string &nfs_export, const std::string &fromPath, const std::string &toPath);
     bool readDir(const std::string &dirPath, NfsFiles &files);
     bool truncate(NfsFh &fh, uint64_t size);
