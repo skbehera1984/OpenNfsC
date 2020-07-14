@@ -165,3 +165,8 @@ bool Nfs3ApiHandle::setattr( NfsFh &fh, NfsAttr &attr)
 {
   return true;
 }
+
+bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh)
+{
+  return true;
+}

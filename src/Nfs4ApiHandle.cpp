@@ -1357,5 +1357,64 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   return true;
 }
 
+bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh)
+{
+  std::vector<std::string> exp_components;
+  NfsUtil::splitNfsPath(path, exp_components);
+
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTROOTFH;
+  compCall.appendCommand(&carg);
+
+  for (std::string &comp : exp_components)
+  {
+    cout<< "comp =" << comp <<endl;
+    nfs_argop4 carg;
+    carg.argop = OP_LOOKUP;
+    LOOKUP4args *largs = &carg.nfs_argop4_u.oplookup;
+    largs->objname.utf8string_len = comp.length();
+    largs->objname.utf8string_val = const_cast<char *>(comp.c_str());
+    compCall.appendCommand(&carg);
+  }
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  uint32_t mask[2];
+  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = mask;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETFH;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOOKUP failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    return false;
+  }
+
+  int index = compCall.findOPIndex(OP_GETFH);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH\n");
+    return false;
+  }
+
+  lookup_fh.clear();
+
+  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
+  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
+  lookup_fh = fh;
+
+  return true;
+}
+
 /* send RENEW client Id every 12 secs to keep the connection alive
  */

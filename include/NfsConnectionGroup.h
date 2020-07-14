@@ -141,6 +141,7 @@ class NfsConnectionGroup : public SmartRef
     bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim = false);
     bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length);
     bool setattr( NfsFh &fh, NfsAttr &attr);
+    bool lookup(const std::string &path, NfsFh &lookup_fh);
 
   public:
     char *getInitialClientVerifier() { return m_initialClientVerifier; }
