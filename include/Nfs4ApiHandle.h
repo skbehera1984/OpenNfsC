@@ -67,7 +67,7 @@ class Nfs4ApiHandle : public NfsApiHandle
     bool access(const std::string &filePath,
                 uint32_t          accessRequested,
                 NfsAccess         &acc);
-    bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode);
+    bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH);
     bool mkdir(const std::string &path, uint32_t mode, bool createPath = false);
     bool rmdir(const std::string &path);
     bool rmdir(const NfsFh &parentFH, const string &name);

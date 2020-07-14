@@ -70,7 +70,7 @@ class NfsApiHandle : public SmartRef
     virtual bool truncate(NfsFh &fh, uint64_t size) = 0;
     virtual bool truncate(const std::string &path, uint64_t size) = 0;
     virtual bool access(const std::string &filePath, uint32_t accessRequested, NfsAccess &acc) = 0;
-    virtual bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode) = 0;
+    virtual bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH) = 0;
     virtual bool mkdir(const std::string &path, uint32_t mode, bool createPath = false) = 0;
     virtual bool rmdir(const std::string &path) = 0;
     virtual bool rmdir(const NfsFh &parentFH, const string &name) = 0;

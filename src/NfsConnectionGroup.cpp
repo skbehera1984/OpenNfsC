@@ -593,9 +593,9 @@ bool NfsConnectionGroup::access(const std::string &path, uint32_t accessRequeste
   return m_NfsApiHandle->access(path, accessRequested, acc);
 }
 
-bool NfsConnectionGroup::mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode)
+bool NfsConnectionGroup::mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH)
 {
-  return m_NfsApiHandle->mkdir(parentFH, dirName, mode);
+  return m_NfsApiHandle->mkdir(parentFH, dirName, mode, dirFH);
 }
 
 bool NfsConnectionGroup::mkdir(const std::string &path, uint32_t mode, bool createPath)

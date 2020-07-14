@@ -1134,7 +1134,10 @@ bool Nfs4ApiHandle::truncate(const std::string &path, uint64_t size)
   return true;
 }
 
-bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode)
+bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH,
+                          const std::string dirName,
+                          uint32_t mode,
+                          NfsFh &dirFH)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1167,6 +1170,7 @@ bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH, const std::string dirName, uint
     return false;
   }
 
+  // TODO sarat - get the FH
   return true;
 }
 

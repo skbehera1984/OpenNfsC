@@ -6,11 +6,10 @@
 #include "Portmap.h"
 #include "RpcDefs.h"
 #include "NfsUtil.h"
-#include "Nfs4Call.h"
+#include "NfsCall.h"
 
 #include <nfsrpc/pmap.h>
 #include <nfsrpc/nfs.h>
-#include <nfsrpc/nfs4.h>
 #include <nfsrpc/nlm.h>
 #include <nfsrpc/mount.h>
 
@@ -19,6 +18,7 @@
 #include <sstream>
 #include <sys/types.h>
 #include <unistd.h>
+#include <syslog.h>
 
 #include <Nfs3ApiHandle.h>
 
@@ -127,8 +127,59 @@ bool Nfs3ApiHandle::access(const std::string &filePath, uint32_t accessRequested
   return true;
 }
 
-bool Nfs3ApiHandle::mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode)
+bool Nfs3ApiHandle::mkdir(const NfsFh &parentFH,
+                          const std::string dirName,
+                          uint32_t mode,
+                          NfsFh &dirFH)
 {
+  MKDIR3args mkdirArgs = {};
+  MKDIR3res  mkdirRes  = {};
+
+  mkdirArgs.mkdir3_where.dirop3_dir.fh3_data.fh3_data_len = parentFH.getLength();
+  mkdirArgs.mkdir3_where.dirop3_dir.fh3_data.fh3_data_val = (char *)parentFH.getData();
+  mkdirArgs.mkdir3_attributes.sattr3_mode.set_it             = true;
+  mkdirArgs.mkdir3_attributes.sattr3_mode.set_mode3_u.mode   = 0700;
+  string tName = dirName;
+  mkdirArgs.mkdir3_where.dirop3_name =  (char *) tName.c_str();
+
+  NFSv3::MkdirCall nfsMkdirCall(mkdirArgs);
+  enum clnt_stat mkdirRet = nfsMkdirCall.call(m_pConn);
+  if ( mkdirRet != RPC_SUCCESS )
+  {
+    return false;
+  }
+
+  if (mkdirRes.status != NFS3_OK)
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::mkdir(): nfs_v3_mkdir error: %d  <%s>\n", mkdirRes.status, dirName.c_str());
+    return false;
+  }
+
+  // created the directory, but the file handle may not have been return in the result,
+  // so we'll call NFS LOOKUP() to get the file handle of the dir we just created
+  LOOKUP3args lookupArgs = {};
+  lookupArgs.lookup3_what.dirop3_dir.fh3_data.fh3_data_len = parentFH.getLength();
+  lookupArgs.lookup3_what.dirop3_dir.fh3_data.fh3_data_val = (char *)parentFH.getData();
+  lookupArgs.lookup3_what.dirop3_name = (char *)tName.c_str();
+
+  NFSv3::LookUpCall nfsLookupCall(lookupArgs);
+  enum clnt_stat lookupRet = nfsLookupCall.call(m_pConn);
+  if ( lookupRet != RPC_SUCCESS )
+  {
+    return false;
+  }
+
+  LOOKUP3res &lookupRes = nfsLookupCall.getResult();
+  if ( lookupRes.status != NFS3_OK)
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::mkdir(): nfs_v3_lookup error: %d  <%s>\n", lookupRes.status, dirName.c_str());
+    return false;
+  }
+
+  nfs_fh3 *fh3 = &(lookupRes.LOOKUP3res_u.lookup3ok.lookup3_object);
+  NfsFh fh(fh3->fh3_data.fh3_data_len, fh3->fh3_data.fh3_data_val);
+  dirFH = fh;
+
   return true;
 }
 
