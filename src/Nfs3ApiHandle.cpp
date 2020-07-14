@@ -142,6 +142,10 @@ bool Nfs3ApiHandle::rmdir(const std::string &path)
   return true;
 }
 
+bool Nfs3ApiHandle::rmdir(const NfsFh &parentFH, const string &name)
+{
+  return true;
+}
 bool Nfs3ApiHandle::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf)
 {
   return true;

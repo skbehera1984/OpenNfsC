@@ -1228,6 +1228,11 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPat
   return true;
 }
 
+bool Nfs4ApiHandle::rmdir(const NfsFh &parentFH, const string &name)
+{
+  return remove(parentFH, name);
+}
+
 bool Nfs4ApiHandle::rmdir(const std::string &path)
 {
   return remove(path);

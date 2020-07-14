@@ -70,6 +70,7 @@ class Nfs4ApiHandle : public NfsApiHandle
     bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode);
     bool mkdir(const std::string &path, uint32_t mode, bool createPath = false);
     bool rmdir(const std::string &path);
+    bool rmdir(const NfsFh &parentFH, const string &name);
     bool commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf);
     bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim = false);
     bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length);

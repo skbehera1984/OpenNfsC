@@ -608,6 +608,11 @@ bool NfsConnectionGroup::rmdir(const std::string &path)
   return m_NfsApiHandle->rmdir(path);
 }
 
+bool NfsConnectionGroup::rmdir(const NfsFh &parentFH, const string &name)
+{
+  return m_NfsApiHandle->rmdir(parentFH, name);
+}
+
 bool NfsConnectionGroup::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf)
 {
   return m_NfsApiHandle->commit(fh, offset, bytes, writeverf);
