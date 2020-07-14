@@ -1162,6 +1162,16 @@ bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH,
   crargs->createattrs.attr_vals.attrlist4_val = (char*)&mode;
   compCall.appendCommand(&carg);
 
+  carg.argop = OP_GETFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  uint32_t mask2[2] = {0}; mask2[0] = 0x0010011a; mask2[1] = 0x00b0a23a;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = mask2;
+  compCall.appendCommand(&carg);
+
   cst = compCall.call(m_pConn);
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
@@ -1170,7 +1180,17 @@ bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH,
     return false;
   }
 
-  // TODO sarat - get the FH
+  int index = compCall.findOPIndex(OP_GETFH);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH\n");
+    return false;
+  }
+
+  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
+  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
+  dirFH = fh;
+
   return true;
 }
 
