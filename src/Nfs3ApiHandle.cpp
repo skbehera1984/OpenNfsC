@@ -7,11 +7,13 @@
 #include "RpcDefs.h"
 #include "NfsUtil.h"
 #include "NfsCall.h"
+#include "Stringf.h"
 
 #include <nfsrpc/pmap.h>
 #include <nfsrpc/nfs.h>
 #include <nfsrpc/nlm.h>
 #include <nfsrpc/mount.h>
+#include <NlmCall.h>
 
 #include <arpa/inet.h>
 #include <iostream>
@@ -372,6 +374,41 @@ bool Nfs3ApiHandle::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *wri
 
 bool Nfs3ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim)
 {
+  nlm4_lockargs lockArg = {};
+
+  string cookie("No cookie required");
+  lockArg.nlm4_lockargs_cookie.n_len = cookie.size();
+  lockArg.nlm4_lockargs_cookie.n_bytes = (char*)cookie.c_str();
+  lockArg.nlm4_lockargs_block = false;
+  lockArg.nlm4_lockargs_exclusive = true;
+  string callerName = m_pConn->getIP();
+  lockArg.nlm4_lockargs_alock.nlm4_lock_caller_name = (char*) callerName.c_str();
+  lockArg.nlm4_lockargs_alock.nlm4_lock_fh.n_len = fh.getLength();
+  lockArg.nlm4_lockargs_alock.nlm4_lock_fh.n_bytes = (char*) fh.getData();
+  string lockOwner = stringf("%s:%ld", callerName.c_str(), pthread_self());
+  lockArg.nlm4_lockargs_alock.nlm4_lock_oh.n_len = lockOwner.size();
+  lockArg.nlm4_lockargs_alock.nlm4_lock_oh.n_bytes = (char*)lockOwner.c_str();
+  lockArg.nlm4_lockargs_alock.nlm4_lock_svid = pthread_self();
+  lockArg.nlm4_lockargs_alock.nlm4_lock_l_offset = offset;
+  lockArg.nlm4_lockargs_alock.nlm4_lock_l_len = length;
+  lockArg.nlm4_lockargs_reclaim = reclaim;
+  lockArg.nlm4_lockargs_state = 0;
+
+  NLMv4::LockCall nlmLockCall(lockArg);
+  enum clnt_stat lockRet = nlmLockCall.call(m_pConn);
+  if (lockRet != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  nlm4_res &res = nlmLockCall.getResult();
+
+  if ( res.nlm4_res_stat.nlm4_stat != NLMSTAT4_GRANTED )
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::nlm_nm_lock(): nlm_v4_nm_lock error: %d\n", res.nlm4_res_stat.nlm4_stat);
+    return false;
+  }
+
   return true;
 }
 
