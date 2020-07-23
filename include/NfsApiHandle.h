@@ -59,7 +59,8 @@ class NfsApiHandle : public SmartRef
                                 uint64_t            offset,
                                 std::string        &data,
                                 uint32_t           &bytesWritten,
-                                NfsAttr            &postAttr) = 0;
+                                char               *verf,
+                                const bool          needverify) = 0;
     virtual bool close(NfsFh &fileFh, NfsAttr &postAttr) = 0;
     virtual bool remove(std::string path, NfsError &status) = 0;
     virtual bool remove(const NfsFh &parentFH, const string &name, NfsError &status) = 0;

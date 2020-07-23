@@ -80,8 +80,41 @@ bool Nfs3ApiHandle::write_unstable(NfsFh       &fileFH,
                                    uint64_t     offset,
                                    std::string &data,
                                    uint32_t    &bytesWritten,
-                                   NfsAttr     &postAttr)
+                                   char        *verf,
+                                   const bool   needverify)
 {
+  WRITE3args writeArg = {};
+
+  writeArg.write3_file.fh3_data.fh3_data_len = fileFH.getLength();
+  writeArg.write3_file.fh3_data.fh3_data_val = (char*)fileFH.getData();
+  writeArg.write3_offset                     = (u_quad_t)offset;
+  writeArg.write3_count                      = data.length();
+  writeArg.write3_stable                     = STABLE_UNSTABLE;
+  writeArg.write3_data.write3_data_len       = data.length();
+  writeArg.write3_data.write3_data_val       = (char*)data.c_str();
+
+  NFSv3::WriteCall nfsWriteCall(writeArg);
+  enum clnt_stat writeRet = nfsWriteCall.call(m_pConn);
+  if (writeRet != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  WRITE3res &res = nfsWriteCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s: nfs_v3_write error: %d\n", __func__, res.status);
+    return false;
+  }
+
+  bytesWritten = res.WRITE3res_u.write3ok.write3_count_res;
+
+  if(verf && needverify)
+  {
+    memset(verf, 0, NFS3_WRITEVERFSIZE);
+    memcpy(verf, res.WRITE3res_u.write3ok.write3_verf, NFS3_WRITEVERFSIZE);
+  }
+
   return true;
 }
 

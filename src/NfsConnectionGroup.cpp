@@ -551,6 +551,16 @@ bool NfsConnectionGroup::write(NfsFh       &fileFH,
   return m_NfsApiHandle->write(fileFH, offset, data, bytesWritten, postAttr);
 }
 
+bool NfsConnectionGroup::write_unstable(NfsFh       &fileFH,
+                                        uint64_t     offset,
+                                        std::string &data,
+                                        uint32_t    &bytesWritten,
+                                        char        *verf,
+                                        const bool   needverify)
+{
+  return m_NfsApiHandle->write_unstable(fileFH, offset, data, bytesWritten, verf, needverify);
+}
+
 bool NfsConnectionGroup::close(NfsFh &fileFH, NfsAttr &postAttr)
 {
   return m_NfsApiHandle->close(fileFH, postAttr);

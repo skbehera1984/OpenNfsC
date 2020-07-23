@@ -886,7 +886,8 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
                                    uint64_t     offset,
                                    std::string &data,
                                    uint32_t    &bytesWritten,
-                                   NfsAttr     &postAttr)
+                                   char        *verf,
+                                   const bool   needverify)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
