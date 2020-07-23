@@ -74,6 +74,7 @@ class Nfs4ApiHandle : public NfsApiHandle
                 const std::string  &toPath,
                 NfsError           &status);
     bool readDir(const std::string &dirPath, NfsFiles &files, NfsError &status);
+    bool readDir(NfsFh &dirFh, NfsFiles &files, NfsError &status);
     bool truncate(NfsFh &fh, uint64_t size, NfsError &status);
     bool truncate(const std::string &path, uint64_t size, NfsError &status);
     bool access(const std::string &filePath,
@@ -93,7 +94,7 @@ class Nfs4ApiHandle : public NfsApiHandle
     bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status);
 
   private:
-    bool parseReadDir(entry4 *entries, uint32_t mask1, uint32_t mask2, NfsFiles &files);
+    bool readDirV4(NfsFh &dirFh, uint64_t &Cookie, verifier4 &vref, NfsFiles &files, bool &eof, NfsError &status);
     NfsFh        m_rootFH;
 
 };

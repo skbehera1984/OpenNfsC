@@ -279,6 +279,94 @@ bool Nfs3ApiHandle::readDir(const std::string &dirPath, NfsFiles &files, NfsErro
   return true;
 }
 
+bool Nfs3ApiHandle::readDir(NfsFh &dirFh, NfsFiles &files, NfsError &status)
+{
+  bool sts = false;
+  bool ReadDirError = false;
+  bool eof = false;
+  cookie3 Cookie = 0;
+  cookieverf3 CookieVerf;
+  memset(CookieVerf, 0, sizeof(CookieVerf));
+
+  while (!ReadDirError && !eof)
+  {
+    if (!readDirPlus(dirFh, Cookie, CookieVerf, files, eof, status))
+    {
+      ReadDirError = true;
+    }
+  }
+
+  if (!ReadDirError)
+    sts = true;
+
+  return sts;
+}
+
+bool Nfs3ApiHandle::readDirPlus(NfsFh       &dirFh,
+                                cookie3     &cookie,
+                                cookieverf3 &cookieVref,
+                                NfsFiles    &files,
+                                bool        &eof,
+                                NfsError    &status)
+{
+  READDIRPLUS3args readDirPlusArg = {};
+  readDirPlusArg.readdirplus3_dir.fh3_data.fh3_data_len = dirFh.getLength();
+  readDirPlusArg.readdirplus3_dir.fh3_data.fh3_data_val = (char*)dirFh.getData();
+  readDirPlusArg.readdirplus3_cookie = cookie;
+  memcpy(&(readDirPlusArg.readdirplus3_cookieverf), &(cookieVref), sizeof(cookieVref));
+  readDirPlusArg.readdirplus3_dircount = 1048;
+  readDirPlusArg.readdirplus3_maxcount = 8192;
+
+  NFSv3::ReaddirPlusCall nfsReaddirPlusCall(readDirPlusArg);
+  enum clnt_stat readDirPlusRet = nfsReaddirPlusCall.call(m_pConn);
+  if (readDirPlusRet != RPC_SUCCESS)
+  {
+    //rtNfsError = NFS3ERR_SERVERFAULT;
+    return false;
+  }
+
+  READDIRPLUS3res &res = nfsReaddirPlusCall.getResult();
+  //rtNfsError = res.status;
+  if (res.status != NFS3_OK)
+  {
+    status.setError3(res.status, "nfs v3 readdirplus failed");
+    syslog(LOG_ERR, "Nfs3ApiHandle::readDirPlus(): nfs_v3_readdirplus error: %d\n", res.status);
+    return false;
+  }
+
+  // copy the cookie verifier from the readdirplus results
+  memcpy(&(cookieVref),
+         &(res.READDIRPLUS3res_u.readdirplus3ok.readdirplus3_cookieverf_res),
+         sizeof( cookieverf3 ));
+
+  // copy the EOF from the readdirplus results
+  if (res.READDIRPLUS3res_u.readdirplus3ok.readdirplus3_reply.dirlistplus3_eof)
+  {
+    eof = true;
+  }
+  else
+  {
+    eof = false;
+  }
+
+  // copy the entries to rtDirEntries
+  entryplus3 *ptCurr = res.READDIRPLUS3res_u.readdirplus3ok.readdirplus3_reply.dirlistplus3_entries;
+
+  while( ptCurr )
+  {
+    NfsFile file;
+    file.cookie = ptCurr->entryplus3_cookie;
+    file.name = string( ptCurr->entryplus3_name );
+    file.path = "";
+    file.attr.v3Attr = ptCurr->entryplus3_name_attributes.post_op_attr_u.post_op_attr;
+    files.push_back(file);
+    cookie = ptCurr -> entryplus3_cookie;
+    ptCurr = ptCurr -> entryplus3_nextentry;
+  }
+
+  return true;
+}
+
 bool Nfs3ApiHandle::truncate(NfsFh &fh, uint64_t size, NfsError &status)
 {
   return true;

@@ -156,13 +156,115 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsError &status)
   return true;
 }
 
-bool Nfs4ApiHandle::parseReadDir(entry4 *entries, uint32_t mask1, uint32_t mask2, NfsFiles &files)
+bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
-  if (entries == NULL)
-    return true;
+  NfsFh dirFh;
+  if (!getDirFh(dirPath, dirFh, status))
+  {
+    return false;
+  }
 
-  // always append to files list
-  entry4 *dirent = entries;
+  bool sts = false;
+  bool ReadDirError = false;
+  uint64_t Cookie = 0;
+  verifier4 CookieVerf;
+  bool eof = false;
+  NfsError err;
+
+  memset(CookieVerf, 0, NFS4_VERIFIER_SIZE);
+
+  while (!ReadDirError && !eof)
+  {
+    if (!readDirV4(dirFh, Cookie, CookieVerf, files, eof, status))
+    {
+      ReadDirError = true;
+    }
+  }
+
+  if (!ReadDirError)
+    sts = true;
+
+  return sts;
+}
+
+bool Nfs4ApiHandle::readDir(NfsFh &dirFh, NfsFiles &files, NfsError &status)
+{
+  bool sts = false;
+  bool ReadDirError = false;
+  uint64_t Cookie = 0;
+  verifier4 CookieVerf;
+  bool eof = false;
+
+  memset(CookieVerf, 0, NFS4_VERIFIER_SIZE);
+
+  while (!ReadDirError && !eof)
+  {
+    if (!readDirV4(dirFh, Cookie, CookieVerf, files, eof, status))
+    {
+      ReadDirError = true;
+    }
+  }
+
+  if (!ReadDirError)
+    sts = true;
+
+  return sts;
+}
+
+bool Nfs4ApiHandle::readDirV4(NfsFh     &dirFh,
+                              uint64_t  &cookie,
+                              verifier4 &vref,
+                              NfsFiles  &files,
+                              bool      &eof,
+                              NfsError  &status)
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = dirFh.getLength();
+  pfhgargs->object.nfs_fh4_val = dirFh.getData();
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_READDIR;
+  READDIR4args *readdir = &carg.nfs_argop4_u.opreaddir;
+  readdir->cookie = (nfs_cookie4)cookie;
+  memcpy(&(readdir->cookieverf), &(vref), NFS4_VERIFIER_SIZE);
+  readdir->dircount = 8192;
+  readdir->maxcount = 8192;
+  uint32_t mask[2];
+  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
+  readdir->attr_request.bitmap4_len = 2;
+  readdir->attr_request.bitmap4_val = mask;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    status.setError4(res.status, "nfs v4 readdir failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call failed\n", __func__);
+    return false;
+  }
+
+  int index = compCall.findOPIndex(OP_READDIR);
+  if (index == -1)
+  {
+    cout << "Failed to find op index for - OP_READDIR" << endl;
+    return false;
+  }
+
+  READDIR4resok *dir_res = &res.resarray.resarray_val[index].nfs_resop4_u.opreaddir.READDIR4res_u.resok4;
+  memcpy(&(vref), &(dir_res->cookieverf), NFS4_VERIFIER_SIZE);
+
+  if (dir_res->reply.eof)
+    eof = true;
+  else
+    eof = false;
+
+  entry4 *dirent = dir_res->reply.entries;
 
   while(dirent)
   {
@@ -171,130 +273,15 @@ bool Nfs4ApiHandle::parseReadDir(entry4 *entries, uint32_t mask1, uint32_t mask2
     file.name = std::string(dirent->name.utf8string_val, dirent->name.utf8string_len);
     file.path = "";
 
-    NfsUtil::decode_fattr4(&dirent->attrs, mask1, mask2, file.attr);
+    NfsUtil::decode_fattr4(&dirent->attrs, mask[0], mask[1], file.attr);
     file.type = file.attr.fileType;
 
     files.push_back(file);
     dirent = dirent->nextentry;
   }
 
-  return true;
-}
-
-bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files, NfsError &status)
-{
-  NFSv4::COMPOUNDCall compCall;
-  enum clnt_stat cst = RPC_SUCCESS;
-
-  std::vector<std::string> components;
-  NfsUtil::splitNfsPath(dirPath, components);
-
-  nfs_argop4 carg;
-
-  carg.argop = OP_PUTROOTFH;
-  compCall.appendCommand(&carg);
-
-  for (std::string &comp : components)
-  {
-    nfs_argop4 carg;
-    carg.argop = OP_LOOKUP;
-    LOOKUP4args *largs = &carg.nfs_argop4_u.oplookup;
-    largs->objname.utf8string_len = comp.length();
-    largs->objname.utf8string_val = const_cast<char *>(comp.c_str());
-    compCall.appendCommand(&carg);
-  }
-
-  carg.argop = OP_GETATTR;
-  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
-  gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
-  compCall.appendCommand(&carg);
-
-  carg.argop = OP_GETFH;
-  compCall.appendCommand(&carg);
-
-  cst = compCall.call(m_pConn);
-  COMPOUND4res res = compCall.getResult();
-  if (res.status != NFS4_OK)
-  {
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call failed. NFS ERR - %ld\n", __func__, (long)res.status);
-    return false;
-  }
-
-  int index = compCall.findOPIndex(OP_GETFH);
-  if (index == -1)
-  {
-    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH\n");
-    return false;
-  }
-
-  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
-  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
-
-  uint32 eof = 0;
-  verifier4 scvref;
-  memset(scvref, 0, NFS4_VERIFIER_SIZE);
-  uint64_t  scookie = 0;
-
-  while (eof == 0)
-  {
-    compCall.clear();
-
-    carg.argop = OP_PUTFH;
-    PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
-    pfhgargs->object.nfs_fh4_len = fh.getLength();
-    pfhgargs->object.nfs_fh4_val = fh.getData();
-    compCall.appendCommand(&carg);
-
-    carg.argop = OP_GETATTR;
-    gargs = &carg.nfs_argop4_u.opgetattr;
-    gargs->attr_request.bitmap4_len = 2;
-    gargs->attr_request.bitmap4_val = mask;
-    compCall.appendCommand(&carg);
-
-    carg.argop = OP_GETFH;
-    compCall.appendCommand(&carg);
-
-    carg.argop = OP_READDIR;
-    READDIR4args *readdir = &carg.nfs_argop4_u.opreaddir;
-    readdir->cookie = (nfs_cookie4)scookie;
-    memcpy(readdir->cookieverf, scvref, NFS4_VERIFIER_SIZE);
-    readdir->dircount = 8192;
-    readdir->maxcount = 8192;
-    readdir->attr_request.bitmap4_len = 2;
-    readdir->attr_request.bitmap4_val = mask;
-    compCall.appendCommand(&carg);
-
-    cst = compCall.call(m_pConn);
-    res = compCall.getResult();
-    if (res.status != NFS4_OK)
-    {
-      syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call failed. NFS ERR - %ld\n", __func__, (long)res.status);
-      return false;
-    }
-
-    index = compCall.findOPIndex(OP_READDIR);
-    if (index == -1)
-    {
-      syslog(LOG_ERR, "Failed to find op index for - OP_READDIR\n");
-      return false;
-    }
-
-    READDIR4resok *dir_res = &res.resarray.resarray_val[index].nfs_resop4_u.opreaddir.READDIR4res_u.resok4;
-    memcpy(scvref, dir_res->cookieverf, NFS4_VERIFIER_SIZE);
-    eof = dir_res->reply.eof;
-
-    if (!parseReadDir(dir_res->reply.entries, mask[0], mask[1], files))
-    {
-      syslog(LOG_ERR, "Failed to parse READDIR entries\n");
-      return false;
-    }
-
-    if (files.size() != 0)
-      scookie = files.back().cookie;
-  }
+  if (files.size() != 0)
+    cookie = files.back().cookie;
 
   return true;
 }

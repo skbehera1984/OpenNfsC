@@ -603,6 +603,11 @@ bool NfsConnectionGroup::readDir(const std::string &dirPath, NfsFiles &files, Nf
   return m_NfsApiHandle->readDir(dirPath, files, status);
 }
 
+bool NfsConnectionGroup::readDir(NfsFh &dirFh, NfsFiles &files, NfsError &status)
+{
+  return m_NfsApiHandle->readDir(dirFh, files, status);
+}
+
 bool NfsConnectionGroup::truncate(NfsFh &fh, uint64_t size, NfsError &status)
 {
   return m_NfsApiHandle->truncate(fh, size, status);
