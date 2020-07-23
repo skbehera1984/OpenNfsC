@@ -345,6 +345,24 @@ bool NfsError::operator==(const NfsError &obj)const
     return false;
 }
 
+bool NfsError::operator==(const bool &val)const
+{
+  if (val == true)
+  {
+    if (err == 0 && err3 == nfsstat3::NFS3_OK && err4 == nfsstat4::NFS4_OK)
+      return true;
+    else
+      return false;
+  }
+  else
+  {
+    if (err != 0 || err3 != nfsstat3::NFS3_OK || err4 != nfsstat4::NFS4_OK)
+      return true;
+    else
+      return false;
+  }
+}
+
 void NfsError::clear()
 {
   etype = EType::ETYPE_INTERNAL;

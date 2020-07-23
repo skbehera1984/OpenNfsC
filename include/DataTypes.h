@@ -183,6 +183,7 @@ class NfsError
     NfsError(const NfsError &obj);
     NfsError& operator=(const NfsError &obj);
     bool operator==(const NfsError &obj)const;
+    bool operator==(const bool &val)const;
 
   private:
     enum EType  etype;
