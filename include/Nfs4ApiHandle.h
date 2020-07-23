@@ -30,15 +30,16 @@ class Nfs4ApiHandle : public NfsApiHandle
     virtual ~Nfs4ApiHandle() {}
 
   public:
-    bool connect(std::string &serverIP);
-    bool getRootFH(const std::string &nfs_export);
-    bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH);
-    bool getDirFh(const std::string &dirPath, NfsFh &dirFH);
+    bool connect(std::string &serverIP, NfsError &status);
+    bool getRootFH(const std::string &nfs_export, NfsError &status);
+    bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status);
+    bool getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status);
     bool open(const std::string   filePath,
               uint32_t            access,
               uint32_t            shareAccess,
               uint32_t            shareDeny,
-              NfsFh              &file);
+              NfsFh              &file,
+              NfsError           &status);
     bool read(NfsFh              &fileFH,
               uint64_t            offset,
               uint32_t            length,
@@ -46,47 +47,50 @@ class Nfs4ApiHandle : public NfsApiHandle
               uint32_t           &bytesRead,
               bool               &eof,
               NfsAttr            &postAttr,
-              NfsError           &err);
+              NfsError           &status);
     bool write(NfsFh              &fileFH,
                uint64_t            offset,
                uint32_t            length,
                std::string        &data,
                uint32_t           &bytesWritten,
-               NfsError           &err);
+               NfsError           &status);
     bool write_unstable(NfsFh              &fileFH,
                         uint64_t            offset,
                         std::string        &data,
                         uint32_t           &bytesWritten,
                         char               *verf,
-                        const bool          needverify);
-    bool close(NfsFh &fileFh, NfsAttr &postAttr);
+                        const bool          needverify,
+                        NfsError            &status);
+    bool close(NfsFh &fileFh, NfsAttr &postAttr, NfsError &status);
     bool remove(std::string path, NfsError &status);
     bool remove(const NfsFh &parentFH, const string &name, NfsError &status);
     bool rename(NfsFh &fromDirFh,
                 const std::string &fromName,
                 NfsFh &toDirFh,
                 const std::string toName,
-                NfsError &sts);
+                NfsError &status);
     bool rename(const std::string  &nfs_export,
                 const std::string  &fromPath,
-                const std::string  &toPath);
-    bool readDir(const std::string &dirPath, NfsFiles &files);
-    bool truncate(NfsFh &fh, uint64_t size);
-    bool truncate(const std::string &path, uint64_t size);
+                const std::string  &toPath,
+                NfsError           &status);
+    bool readDir(const std::string &dirPath, NfsFiles &files, NfsError &status);
+    bool truncate(NfsFh &fh, uint64_t size, NfsError &status);
+    bool truncate(const std::string &path, uint64_t size, NfsError &status);
     bool access(const std::string &filePath,
                 uint32_t          accessRequested,
-                NfsAccess         &acc);
-    bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH);
-    bool mkdir(const std::string &path, uint32_t mode, bool createPath = false);
+                NfsAccess         &acc,
+                NfsError          &status);
+    bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH, NfsError &status);
+    bool mkdir(const std::string &path, uint32_t mode, NfsError &status, bool createPath = false);
     bool rmdir(const std::string &path, NfsError &status);
     bool rmdir(const NfsFh &parentFH, const string &name, NfsError &status);
-    bool commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf);
-    bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim = false);
-    bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length);
-    bool setattr( NfsFh &fh, NfsAttr &attr);
-    bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err);
-    bool lookup(const std::string &path, NfsFh &lookup_fh);
-    bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err);
+    bool commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf, NfsError &status);
+    bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status, bool reclaim = false);
+    bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status);
+    bool setattr(NfsFh &fh, NfsAttr &attr, NfsError &status);
+    bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status);
+    bool lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status);
+    bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status);
 
   private:
     bool parseReadDir(entry4 *entries, uint32_t mask1, uint32_t mask2, NfsFiles &files);

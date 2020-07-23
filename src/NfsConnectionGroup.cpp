@@ -503,33 +503,34 @@ uint32_t NfsConnectionGroup::getFileLockSeqId()
   return seqid;
 }
 
-bool NfsConnectionGroup::connect(std::string serverIP)
+bool NfsConnectionGroup::connect(std::string serverIP, NfsError &status)
 {
-  return m_NfsApiHandle->connect(serverIP);
+  return m_NfsApiHandle->connect(serverIP, status);
 }
 
-bool NfsConnectionGroup::getRootFH(const std::string &nfs_export)
+bool NfsConnectionGroup::getRootFH(const std::string &nfs_export, NfsError &status)
 {
-  return m_NfsApiHandle->getRootFH(nfs_export);
+  return m_NfsApiHandle->getRootFH(nfs_export, status);
 }
 
-bool NfsConnectionGroup::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH)
+bool NfsConnectionGroup::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
-  return m_NfsApiHandle->getDirFh(rootFH, dirPath, dirFH);
+  return m_NfsApiHandle->getDirFh(rootFH, dirPath, dirFH, status);
 }
 
-bool NfsConnectionGroup::getDirFh(const std::string &dirPath, NfsFh &dirFH)
+bool NfsConnectionGroup::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
-  return m_NfsApiHandle->getDirFh(dirPath, dirFH);
+  return m_NfsApiHandle->getDirFh(dirPath, dirFH, status);
 }
 
 bool NfsConnectionGroup::open(const std::string filePath,
                               uint32_t          access,
                               uint32_t          shareAccess,
                               uint32_t          shareDeny,
-                              NfsFh             &fileFh)
+                              NfsFh             &fileFh,
+                              NfsError          &status)
 {
-  return m_NfsApiHandle->open(filePath, access, shareAccess, shareDeny, fileFh);
+  return m_NfsApiHandle->open(filePath, access, shareAccess, shareDeny, fileFh, status);
 }
 
 bool NfsConnectionGroup::read(NfsFh        &fileFH,
@@ -539,9 +540,9 @@ bool NfsConnectionGroup::read(NfsFh        &fileFH,
                               uint32_t     &bytesRead,
                               bool         &eof,
                               NfsAttr      &postAttr,
-                              NfsError     &err)
+                              NfsError     &status)
 {
-  return m_NfsApiHandle->read(fileFH, offset, length, data, bytesRead, eof, postAttr, err);
+  return m_NfsApiHandle->read(fileFH, offset, length, data, bytesRead, eof, postAttr, status);
 }
 
 bool NfsConnectionGroup::write(NfsFh       &fileFH,
@@ -549,9 +550,9 @@ bool NfsConnectionGroup::write(NfsFh       &fileFH,
                                uint32_t     length,
                                std::string &data,
                                uint32_t    &bytesWritten,
-                               NfsError    &err)
+                               NfsError    &status)
 {
-  return m_NfsApiHandle->write(fileFH, offset, length, data, bytesWritten, err);
+  return m_NfsApiHandle->write(fileFH, offset, length, data, bytesWritten, status);
 }
 
 bool NfsConnectionGroup::write_unstable(NfsFh       &fileFH,
@@ -559,14 +560,15 @@ bool NfsConnectionGroup::write_unstable(NfsFh       &fileFH,
                                         std::string &data,
                                         uint32_t    &bytesWritten,
                                         char        *verf,
-                                        const bool   needverify)
+                                        const bool   needverify,
+                                        NfsError     &status)
 {
-  return m_NfsApiHandle->write_unstable(fileFH, offset, data, bytesWritten, verf, needverify);
+  return m_NfsApiHandle->write_unstable(fileFH, offset, data, bytesWritten, verf, needverify, status);
 }
 
-bool NfsConnectionGroup::close(NfsFh &fileFH, NfsAttr &postAttr)
+bool NfsConnectionGroup::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &status)
 {
-  return m_NfsApiHandle->close(fileFH, postAttr);
+  return m_NfsApiHandle->close(fileFH, postAttr, status);
 }
 
 bool NfsConnectionGroup::remove(std::string path, NfsError &status)
@@ -583,46 +585,47 @@ bool NfsConnectionGroup::rename(NfsFh &fromDirFh,
                                 const std::string &fromName,
                                 NfsFh &toDirFh,
                                 const std::string toName,
-                                NfsError &sts)
+                                NfsError &status)
 {
-  return m_NfsApiHandle->rename(fromDirFh, fromName, toDirFh, toName, sts);
+  return m_NfsApiHandle->rename(fromDirFh, fromName, toDirFh, toName, status);
 }
 
 bool NfsConnectionGroup::rename(const std::string &nfs_export,
                                 const std::string &fromPath,
-                                const std::string &toPath)
+                                const std::string &toPath,
+                                NfsError          &status)
 {
-  return m_NfsApiHandle->rename(nfs_export, fromPath, toPath);
+  return m_NfsApiHandle->rename(nfs_export, fromPath, toPath, status);
 }
 
-bool NfsConnectionGroup::readDir(const std::string &dirPath, NfsFiles &files)
+bool NfsConnectionGroup::readDir(const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
-  return m_NfsApiHandle->readDir(dirPath, files);
+  return m_NfsApiHandle->readDir(dirPath, files, status);
 }
 
-bool NfsConnectionGroup::truncate(NfsFh &fh, uint64_t size)
+bool NfsConnectionGroup::truncate(NfsFh &fh, uint64_t size, NfsError &status)
 {
-  return m_NfsApiHandle->truncate(fh, size);
+  return m_NfsApiHandle->truncate(fh, size, status);
 }
 
-bool NfsConnectionGroup::truncate(const std::string &path, uint64_t size)
+bool NfsConnectionGroup::truncate(const std::string &path, uint64_t size, NfsError &status)
 {
-  return m_NfsApiHandle->truncate(path, size);
+  return m_NfsApiHandle->truncate(path, size, status);
 }
 
-bool NfsConnectionGroup::access(const std::string &path, uint32_t accessRequested, NfsAccess &acc)
+bool NfsConnectionGroup::access(const std::string &path, uint32_t accessRequested, NfsAccess &acc, NfsError &status)
 {
-  return m_NfsApiHandle->access(path, accessRequested, acc);
+  return m_NfsApiHandle->access(path, accessRequested, acc, status);
 }
 
-bool NfsConnectionGroup::mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH)
+bool NfsConnectionGroup::mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH, NfsError &status)
 {
-  return m_NfsApiHandle->mkdir(parentFH, dirName, mode, dirFH);
+  return m_NfsApiHandle->mkdir(parentFH, dirName, mode, dirFH, status);
 }
 
-bool NfsConnectionGroup::mkdir(const std::string &path, uint32_t mode, bool createPath)
+bool NfsConnectionGroup::mkdir(const std::string &path, uint32_t mode, NfsError &status, bool createPath)
 {
-  return m_NfsApiHandle->mkdir(path, mode, createPath);
+  return m_NfsApiHandle->mkdir(path, mode, status, createPath);
 }
 
 bool NfsConnectionGroup::rmdir(const std::string &path, NfsError &status)
@@ -635,39 +638,39 @@ bool NfsConnectionGroup::rmdir(const NfsFh &parentFH, const string &name, NfsErr
   return m_NfsApiHandle->rmdir(parentFH, name, status);
 }
 
-bool NfsConnectionGroup::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf)
+bool NfsConnectionGroup::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf, NfsError &status)
 {
-  return m_NfsApiHandle->commit(fh, offset, bytes, writeverf);
+  return m_NfsApiHandle->commit(fh, offset, bytes, writeverf, status);
 }
 
-bool NfsConnectionGroup::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim)
+bool NfsConnectionGroup::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status, bool reclaim)
 {
-  return m_NfsApiHandle->lock(fh, lockType, offset, length, reclaim);
+  return m_NfsApiHandle->lock(fh, lockType, offset, length, status, reclaim);
 }
 
-bool NfsConnectionGroup::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length)
+bool NfsConnectionGroup::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status)
 {
-  return m_NfsApiHandle->unlock(fh, lockType, offset, length);
+  return m_NfsApiHandle->unlock(fh, lockType, offset, length, status);
 }
 
-bool NfsConnectionGroup::setattr( NfsFh &fh, NfsAttr &attr)
+bool NfsConnectionGroup::setattr( NfsFh &fh, NfsAttr &attr, NfsError &status)
 {
-  return m_NfsApiHandle->setattr(fh, attr);
+  return m_NfsApiHandle->setattr(fh, attr, status);
 }
 
-bool NfsConnectionGroup::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
+bool NfsConnectionGroup::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 {
-  return m_NfsApiHandle->getAttr(fh, attr, err);
+  return m_NfsApiHandle->getAttr(fh, attr, status);
 }
 
-bool NfsConnectionGroup::lookup(const std::string &path, NfsFh &lookup_fh)
+bool NfsConnectionGroup::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
-  return m_NfsApiHandle->lookup(path, lookup_fh);
+  return m_NfsApiHandle->lookup(path, lookup_fh, status);
 }
 
-bool NfsConnectionGroup::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err)
+bool NfsConnectionGroup::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status)
 {
-  return m_NfsApiHandle->fsstat(rootFh, stat, invarSec, err);
+  return m_NfsApiHandle->fsstat(rootFh, stat, invarSec, status);
 }
 
 } //end of namespace

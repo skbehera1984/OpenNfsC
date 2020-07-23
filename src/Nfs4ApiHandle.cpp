@@ -30,7 +30,7 @@ Nfs4ApiHandle::Nfs4ApiHandle(NfsConnectionGroup *ptr) : NfsApiHandle(ptr)
 {
 }
 
-bool Nfs4ApiHandle::connect(std::string &serverIP)
+bool Nfs4ApiHandle::connect(std::string &serverIP, NfsError &status)
 {
   NFSv4::NullCall  ncl;
   enum clnt_stat cst = ncl.call(m_pConn);
@@ -98,7 +98,7 @@ bool Nfs4ApiHandle::connect(std::string &serverIP)
   return true;
 }
 
-bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export)
+bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsError &status)
 {
   std::vector<std::string> exp_components;
   NfsUtil::splitNfsPath(nfs_export, exp_components);
@@ -181,7 +181,7 @@ bool Nfs4ApiHandle::parseReadDir(entry4 *entries, uint32_t mask1, uint32_t mask2
   return true;
 }
 
-bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files)
+bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -299,7 +299,7 @@ bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files)
   return true;
 }
 
-bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH)
+bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(dirPath, path_components);
@@ -358,7 +358,7 @@ bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, Nf
   return true;
 }
 
-bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH)
+bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(dirPath, path_components);
@@ -418,7 +418,7 @@ bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
                            const std::string &fromName,
                            NfsFh &toDirFh,
                            const std::string toName,
-                           NfsError &sts)
+                           NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -460,7 +460,7 @@ bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    sts.setError4(res.status, "NFSV4 call RENAME failed");
+    status.setError4(res.status, "NFSV4 call RENAME failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call RENAME failed\n", __func__);
     return false;
   }
@@ -474,7 +474,8 @@ bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
  */
 bool Nfs4ApiHandle::rename(const std::string &nfs_export,
                            const std::string &fromPath,
-                           const std::string &toPath)
+                           const std::string &toPath,
+                           NfsError          &status)
 {
   std::vector<std::string> from_components;
   NfsUtil::splitNfsPath(fromPath, from_components);
@@ -491,18 +492,18 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
   NfsUtil::buildNfsPath(fromDir, from_components);
   NfsUtil::buildNfsPath(toDir, to_components);
 
-  getRootFH(nfs_export);
+  getRootFH(nfs_export, status);
 
   NfsFh fromDirFh;
 
   if (from_components.size())
-    getDirFh(m_rootFH, fromDir, fromDirFh);
+    getDirFh(m_rootFH, fromDir, fromDirFh, status);
   else
     fromDirFh = m_rootFH;
 
   NfsFh toDirFh;
   if (to_components.size())
-    getDirFh(m_rootFH, toDir, toDirFh);
+    getDirFh(m_rootFH, toDir, toDirFh, status);
   else
     toDirFh = m_rootFH;
 
@@ -555,10 +556,11 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
   return true;
 }
 
-bool Nfs4ApiHandle::commit(NfsFh             &fh,
-                           uint64_t          offset,
-                           uint32_t          bytes,
-                           char              *writeverf)
+bool Nfs4ApiHandle::commit(NfsFh     &fh,
+                           uint64_t  offset,
+                           uint32_t  bytes,
+                           char      *writeverf,
+                           NfsError  &status)
 {
 
   NFSv4::COMPOUNDCall compCall;
@@ -604,7 +606,8 @@ bool Nfs4ApiHandle::commit(NfsFh             &fh,
 
 bool Nfs4ApiHandle::access(const std::string &filePath,
                            uint32_t          accessRequested,
-                           NfsAccess         &acc)
+                           NfsAccess         &acc,
+                           NfsError          &status)
 {
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(filePath, path_components);
@@ -659,7 +662,8 @@ bool Nfs4ApiHandle::open(const std::string filePath,
                          uint32_t          access,
                          uint32_t          shareAccess,
                          uint32_t          shareDeny,
-                         NfsFh             &fileFh)
+                         NfsFh             &fileFh,
+                         NfsError          &status)
 {
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(filePath, path_components);
@@ -671,7 +675,7 @@ bool Nfs4ApiHandle::open(const std::string filePath,
   NfsUtil::buildNfsPath(dirPath, path_components);
 
   NfsFh dirFH;
-  if (!getDirFh(dirPath, dirFH))
+  if (!getDirFh(dirPath, dirFH, status))
   {
     syslog(LOG_ERR, "Failed to get parent directory FH\n");
     return false;
@@ -771,7 +775,7 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
                          uint32_t    &bytesRead,
                          bool        &eof,
                          NfsAttr     &postAttr,
-                         NfsError    &err)
+                         NfsError    &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -797,7 +801,7 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    err.setError4(res.status, "nfs_v4_read failed");
+    status.setError4(res.status, "nfs_v4_read failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call READ failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -830,7 +834,7 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
                           uint32_t     length,
                           std::string &data,
                           uint32_t    &bytesWritten,
-                          NfsError    &err)
+                          NfsError    &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -866,7 +870,7 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    err.setError4(res.status, string("NFSV4 write Failed"));
+    status.setError4(res.status, string("NFSV4 write Failed"));
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -889,7 +893,8 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
                                    std::string &data,
                                    uint32_t    &bytesWritten,
                                    char        *verf,
-                                   const bool   needverify)
+                                   const bool   needverify,
+                                   NfsError    &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -942,7 +947,7 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
   return true;
 }
 
-bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr)
+bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1043,7 +1048,7 @@ bool Nfs4ApiHandle::remove(std::string path, NfsError &status)
   NfsUtil::buildNfsPath(parentPath, path_components);
 
   NfsFh parentFH;
-  if (!getDirFh(parentPath, parentFH))
+  if (!getDirFh(parentPath, parentFH, status))
   {
     syslog(LOG_ERR, "Failed to get parent directory FH\n");
     return false;
@@ -1077,7 +1082,7 @@ bool Nfs4ApiHandle::remove(std::string path, NfsError &status)
   return true;
 }
 
-bool Nfs4ApiHandle::setattr( NfsFh &fh, NfsAttr &attr )
+bool Nfs4ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 {
 
   NFSv4::COMPOUNDCall compCall;
@@ -1126,7 +1131,7 @@ bool Nfs4ApiHandle::setattr( NfsFh &fh, NfsAttr &attr )
   return true;
 }
 
-bool Nfs4ApiHandle::truncate(NfsFh &fh, uint64_t size)
+bool Nfs4ApiHandle::truncate(NfsFh &fh, uint64_t size, NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1164,23 +1169,23 @@ bool Nfs4ApiHandle::truncate(NfsFh &fh, uint64_t size)
   return true;
 }
 
-bool Nfs4ApiHandle::truncate(const std::string &path, uint64_t size)
+bool Nfs4ApiHandle::truncate(const std::string &path, uint64_t size, NfsError &status)
 {
   NfsFh fh;
-  if (open(path, ACCESS4_MODIFY, SHARE_ACCESS_READ|SHARE_ACCESS_WRITE, SHARE_DENY_BOTH, fh) == false)
+  if (open(path, ACCESS4_MODIFY, SHARE_ACCESS_READ|SHARE_ACCESS_WRITE, SHARE_DENY_BOTH, fh, status) == false)
   {
     syslog(LOG_ERR, "Nfs4ApiHandle::truncate: Failed to open file handle\n");
     return false;
   }
 
-  if (truncate(fh, size) == false)
+  if (truncate(fh, size, status) == false)
   {
     syslog(LOG_ERR, "Nfs4ApiHandle::truncate: Failed to set size for file path - %s\n", path.c_str());
     return false;
   }
 
   NfsAttr attr;
-  if (close(fh, attr) == false)
+  if (close(fh, attr, status) == false)
   {
     syslog(LOG_ERR, "Nfs4ApiHandle::truncate: Failed to close file handle\n");
     return false;
@@ -1189,10 +1194,11 @@ bool Nfs4ApiHandle::truncate(const std::string &path, uint64_t size)
   return true;
 }
 
-bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH,
-                          const std::string dirName,
-                          uint32_t mode,
-                          NfsFh &dirFH)
+bool Nfs4ApiHandle::mkdir(const NfsFh       &parentFH,
+                          const std::string  dirName,
+                          uint32_t           mode,
+                          NfsFh             &dirFH,
+                          NfsError          &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1249,7 +1255,7 @@ bool Nfs4ApiHandle::mkdir(const NfsFh &parentFH,
   return true;
 }
 
-bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPath)
+bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &status, bool createPath)
 {
   if (!createPath)
   {
@@ -1263,7 +1269,7 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPat
     NfsUtil::buildNfsPath(parentPath, path_components);
 
     NfsFh parentFH;
-    if (!getDirFh(parentPath, parentFH))
+    if (!getDirFh(parentPath, parentFH, status))
     {
       syslog(LOG_ERR, "Failed to get parent directory FH\n");
       return false;
@@ -1321,7 +1327,7 @@ bool Nfs4ApiHandle::rmdir(const std::string &path, NfsError &status)
 
 /* To lock the entire file use offset = 0 and length = 0xFFFFFFFFFFFFFFFF
  */
-bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim)
+bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status, bool reclaim)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1389,7 +1395,7 @@ bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
 
 /* To unlock the entire file use offset = 0 and length = 0xFFFFFFFFFFFFFFFF
  */
-bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length)
+bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1438,7 +1444,7 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   return true;
 }
 
-bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh)
+bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
   std::vector<std::string> exp_components;
   NfsUtil::splitNfsPath(path, exp_components);
@@ -1497,7 +1503,7 @@ bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh)
   return true;
 }
 
-bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
+bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1521,7 +1527,7 @@ bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    err.setError4(res.status, "nfs v4 getattr failed");
+    status.setError4(res.status, "nfs v4 getattr failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call GETATTR failed\n", __func__);
     return false;
   }
@@ -1543,7 +1549,7 @@ bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
   return true;
 }
 
-bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err)
+bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1566,7 +1572,7 @@ bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    err.setError4(res.status, "nfs v4 fsstat failed");
+    status.setError4(res.status, "nfs v4 fsstat failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call FSSTAT failed\n", __func__);
     return false;
   }

@@ -35,15 +35,16 @@ class NfsApiHandle : public SmartRef
     virtual ~NfsApiHandle() {}
 
   public:
-    virtual bool connect(std::string &serverIP) = 0;
-    virtual bool getRootFH(const std::string &nfs_export) = 0;
-    virtual bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH) = 0;
-    virtual bool getDirFh(const std::string &dirPath, NfsFh &dirFH) = 0;
+    virtual bool connect(std::string &serverIP, NfsError &status) = 0;
+    virtual bool getRootFH(const std::string &nfs_export, NfsError &status) = 0;
+    virtual bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status) = 0;
+    virtual bool getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status) = 0;
     virtual bool open(const std::string   filePath,
                       uint32_t            access,
                       uint32_t            shareAccess,
                       uint32_t            shareDeny,
-                      NfsFh              &file) = 0;
+                      NfsFh              &file,
+                      NfsError           &status) = 0;
     virtual bool read(NfsFh              &fileFH,
                       uint64_t            offset,
                       uint32_t            length,
@@ -51,45 +52,47 @@ class NfsApiHandle : public SmartRef
                       uint32_t           &bytesRead,
                       bool               &eof,
                       NfsAttr            &postAttr,
-                      NfsError           &err) = 0;
+                      NfsError           &status) = 0;
     virtual bool write(NfsFh              &fileFH,
                        uint64_t            offset,
                        uint32_t            length,
                        std::string        &data,
                        uint32_t           &bytesWritten,
-                       NfsError           &err) = 0;
+                       NfsError           &status) = 0;
     virtual bool write_unstable(NfsFh              &fileFH,
                                 uint64_t            offset,
                                 std::string        &data,
                                 uint32_t           &bytesWritten,
                                 char               *verf,
-                                const bool          needverify) = 0;
-    virtual bool close(NfsFh &fileFh, NfsAttr &postAttr) = 0;
+                                const bool          needverify,
+                                NfsError           &status) = 0;
+    virtual bool close(NfsFh &fileFh, NfsAttr &postAttr, NfsError &status) = 0;
     virtual bool remove(std::string path, NfsError &status) = 0;
     virtual bool remove(const NfsFh &parentFH, const string &name, NfsError &status) = 0;
     virtual bool rename(NfsFh &fromDirFh,
                         const std::string &fromName,
                         NfsFh &toDirFh,
                         const std::string toName,
-                        NfsError &sts) = 0;
+                        NfsError &status) = 0;
     virtual bool rename(const std::string  &nfs_export,
                         const std::string  &fromPath,
-                        const std::string  &toPath) = 0;
-    virtual bool readDir(const std::string &dirPath, NfsFiles &files) = 0;
-    virtual bool truncate(NfsFh &fh, uint64_t size) = 0;
-    virtual bool truncate(const std::string &path, uint64_t size) = 0;
-    virtual bool access(const std::string &filePath, uint32_t accessRequested, NfsAccess &acc) = 0;
-    virtual bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH) = 0;
-    virtual bool mkdir(const std::string &path, uint32_t mode, bool createPath = false) = 0;
+                        const std::string  &toPath,
+                        NfsError           &status) = 0;
+    virtual bool readDir(const std::string &dirPath, NfsFiles &files, NfsError &status) = 0;
+    virtual bool truncate(NfsFh &fh, uint64_t size, NfsError &status) = 0;
+    virtual bool truncate(const std::string &path, uint64_t size, NfsError &status) = 0;
+    virtual bool access(const std::string &filePath, uint32_t accessRequested, NfsAccess &acc, NfsError &status) = 0;
+    virtual bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH, NfsError &status) = 0;
+    virtual bool mkdir(const std::string &path, uint32_t mode, NfsError &status, bool createPath = false) = 0;
     virtual bool rmdir(const std::string &path, NfsError &status) = 0;
     virtual bool rmdir(const NfsFh &parentFH, const string &name, NfsError &status) = 0;
-    virtual bool commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf) = 0;
-    virtual bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim = false) = 0;
-    virtual bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length) = 0;
-    virtual bool setattr( NfsFh &fh, NfsAttr &attr) =0;
-    virtual bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err) = 0;
-    virtual bool lookup(const std::string &path, NfsFh &lookup_fh) = 0;
-    virtual bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err) = 0;
+    virtual bool commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf, NfsError &status) = 0;
+    virtual bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status, bool reclaim = false) = 0;
+    virtual bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status) = 0;
+    virtual bool setattr(NfsFh &fh, NfsAttr &attr, NfsError &status) =0;
+    virtual bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status) = 0;
+    virtual bool lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status) = 0;
+    virtual bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status) = 0;
 
   protected:
     NfsConnectionGroup *m_pConn;

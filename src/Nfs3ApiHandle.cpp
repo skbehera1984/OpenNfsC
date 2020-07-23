@@ -30,22 +30,22 @@ Nfs3ApiHandle::Nfs3ApiHandle(NfsConnectionGroup *ptr) : NfsApiHandle(ptr)
 {
 }
 
-bool Nfs3ApiHandle::connect(std::string &serverIP)
+bool Nfs3ApiHandle::connect(std::string &serverIP, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::getRootFH(const std::string &nfs_export)
+bool Nfs3ApiHandle::getRootFH(const std::string &nfs_export, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH)
+bool Nfs3ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH)
+bool Nfs3ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
   return true;
 }
@@ -54,7 +54,8 @@ bool Nfs3ApiHandle::open(const std::string filePath,
                          uint32_t          access,
                          uint32_t          shareAccess,
                          uint32_t          shareDeny,
-                         NfsFh             &file)
+                         NfsFh             &file,
+                         NfsError          &status)
 {
   return true;
 }
@@ -66,7 +67,7 @@ bool Nfs3ApiHandle::read(NfsFh       &fileFH,
                          uint32_t    &bytesRead,
                          bool        &eof,
                          NfsAttr     &postAttr,
-                         NfsError    &err)
+                         NfsError    &status)
 {
   READ3args readArg = {};
 
@@ -85,7 +86,7 @@ bool Nfs3ApiHandle::read(NfsFh       &fileFH,
   READ3res &res = nfsReadCall.getResult();
   if (res.status != NFS3_OK)
   {
-    err.setError3(res.status, "nfs_v3_read failed");
+    status.setError3(res.status, "nfs_v3_read failed");
     syslog(LOG_ERR, "Nfs3ApiHandle::read(): nfs_v3_read error: %d\n", res.status);
     return false;
   }
@@ -117,7 +118,7 @@ bool Nfs3ApiHandle::write(NfsFh       &fileFH,
                           uint32_t     length,
                           std::string &data,
                           uint32_t    &bytesWritten,
-                          NfsError    &err)
+                          NfsError    &status)
 {
   WRITE3args writeArg = {};
 
@@ -140,7 +141,7 @@ bool Nfs3ApiHandle::write(NfsFh       &fileFH,
   WRITE3res &writeRes = nfsWriteCall.getResult();
   if (writeRes.status != NFS3_OK)
   {
-    err.setError3(writeRes.status, "nfs_v3_write failed");
+    status.setError3(writeRes.status, "nfs_v3_write failed");
     syslog(LOG_ERR, "Nfs3ApiHandle::write(): nfs_v3_write error: %d\n", writeRes.status);
     return false;
   }
@@ -155,7 +156,8 @@ bool Nfs3ApiHandle::write_unstable(NfsFh       &fileFH,
                                    std::string &data,
                                    uint32_t    &bytesWritten,
                                    char        *verf,
-                                   const bool   needverify)
+                                   const bool   needverify,
+                                   NfsError    &status)
 {
   WRITE3args writeArg = {};
 
@@ -192,7 +194,7 @@ bool Nfs3ApiHandle::write_unstable(NfsFh       &fileFH,
   return true;
 }
 
-bool Nfs3ApiHandle::close(NfsFh &fileFh, NfsAttr &postAttr)
+bool Nfs3ApiHandle::close(NfsFh &fileFh, NfsAttr &postAttr, NfsError &status)
 {
   return true;
 }
@@ -233,7 +235,7 @@ bool Nfs3ApiHandle::rename(NfsFh &fromDirFh,
                            const std::string &fromName,
                            NfsFh &toDirFh,
                            const std::string toName,
-                           NfsError &sts)
+                           NfsError &status)
 {
   RENAME3args renameArg = {};
 
@@ -266,35 +268,37 @@ bool Nfs3ApiHandle::rename(NfsFh &fromDirFh,
 
 bool Nfs3ApiHandle::rename(const std::string &nfs_export,
                            const std::string &fromPath,
-                           const std::string &toPath)
+                           const std::string &toPath,
+                           NfsError          &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::readDir(const std::string &dirPath, NfsFiles &files)
+bool Nfs3ApiHandle::readDir(const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::truncate(NfsFh &fh, uint64_t size)
+bool Nfs3ApiHandle::truncate(NfsFh &fh, uint64_t size, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::truncate(const std::string &path, uint64_t size)
+bool Nfs3ApiHandle::truncate(const std::string &path, uint64_t size, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::access(const std::string &filePath, uint32_t accessRequested, NfsAccess &acc)
+bool Nfs3ApiHandle::access(const std::string &filePath, uint32_t accessRequested, NfsAccess &acc, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::mkdir(const NfsFh &parentFH,
-                          const std::string dirName,
-                          uint32_t mode,
-                          NfsFh &dirFH)
+bool Nfs3ApiHandle::mkdir(const NfsFh       &parentFH,
+                          const std::string  dirName,
+                          uint32_t           mode,
+                          NfsFh             &dirFH,
+                          NfsError          &status)
 {
   MKDIR3args mkdirArgs = {};
   MKDIR3res  mkdirRes  = {};
@@ -347,7 +351,7 @@ bool Nfs3ApiHandle::mkdir(const NfsFh &parentFH,
   return true;
 }
 
-bool Nfs3ApiHandle::mkdir(const std::string &path, uint32_t mode, bool createPath)
+bool Nfs3ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &status, bool createPath)
 {
   return true;
 }
@@ -384,7 +388,7 @@ bool Nfs3ApiHandle::rmdir(const NfsFh &parentFH, const string &name, NfsError &s
 
   return true;
 }
-bool Nfs3ApiHandle::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf)
+bool Nfs3ApiHandle::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf, NfsError &status)
 {
   COMMIT3args commitArg = {};
 
@@ -415,7 +419,7 @@ bool Nfs3ApiHandle::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *wri
   return true;
 }
 
-bool Nfs3ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim)
+bool Nfs3ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status, bool reclaim)
 {
   nlm4_lockargs lockArg = {};
 
@@ -455,7 +459,7 @@ bool Nfs3ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
   return true;
 }
 
-bool Nfs3ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length)
+bool Nfs3ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status)
 {
   nlm4_unlockargs unLkArg = {};
 
@@ -490,12 +494,12 @@ bool Nfs3ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   return true;
 }
 
-bool Nfs3ApiHandle::setattr(NfsFh &fh, NfsAttr &attr)
+bool Nfs3ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
+bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 {
   GETATTR3args getAttrArg = {};
 
@@ -512,7 +516,7 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
   GETATTR3res &res = nfsGetattrCall.getResult();
   if (res.status != NFS3_OK)
   {
-    err.setError3(res.status, "nfs v3 getattr failed");
+    status.setError3(res.status, "nfs v3 getattr failed");
     syslog(LOG_ERR, "Nfs3ApiHandle::getAttr(): nfs_v3_getattr error: %d\n", res.status);
     return false;
   }
@@ -523,12 +527,12 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
   return true;
 }
 
-bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh)
+bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
   return true;
 }
 
-bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err)
+bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status)
 {
   FSSTAT3args FsStatArg = {};
 
@@ -545,7 +549,7 @@ bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
   FSSTAT3res &res = nfsFsstatCall.getResult();
   if (res.status != NFS3_OK)
   {
-    err.setError3(res.status, "nfs v3 fsstat failed");
+    status.setError3(res.status, "nfs v3 fsstat failed");
     syslog(LOG_ERR, "Nfs3ApiHandle::fsstat(): nfs_v3_fsstat error: %d\n", res.status);
     return false;
   }

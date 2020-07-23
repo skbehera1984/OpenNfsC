@@ -48,15 +48,16 @@ int main(int argc, char* argv[])
   struct in_addr ip = {0};
   inet_aton(server.c_str(), &ip);
 
+  NfsError status;
   NfsConnectionGroupPtr svr4Ptr = NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP, NFSV4);
-  if (svr4Ptr->connect(server) != false)
+  if (svr4Ptr->connect(server, status) != false)
   {
     cout << "NFSV4 connect successful" << endl;
   }
 
   std::string path = resource;
   NfsFiles files;
-  if (svr4Ptr->readDir(path, files) != false)
+  if (svr4Ptr->readDir(path, files, status) != false)
   {
     cout << "NFSV4 READDIR successful" << endl;
   }
