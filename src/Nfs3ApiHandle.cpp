@@ -414,6 +414,36 @@ bool Nfs3ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
 
 bool Nfs3ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length)
 {
+  nlm4_unlockargs unLkArg = {};
+
+  string cookie("No cookie required");
+  unLkArg.nlm4_unlockargs_cookie.n_len = cookie.size();
+  unLkArg.nlm4_unlockargs_cookie.n_bytes = (char*)cookie.c_str();
+  string callerName = m_pConn->getIP();
+  unLkArg.nlm4_unlockargs_alock.nlm4_lock_caller_name = (char*)callerName.c_str();
+  unLkArg.nlm4_unlockargs_alock.nlm4_lock_fh.n_len = fh.getLength();
+  unLkArg.nlm4_unlockargs_alock.nlm4_lock_fh.n_bytes = (char*)fh.getData();
+  string lockOwner = stringf("%s:%ld", m_pConn->getIP().c_str(), pthread_self());
+  unLkArg.nlm4_unlockargs_alock.nlm4_lock_oh.n_len = lockOwner.size();
+  unLkArg.nlm4_unlockargs_alock.nlm4_lock_oh.n_bytes = (char*)lockOwner.c_str();
+  unLkArg.nlm4_unlockargs_alock.nlm4_lock_svid = pthread_self();
+  unLkArg.nlm4_unlockargs_alock.nlm4_lock_l_offset = offset;
+  unLkArg.nlm4_unlockargs_alock.nlm4_lock_l_len = length;
+
+  NLMv4::UnlockCall nlmUnlockCall(unLkArg);
+  enum clnt_stat tUnlockRet = nlmUnlockCall.call(m_pConn);
+  if (tUnlockRet != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  nlm4_res &res = nlmUnlockCall.getResult();
+  if (res.nlm4_res_stat.nlm4_stat != NLMSTAT4_GRANTED)
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::nlm_lock(): nlm_v4_unlock error: %d\n", res.nlm4_res_stat.nlm4_stat);
+    return false;
+  }
+
   return true;
 }
 
