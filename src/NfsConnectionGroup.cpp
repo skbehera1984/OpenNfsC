@@ -655,6 +655,11 @@ bool NfsConnectionGroup::setattr( NfsFh &fh, NfsAttr &attr)
   return m_NfsApiHandle->setattr(fh, attr);
 }
 
+bool NfsConnectionGroup::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
+{
+  return m_NfsApiHandle->getAttr(fh, attr, err);
+}
+
 bool NfsConnectionGroup::lookup(const std::string &path, NfsFh &lookup_fh)
 {
   return m_NfsApiHandle->lookup(path, lookup_fh);

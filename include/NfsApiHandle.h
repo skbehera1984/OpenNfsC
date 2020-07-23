@@ -87,6 +87,7 @@ class NfsApiHandle : public SmartRef
     virtual bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim = false) = 0;
     virtual bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length) = 0;
     virtual bool setattr( NfsFh &fh, NfsAttr &attr) =0;
+    virtual bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err) = 0;
     virtual bool lookup(const std::string &path, NfsFh &lookup_fh) = 0;
 
   protected:

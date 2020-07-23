@@ -84,6 +84,7 @@ class Nfs4ApiHandle : public NfsApiHandle
     bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, bool reclaim = false);
     bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length);
     bool setattr( NfsFh &fh, NfsAttr &attr);
+    bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err);
     bool lookup(const std::string &path, NfsFh &lookup_fh);
 
   private:

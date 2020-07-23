@@ -490,8 +490,36 @@ bool Nfs3ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   return true;
 }
 
-bool Nfs3ApiHandle::setattr( NfsFh &fh, NfsAttr &attr)
+bool Nfs3ApiHandle::setattr(NfsFh &fh, NfsAttr &attr)
 {
+  return true;
+}
+
+bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
+{
+  GETATTR3args getAttrArg = {};
+
+  getAttrArg.getattr3_object.fh3_data.fh3_data_len = fh.getLength();
+  getAttrArg.getattr3_object.fh3_data.fh3_data_val = (char*)fh.getData();
+
+  NFSv3::GetAttrCall nfsGetattrCall(getAttrArg);
+  enum clnt_stat getAttrRet = nfsGetattrCall.call(m_pConn);
+  if (getAttrRet != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  GETATTR3res &res = nfsGetattrCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    err.setError3(res.status, "nfs v3 getattr failed");
+    syslog(LOG_ERR, "Nfs3ApiHandle::getAttr(): nfs_v3_getattr error: %d\n", res.status);
+    return false;
+  }
+
+  // copy the object attributes out of the result struct
+  memcpy(&attr.v3Attr, &(res.GETATTR3res_u.getattr3ok.getattr3_obj_attributes), sizeof(fattr3));
+
   return true;
 }
 
