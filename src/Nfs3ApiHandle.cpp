@@ -69,10 +69,39 @@ bool Nfs3ApiHandle::read(NfsFh       &fileFH,
 
 bool Nfs3ApiHandle::write(NfsFh       &fileFH,
                           uint64_t     offset,
+                          uint32_t     length,
                           std::string &data,
                           uint32_t    &bytesWritten,
-                          NfsAttr     &postAttr)
+                          NfsError    &err)
 {
+  WRITE3args writeArg = {};
+
+  writeArg.write3_file.fh3_data.fh3_data_len = fileFH.getLength();
+  writeArg.write3_file.fh3_data.fh3_data_val = (char*)fileFH.getData();
+  writeArg.write3_offset                     = (u_quad_t)offset;
+  writeArg.write3_count                      = length;
+  writeArg.write3_stable                     = STABLE_DATA_SYNC;
+  writeArg.write3_data.write3_data_len       = length;
+  writeArg.write3_data.write3_data_val       = (char*)data.c_str();
+
+  NFSv3::WriteCall nfsWriteCall(writeArg);
+  enum clnt_stat ret = nfsWriteCall.call(m_pConn);
+  if ( ret != RPC_SUCCESS )
+  {
+    //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+    return false;
+  }
+
+  WRITE3res &writeRes = nfsWriteCall.getResult();
+  if (writeRes.status != NFS3_OK)
+  {
+    err.setError3(writeRes.status, "nfs_v3_write failed");
+    syslog(LOG_ERR, "Nfs3ApiHandle::write(): nfs_v3_write error: %d\n", writeRes.status);
+    return false;
+  }
+
+  bytesWritten = writeRes.WRITE3res_u.write3ok.write3_count_res;
+
   return true;
 }
 

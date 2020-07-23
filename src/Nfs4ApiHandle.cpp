@@ -824,9 +824,10 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
 
 bool Nfs4ApiHandle::write(NfsFh       &fileFH,
                           uint64_t     offset,
+                          uint32_t     length,
                           std::string &data,
                           uint32_t    &bytesWritten,
-                          NfsAttr     &postAttr)
+                          NfsError    &err)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -846,7 +847,7 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
   memcpy(wargs->stateid.other, Stid.other, 12);
   wargs->offset = offset;
   wargs->stable = FILE_SYNC4;
-  wargs->data.data_len = data.length();
+  wargs->data.data_len = length;
   wargs->data.data_val = const_cast<char*>(data.c_str());
   compCall.appendCommand(&carg);
 
@@ -862,6 +863,7 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    err.setError4(res.status, string("NFSV4 write Failed"));
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -874,11 +876,8 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
   }
 
   WRITE4resok *wres = &res.resarray.resarray_val[index].nfs_resop4_u.opwrite.WRITE4res_u.resok4;
-
   bytesWritten = wres->count;
-  //stable_how4 commited = wres->committed;
 
-  //TODO sarat - get the post attr
   return true;
 }
 
@@ -935,11 +934,8 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
   }
 
   WRITE4resok *wres = &res.resarray.resarray_val[index].nfs_resop4_u.opwrite.WRITE4res_u.resok4;
-
   bytesWritten = wres->count;
-  //stable_how4 commited = wres->committed;
 
-  //TODO Rabi - get the post attr
   return true;
 }
 

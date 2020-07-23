@@ -544,11 +544,12 @@ bool NfsConnectionGroup::read(NfsFh        &fileFH,
 
 bool NfsConnectionGroup::write(NfsFh       &fileFH,
                                uint64_t     offset,
+                               uint32_t     length,
                                std::string &data,
                                uint32_t    &bytesWritten,
-                               NfsAttr     &postAttr)
+                               NfsError    &err)
 {
-  return m_NfsApiHandle->write(fileFH, offset, data, bytesWritten, postAttr);
+  return m_NfsApiHandle->write(fileFH, offset, length, data, bytesWritten, err);
 }
 
 bool NfsConnectionGroup::write_unstable(NfsFh       &fileFH,

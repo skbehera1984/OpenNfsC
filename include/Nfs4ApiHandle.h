@@ -47,9 +47,10 @@ class Nfs4ApiHandle : public NfsApiHandle
               bool               &eof);
     bool write(NfsFh              &fileFH,
                uint64_t            offset,
+               uint32_t            length,
                std::string        &data,
                uint32_t           &bytesWritten,
-               NfsAttr            &postAttr);
+               NfsError           &err);
     bool write_unstable(NfsFh              &fileFH,
                         uint64_t            offset,
                         std::string        &data,
