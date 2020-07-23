@@ -341,6 +341,32 @@ bool Nfs3ApiHandle::rmdir(const NfsFh &parentFH, const string &name, NfsError &s
 }
 bool Nfs3ApiHandle::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf)
 {
+  COMMIT3args commitArg = {};
+
+  commitArg.commit3_file.fh3_data.fh3_data_len = fh.getLength();
+  commitArg.commit3_file.fh3_data.fh3_data_val = (char *) fh.getData();
+  commitArg.commit3_offset  = (u_quad_t)offset;
+  commitArg.commit3_count   = bytes;
+
+  NFSv3::CommitCall nfsCommitCall(commitArg);
+  enum clnt_stat commitRet = nfsCommitCall.call(m_pConn);
+  if (commitRet != RPC_SUCCESS)
+  {
+    //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+    return false;
+  }
+
+  COMMIT3res &res = nfsCommitCall.getResult();
+  //rtNfsErrorMsg = res.status;
+  if (res.status != NFS3_OK)
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s: nfs_v3_commit error: %d\n", __func__, res.status);
+    return false;
+  }
+
+  memset(writeverf, 0, NFS3_WRITEVERFSIZE);
+  memcpy(writeverf, res.COMMIT3res_u.commit3ok.commit3_verf, NFS3_WRITEVERFSIZE);
+
   return true;
 }
 
