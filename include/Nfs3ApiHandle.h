@@ -43,7 +43,9 @@ class Nfs3ApiHandle : public NfsApiHandle
               uint32_t            length,
               std::string        &data,
               uint32_t           &bytesRead,
-              bool               &eof);
+              bool               &eof,
+              NfsAttr            &postAttr,
+              NfsError           &err);
     bool write(NfsFh              &fileFH,
                uint64_t            offset,
                uint32_t            length,

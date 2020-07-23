@@ -769,7 +769,9 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
                          uint32_t     length,
                          std::string &data,
                          uint32_t    &bytesRead,
-                         bool        &eof)
+                         bool        &eof,
+                         NfsAttr     &postAttr,
+                         NfsError    &err)
 {
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -795,6 +797,7 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    err.setError4(res.status, "nfs_v4_read failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call READ failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }

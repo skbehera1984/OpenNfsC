@@ -101,6 +101,7 @@ struct NfsAttr
   NfsTime     time_access;
   NfsTime     time_metadata;
   NfsTime     time_modify;
+  fattr3      v3Attr; // for NFS v3 attr
 };
 
 struct NfsAccess

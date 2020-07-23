@@ -64,8 +64,51 @@ bool Nfs3ApiHandle::read(NfsFh       &fileFH,
                          uint32_t     length,
                          std::string &data,
                          uint32_t    &bytesRead,
-                         bool        &eof)
+                         bool        &eof,
+                         NfsAttr     &postAttr,
+                         NfsError    &err)
 {
+  READ3args readArg = {};
+
+  readArg.read3_file.fh3_data.fh3_data_len = fileFH.getLength();
+  readArg.read3_file.fh3_data.fh3_data_val = (char*)fileFH.getData();
+  readArg.read3_offset                     = offset;
+  readArg.read3_count                      = length;
+
+  NFSv3::ReadCall nfsReadCall(readArg);
+  enum clnt_stat readRet = nfsReadCall.call(m_pConn);
+  if (readRet != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  READ3res &res = nfsReadCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    err.setError3(res.status, "nfs_v3_read failed");
+    syslog(LOG_ERR, "Nfs3ApiHandle::read(): nfs_v3_read error: %d\n", res.status);
+    return false;
+  }
+
+  // copy the read results
+  bytesRead = res.READ3res_u.read3ok.read3_count_res;
+  data = std::string(res.READ3res_u.read3ok.read3_data.read3_data_val,
+                     res.READ3res_u.read3ok.read3_data.read3_data_len);
+
+  // return the EOF flag
+  eof = res.READ3res_u.read3ok.read3_eof;
+
+  // return the post op file attrs
+  if (res.READ3res_u.read3ok.read3_file_attributes.attributes_follow)
+  {
+    postAttr.v3Attr = res.READ3res_u.read3ok.read3_file_attributes.post_op_attr_u.post_op_attr;
+  }
+  else
+  {
+    syslog(LOG_DEBUG, "Nfs3ApiHandle::%s() failed no post op attrs returned\n", __func__);
+    memset(&postAttr.v3Attr, 0, sizeof(fattr3));
+  }
+
   return true;
 }
 

@@ -537,9 +537,11 @@ bool NfsConnectionGroup::read(NfsFh        &fileFH,
                               uint32_t     length,
                               std::string  &data,
                               uint32_t     &bytesRead,
-                              bool         &eof)
+                              bool         &eof,
+                              NfsAttr      &postAttr,
+                              NfsError     &err)
 {
-  return m_NfsApiHandle->read(fileFH, offset, length, data, bytesRead, eof);
+  return m_NfsApiHandle->read(fileFH, offset, length, data, bytesRead, eof, postAttr, err);
 }
 
 bool NfsConnectionGroup::write(NfsFh       &fileFH,

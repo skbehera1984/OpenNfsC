@@ -122,7 +122,7 @@ class NfsConnectionGroup : public SmartRef
     bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH);
     bool getDirFh(const std::string &dirPath, NfsFh &dirFH);
     bool open(const std::string filePath, uint32_t access, uint32_t shareAccess, uint32_t shareDeny, NfsFh &file);
-    bool read(NfsFh &fileFH, uint64_t offset, uint32_t length, std::string &data, uint32_t &bytesRead, bool &eof);
+    bool read(NfsFh &fileFH, uint64_t offset, uint32_t length, std::string &data, uint32_t &bytesRead, bool &eof, NfsAttr &postAttr, NfsError &err);
     bool write(NfsFh &fileFH, uint64_t offset, uint32_t length, std::string &data, uint32_t &bytesWritten, NfsError &err);
     bool write_unstable(NfsFh &fileFH, uint64_t offset,std::string &data,uint32_t &bytesWritten,char *verf, const bool needverify);
     bool close(NfsFh &fileFh, NfsAttr &postAttr);

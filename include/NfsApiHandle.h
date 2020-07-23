@@ -49,7 +49,9 @@ class NfsApiHandle : public SmartRef
                       uint32_t            length,
                       std::string        &data,
                       uint32_t           &bytesRead,
-                      bool               &eof) = 0;
+                      bool               &eof,
+                      NfsAttr            &postAttr,
+                      NfsError           &err) = 0;
     virtual bool write(NfsFh              &fileFH,
                        uint64_t            offset,
                        uint32_t            length,

@@ -103,6 +103,7 @@ NfsAttr::NfsAttr()
   time_metadata.nanosecs = 0;
   time_modify.seconds = 0;
   time_modify.nanosecs = 0;
+  memset(&v3Attr, 0, sizeof(fattr3));
 }
 
 void NfsAttr::print() const
