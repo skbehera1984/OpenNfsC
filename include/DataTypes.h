@@ -80,11 +80,37 @@ struct NfsTime
   uint32_t nanosecs;
 };
 
+#define NFS_BLKSIZE 4096
+struct fsstat4
+{
+  NfsFsId  fsid;
+  uint32_t name_max;
+  uint64_t files_avail;
+  uint64_t files_free;
+  uint64_t files_total;
+  uint64_t bytes_avail;
+  uint64_t bytes_free;
+  uint64_t bytes_total;
+  uint64_t bytes_used;
+};
+
+struct NfsFsStat
+{
+  union fs_stat
+  {
+    fsstat3 stat3;
+    fsstat4 stat4;
+  } stat_u;
+};
+
 struct NfsAttr
 {
+public:
   NfsAttr();
   void print() const;
+  void fill_fsstat4(NfsFsStat &stat);
 
+public:
   uint32_t    mask[2];
   NfsFileType fileType;
   uint64_t    changeID;
@@ -96,11 +122,19 @@ struct NfsAttr
   std::string owner;
   std::string group;
   uint64_t    rawDevice;
-  uint64_t    spaceUsed;
   uint64_t    mountFid;
   NfsTime     time_access;
   NfsTime     time_metadata;
   NfsTime     time_modify;
+  uint32_t    name_max;
+  uint64_t    files_avail;
+  uint64_t    files_free;
+  uint64_t    files_total;
+  uint64_t    bytes_avail;
+  uint64_t    bytes_free;
+  uint64_t    bytes_total;
+  uint64_t    bytes_used;
+
   fattr3      v3Attr; // for NFS v3 attr
 };
 

@@ -1543,5 +1543,53 @@ bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err)
   return true;
 }
 
+bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err)
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+
+  nfs_argop4 carg;
+
+  // using the above fh gives wrong values
+  carg.argop = OP_PUTROOTFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  // mask to get fsstat attr
+  uint32_t mask[2] = {0}; mask[0] = 0x20E00100; mask[1] = 0x00003C00;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = mask;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    err.setError4(res.status, "nfs v4 fsstat failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call FSSTAT failed\n", __func__);
+    return false;
+  }
+
+  int index = compCall.findOPIndex(OP_GETATTR);
+  if (index == -1)
+  {
+    cout << "Failed to find op index for - OP_GETATTR" << endl;
+    return false;
+  }
+
+  NfsAttr attr;
+  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, mask[0], mask[1], attr) < 0)
+  {
+    cout << "Failed to decode OP_GETATTR result" << endl;
+    return false;
+  }
+
+  attr.fill_fsstat4(stat);
+
+  return true;
+}
+
 /* send RENEW client Id every 12 secs to keep the connection alive
  */

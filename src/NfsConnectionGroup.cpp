@@ -665,4 +665,9 @@ bool NfsConnectionGroup::lookup(const std::string &path, NfsFh &lookup_fh)
   return m_NfsApiHandle->lookup(path, lookup_fh);
 }
 
+bool NfsConnectionGroup::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err)
+{
+  return m_NfsApiHandle->fsstat(rootFh, stat, invarSec, err);
+}
+
 } //end of namespace

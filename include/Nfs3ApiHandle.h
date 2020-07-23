@@ -84,6 +84,7 @@ class Nfs3ApiHandle : public NfsApiHandle
     bool setattr( NfsFh &fh, NfsAttr &attr);
     bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err);
     bool lookup(const std::string &path, NfsFh &lookup_fh);
+    bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err);
 };
 
 }

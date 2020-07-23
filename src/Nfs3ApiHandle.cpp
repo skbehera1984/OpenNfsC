@@ -527,3 +527,32 @@ bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh)
 {
   return true;
 }
+
+bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err)
+{
+  FSSTAT3args FsStatArg = {};
+
+  FsStatArg.fsstat3_fsroot.fh3_data.fh3_data_len = rootFh.getLength();
+  FsStatArg.fsstat3_fsroot.fh3_data.fh3_data_val = (char*)rootFh.getData();
+
+  NFSv3::FsstatCall nfsFsstatCall(FsStatArg);
+  enum clnt_stat FsStatRet = nfsFsstatCall.call(m_pConn);
+  if (FsStatRet != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  FSSTAT3res &res = nfsFsstatCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    err.setError3(res.status, "nfs v3 fsstat failed");
+    syslog(LOG_ERR, "Nfs3ApiHandle::fsstat(): nfs_v3_fsstat error: %d\n", res.status);
+    return false;
+  }
+
+  // return the values we're interested in
+  stat.stat_u.stat3 = res.FSSTAT3res_u.fsstat3ok.fsstat3_fsstat3;
+  invarSec = res.FSSTAT3res_u.fsstat3ok.fsstat3_invarsec;
+
+  return true;
+}

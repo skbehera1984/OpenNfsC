@@ -600,7 +600,7 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
     if (mask2 & (1 << (FATTR4_SPACE_USED - 32)))
     {
       uint64_t *ptr = (uint64_t*)temp_attr;
-      *ptr = attr.spaceUsed;
+      *ptr = attr.bytes_used;
       fattr->attr_vals.attrlist4_len += 8;
       temp_attr = temp_attr + 8;
       buflen -=8;
@@ -762,12 +762,21 @@ int decode_fattr4(fattr4 *fattr, uint32_t mask1, uint32_t mask2, NfsAttr &attr)
     }
     if (mask1 & (1 << FATTR4_FILES_AVAIL))
     {
+      uint64 filesAvail = 0;
+      RETURN_ON_ERROR(attrPacket->xdrDecodeUint64(&filesAvail));
+      attr.files_avail = filesAvail;
     }
     if (mask1 & (1 << FATTR4_FILES_FREE))
     {
+      uint64 filesFree = 0;
+      RETURN_ON_ERROR(attrPacket->xdrDecodeUint64(&filesFree));
+      attr.files_free = filesFree;
     }
     if (mask1 & (1 << FATTR4_FILES_TOTAL))
     {
+      uint64 filesTotal = 0;
+      RETURN_ON_ERROR(attrPacket->xdrDecodeUint64(&filesTotal));
+      attr.files_total = filesTotal;
     }
     if (mask1 & (1 << FATTR4_FS_LOCATIONS))
     {
@@ -786,6 +795,9 @@ int decode_fattr4(fattr4 *fattr, uint32_t mask1, uint32_t mask2, NfsAttr &attr)
     }
     if (mask1 & (1 << FATTR4_MAXNAME))
     {
+      uint32 maxName = 0;
+      RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&maxName));
+      attr.name_max = maxName;
     }
     if (mask1 & (1 << FATTR4_MAXREAD))
     {
@@ -846,18 +858,27 @@ int decode_fattr4(fattr4 *fattr, uint32_t mask1, uint32_t mask2, NfsAttr &attr)
     }
     if (mask2 & (1 << (FATTR4_SPACE_AVAIL - 32)))
     {
+      uint64 spcAvail = 0;
+      RETURN_ON_ERROR(attrPacket->xdrDecodeUint64(&spcAvail));
+      attr.bytes_avail = spcAvail;
     }
     if (mask2 & (1 << (FATTR4_SPACE_FREE - 32)))
     {
+      uint64 spcFree = 0;
+      RETURN_ON_ERROR(attrPacket->xdrDecodeUint64(&spcFree));
+      attr.bytes_free = spcFree;
     }
     if (mask2 & (1 << (FATTR4_SPACE_TOTAL - 32)))
     {
+      uint64 spcTotal = 0;
+      RETURN_ON_ERROR(attrPacket->xdrDecodeUint64(&spcTotal));
+      attr.bytes_total = spcTotal;
     }
     if (mask2 & (1 << (FATTR4_SPACE_USED - 32)))
     {
       uint64 spcusd = 0;
       RETURN_ON_ERROR(attrPacket->xdrDecodeUint64(&spcusd));
-      attr.spaceUsed = spcusd;
+      attr.bytes_used = spcusd;
     }
     if (mask2 & (1 << (FATTR4_SYSTEM - 32)))
     {

@@ -95,7 +95,6 @@ NfsAttr::NfsAttr()
   owner = std::string("");
   group = std::string("");
   rawDevice = 0;
-  spaceUsed = 0;
   mountFid = 0;
   time_access.seconds = 0;
   time_access.nanosecs = 0;
@@ -103,7 +102,28 @@ NfsAttr::NfsAttr()
   time_metadata.nanosecs = 0;
   time_modify.seconds = 0;
   time_modify.nanosecs = 0;
+  name_max = 0;
+  files_avail = 0;
+  files_free = 0;
+  files_total = 0;
+  bytes_avail = 0;
+  bytes_free = 0;
+  bytes_total = 0;
+  bytes_used = 0;
   memset(&v3Attr, 0, sizeof(fattr3));
+}
+
+void NfsAttr::fill_fsstat4(NfsFsStat &stat)
+{
+  stat.stat_u.stat4.fsid = fsid;
+  stat.stat_u.stat4.name_max = name_max;
+  stat.stat_u.stat4.files_avail = files_avail;
+  stat.stat_u.stat4.files_free = files_free;
+  stat.stat_u.stat4.files_total = files_total;
+  stat.stat_u.stat4.bytes_avail = bytes_avail;
+  stat.stat_u.stat4.bytes_free = bytes_free;
+  stat.stat_u.stat4.bytes_total = bytes_total;
+  stat.stat_u.stat4.bytes_used = bytes_used;
 }
 
 void NfsAttr::print() const
@@ -272,7 +292,7 @@ void NfsAttr::print() const
   }
   if (mask[1] & (1 << (FATTR4_SPACE_USED - 32)))
   {
-    cout << "Space Used : " << spaceUsed << endl;
+    cout << "Bytes Used : " << bytes_used << endl;
   }
   if (mask[1] & (1 << (FATTR4_SYSTEM - 32)))
   {

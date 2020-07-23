@@ -89,6 +89,7 @@ class NfsApiHandle : public SmartRef
     virtual bool setattr( NfsFh &fh, NfsAttr &attr) =0;
     virtual bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &err) = 0;
     virtual bool lookup(const std::string &path, NfsFh &lookup_fh) = 0;
+    virtual bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &err) = 0;
 
   protected:
     NfsConnectionGroup *m_pConn;
