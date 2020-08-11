@@ -135,7 +135,8 @@ public:
   uint64_t    bytes_total;
   uint64_t    bytes_used;
 
-  fattr3      v3Attr; // for NFS v3 attr
+  fattr3      v3Attr;  // for NFS v3 attr
+  sattr3      v3sAttr; // for NFS v3 setAttr
 };
 
 struct NfsAccess

@@ -111,6 +111,7 @@ NfsAttr::NfsAttr()
   bytes_total = 0;
   bytes_used = 0;
   memset(&v3Attr, 0, sizeof(fattr3));
+  memset(&v3sAttr, 0, sizeof(sattr3));
 }
 
 void NfsAttr::fill_fsstat4(NfsFsStat &stat)

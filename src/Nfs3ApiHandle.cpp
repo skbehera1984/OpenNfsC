@@ -584,6 +584,31 @@ bool Nfs3ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
 
 bool Nfs3ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 {
+  SETATTR3args sattrArg = {};
+
+  sattrArg.setattr3_object.fh3_data.fh3_data_len = fh.getLength();
+  sattrArg.setattr3_object.fh3_data.fh3_data_val = (char*)fh.getData();
+  memcpy (&(sattrArg.setattr3_new_attributes), &attr.v3sAttr, sizeof(sattr3));
+  sattrArg.setattr3_guard.check = 0; // don't check for a ctime match
+
+  NFSv3::SetAttrCall nfsSetattrCall(sattrArg);
+  enum clnt_stat sattrRet = nfsSetattrCall.call(m_pConn);
+
+  if (sattrRet != RPC_SUCCESS)
+  {
+    //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+    return false;
+  }
+
+  SETATTR3res &res = nfsSetattrCall.getResult();
+  //rtNfsErrorMsg = res.status;
+  if (res.status != NFS3_OK)
+  {
+    status.setError3(res.status, "nfs v3 setAttr failed");
+    syslog(LOG_ERR, "Nfs3ApiHandle::setAttr(): nfs_v3_setattr error: %d\n", res.status);
+    return false;
+  }
+
   return true;
 }
 
