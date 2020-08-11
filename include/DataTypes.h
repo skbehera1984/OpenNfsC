@@ -103,6 +103,21 @@ struct NfsFsStat
   } stat_u;
 };
 
+struct lookup_attr
+{
+  bool obj_attr_present;
+  bool dir_attr_present;
+  fattr3 obj_attr;
+  fattr3 dir_attr;
+};
+
+struct v3_attrs
+{
+  fattr3      gattr;
+  sattr3      sattr;
+  lookup_attr lattr;
+};
+
 struct NfsAttr
 {
 public:
@@ -135,6 +150,7 @@ public:
   uint64_t    bytes_total;
   uint64_t    bytes_used;
 
+  v3_attrs    attr3;   // houses all types of nfs v3 attr structs
   fattr3      v3Attr;  // for NFS v3 attr
   sattr3      v3sAttr; // for NFS v3 setAttr
 };

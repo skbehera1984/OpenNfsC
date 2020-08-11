@@ -523,6 +523,11 @@ bool NfsConnectionGroup::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsE
   return m_NfsApiHandle->getDirFh(dirPath, dirFH, status);
 }
 
+bool NfsConnectionGroup::create(NfsFh &dirFh, std::string &fileName, NfsAttr *inAttr, NfsFh &fileFh, NfsAttr &outAttr, NfsError &status)
+{
+  return m_NfsApiHandle->create(dirFh, fileName, inAttr, fileFh, outAttr, status);
+}
+
 bool NfsConnectionGroup::open(const std::string filePath,
                               uint32_t          access,
                               uint32_t          shareAccess,
@@ -671,6 +676,11 @@ bool NfsConnectionGroup::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 bool NfsConnectionGroup::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
   return m_NfsApiHandle->lookup(path, lookup_fh, status);
+}
+
+bool NfsConnectionGroup::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status)
+{
+  return m_NfsApiHandle->lookup(dirFh, file, lookup_fh, attr, status);
 }
 
 bool NfsConnectionGroup::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status)

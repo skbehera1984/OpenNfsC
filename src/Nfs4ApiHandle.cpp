@@ -644,6 +644,84 @@ bool Nfs4ApiHandle::access(const std::string &filePath,
   return true;
 }
 
+bool Nfs4ApiHandle::create(NfsFh             &dirFh,
+                           std::string       &fileName,
+                           NfsAttr           *inAttr,
+                           NfsFh             &fileFh,
+                           NfsAttr           &outAttr,
+                           NfsError          &status)
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = dirFh.getLength();
+  pfhgargs->object.nfs_fh4_val = dirFh.getData();
+  compCall.appendCommand(&carg);
+
+  fattr4 obj;
+  NfsUtil::NfsAttr_fattr4(*inAttr, &obj);
+
+  carg.argop = OP_CREATE;
+  CREATE4args *crargs = &carg.nfs_argop4_u.opcreate;
+  crargs->objtype.type = NF4DIR;
+  crargs->objname.utf8string_val = const_cast<char*>(fileName.c_str());
+  crargs->objname.utf8string_len = fileName.length();
+  crargs->createattrs.attrmask.bitmap4_len = obj.attrmask.bitmap4_len;
+  crargs->createattrs.attrmask.bitmap4_val = obj.attrmask.bitmap4_val;
+  crargs->createattrs.attr_vals.attrlist4_len = obj.attr_vals.attrlist4_len;
+  crargs->createattrs.attr_vals.attrlist4_val = obj.attr_vals.attrlist4_val;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  uint32_t mask[2] = {0}; mask[0] = 0x0010011a; mask[1] = 0x00b0a23a;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = mask;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed\n", __func__);
+    return false;
+  }
+
+  int index = compCall.findOPIndex(OP_GETFH);
+  if (index == -1)
+  {
+    cout << "Failed to find op index for - OP_GETFH" << endl;
+    return false;
+  }
+
+  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
+  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
+  fileFh = fh;
+
+  index = compCall.findOPIndex(OP_GETATTR);
+  if (index == -1)
+  {
+    cout << "Failed to find op index for - OP_GETATTR" << endl;
+    return false;
+  }
+
+  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, mask[0], mask[1], outAttr) < 0)
+  {
+    cout << "Failed to decode OP_GETATTR result" << endl;
+    return false;
+  }
+
+  return true;
+}
+
 // filePath is absolute path fs path
 bool Nfs4ApiHandle::open(const std::string filePath,
                          uint32_t          access,
@@ -1428,6 +1506,11 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   memcpy(stateid.other, lck_st->other, 12);
   fh.setLockState(stateid);
 
+  return true;
+}
+
+bool Nfs4ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status)
+{
   return true;
 }
 

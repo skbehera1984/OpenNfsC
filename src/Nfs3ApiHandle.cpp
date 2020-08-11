@@ -50,6 +50,88 @@ bool Nfs3ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError 
   return true;
 }
 
+bool Nfs3ApiHandle::create(NfsFh             &dirFh,
+                           std::string       &fileName,
+                           NfsAttr           *inAttr,
+                           NfsFh             &fileFh,
+                           NfsAttr           &outAttr,
+                           NfsError          &status)
+{
+  CREATE3args createArg = {};
+
+  createArg.create3_where.dirop3_dir.fh3_data.fh3_data_len = dirFh.getLength();
+  createArg.create3_where.dirop3_dir.fh3_data.fh3_data_val = (char*)dirFh.getData();
+  createArg.create3_where.dirop3_name = (char*)fileName.c_str();
+  createArg.create3_how.mode = CREATE_GUARDED;
+
+  if (inAttr)
+  {
+    memcpy(&(createArg.create3_how.createhow3_u.create3_obj_attributes), &(inAttr->v3sAttr), sizeof(sattr3));
+  }
+  else
+  {
+    // We have issues with Isilon if mode is not set
+    memset(&(createArg.create3_how.createhow3_u.create3_obj_attributes),(int)0, sizeof(sattr3));
+    createArg.create3_how.createhow3_u.create3_obj_attributes.sattr3_mode.set_it = 1;
+    createArg.create3_how.createhow3_u.create3_obj_attributes.sattr3_mode.set_mode3_u.mode = 0777;
+    //  createArg.create3_how.createhow3_u.create3_obj_attributes.sattr3_size.set_it = 1;
+    //  createArg.create3_how.createhow3_u.create3_obj_attributes.sattr3_size.set_size3_u.size = 0;
+  }
+
+  NFSv3::CreateCall nfsCreateCall(createArg);
+  enum clnt_stat createRet = nfsCreateCall.call(m_pConn);
+  if (createRet != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  CREATE3res &res = nfsCreateCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    status.setError3(res.status, "nfs v3 create failed");
+    if ( res.status != NFS3ERR_EXIST )
+    {
+      syslog(LOG_ERR, "Nfs3ApiHandle::create(): nfs_v3_create error: %d  <%s>\n", res.status, fileName.c_str());
+    }
+    return false;
+  }
+
+  // copy the CREATE3 results if they were returned
+  if (res.CREATE3res_u.create3_ok.create3_obj_attributes.attributes_follow &&
+      res.CREATE3res_u.create3_ok.create3_obj.handle_follows)
+  {
+    // return the fsid and fileid(inode) in the attr
+    outAttr.attr3.gattr.fattr3_fsid   = res.CREATE3res_u.create3_ok.create3_obj_attributes.post_op_attr_u.post_op_attr.fattr3_fsid;
+    outAttr.attr3.gattr.fattr3_fileid = res.CREATE3res_u.create3_ok.create3_obj_attributes.post_op_attr_u.post_op_attr.fattr3_fileid;
+    nfs_fh3 &fh3 = res.CREATE3res_u.create3_ok.create3_obj.post_op_fh3_u.post_op_fh3;
+    NfsFh fh(fh3.fh3_data.fh3_data_len, fh3.fh3_data.fh3_data_val);
+    fileFh = fh;
+    return true;
+  }
+
+  // create didn't return the file handle and attributes we do a lookup to get them
+  NfsAttr lkpAttr;
+  if (lookup(dirFh, fileName, fileFh, lkpAttr, status))
+  {
+    if (lkpAttr.attr3.lattr.obj_attr_present)
+    {
+      outAttr.attr3.gattr.fattr3_fsid   = lkpAttr.attr3.lattr.obj_attr.fattr3_fsid;
+      outAttr.attr3.gattr.fattr3_fileid = lkpAttr.attr3.lattr.obj_attr.fattr3_fileid;
+    }
+    else
+    {
+      // fail if the attributes aren't available
+      return false;
+    }
+  }
+  else
+  {
+    return false;
+  }
+
+  return true;
+}
+
 bool Nfs3ApiHandle::open(const std::string filePath,
                          uint32_t          access,
                          uint32_t          shareAccess,
@@ -642,6 +724,50 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 
 bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
+  return true;
+}
+
+bool Nfs3ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status)
+{
+  LOOKUP3args lkpArg = {};
+
+  lkpArg.lookup3_what.dirop3_dir.fh3_data.fh3_data_len = dirFh.getLength();
+  lkpArg.lookup3_what.dirop3_dir.fh3_data.fh3_data_val = (char*)dirFh.getData();
+  string name = file;
+  lkpArg.lookup3_what.dirop3_name = (char*)name.c_str();
+
+  NFSv3::LookUpCall nfsLookupCall(lkpArg);
+  enum clnt_stat lkpRet = nfsLookupCall.call(m_pConn);
+  if (lkpRet != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  LOOKUP3res res = nfsLookupCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    if (res.status != NFS3ERR_NOENT)
+    {
+      syslog(LOG_ERR, "Nfs3ApiHandle::lookup(): nfs_v3_lookup error: %d  <%s>\n", res.status, name.c_str());
+    }
+    return false;
+  }
+
+  nfs_fh3 *fh3 = &(res.LOOKUP3res_u.lookup3ok.lookup3_object);
+  NfsFh fh(fh3->fh3_data.fh3_data_len, fh3->fh3_data.fh3_data_val);
+  lookup_fh = fh;
+
+  if (res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.attributes_follow)
+  {
+    attr.attr3.lattr.obj_attr_present = true;
+    attr.attr3.lattr.obj_attr = res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.post_op_attr_u.post_op_attr;
+  }
+  if (res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.attributes_follow)
+  {
+    attr.attr3.lattr.dir_attr_present = true;
+    attr.attr3.lattr.dir_attr = res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.post_op_attr_u.post_op_attr;
+  }
+
   return true;
 }
 

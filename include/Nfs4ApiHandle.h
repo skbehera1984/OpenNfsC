@@ -34,6 +34,12 @@ class Nfs4ApiHandle : public NfsApiHandle
     bool getRootFH(const std::string &nfs_export, NfsError &status);
     bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status);
     bool getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status);
+    bool create(NfsFh             &dirFh,
+                std::string       &fileName,
+                NfsAttr           *inAttr,
+                NfsFh             &fileFh,
+                NfsAttr           &outAttr,
+                NfsError          &status);
     bool open(const std::string   filePath,
               uint32_t            access,
               uint32_t            shareAccess,
@@ -91,6 +97,7 @@ class Nfs4ApiHandle : public NfsApiHandle
     bool setattr(NfsFh &fh, NfsAttr &attr, NfsError &status);
     bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status);
     bool lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status);
+    bool lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status);
     bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status);
 
   private:

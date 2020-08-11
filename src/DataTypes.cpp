@@ -110,6 +110,9 @@ NfsAttr::NfsAttr()
   bytes_free = 0;
   bytes_total = 0;
   bytes_used = 0;
+  memset(&attr3, 0, sizeof(v3_attrs));
+  attr3.lattr.obj_attr_present = false;
+  attr3.lattr.dir_attr_present = false;
   memset(&v3Attr, 0, sizeof(fattr3));
   memset(&v3sAttr, 0, sizeof(sattr3));
 }

@@ -39,6 +39,12 @@ class NfsApiHandle : public SmartRef
     virtual bool getRootFH(const std::string &nfs_export, NfsError &status) = 0;
     virtual bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status) = 0;
     virtual bool getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status) = 0;
+    virtual bool create(NfsFh             &dirFh,
+                        std::string       &fileName,
+                        NfsAttr           *inAttr,
+                        NfsFh             &fileFh,
+                        NfsAttr           &outAttr,
+                        NfsError          &status) = 0;
     virtual bool open(const std::string   filePath,
                       uint32_t            access,
                       uint32_t            shareAccess,
@@ -93,6 +99,7 @@ class NfsApiHandle : public SmartRef
     virtual bool setattr(NfsFh &fh, NfsAttr &attr, NfsError &status) =0;
     virtual bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status) = 0;
     virtual bool lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status) = 0;
+    virtual bool lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status) = 0;
     virtual bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status) = 0;
 
   protected:
