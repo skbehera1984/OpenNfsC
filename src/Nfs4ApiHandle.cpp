@@ -25,6 +25,30 @@
 
 using namespace OpenNfsC;
 
+//mask[0] = 0x00100012; mask[1] = 0x0030a03a;
+static uint32_t std_attr[2] = {
+  (1 << FATTR4_TYPE | 1 << FATTR4_SIZE | 1 << FATTR4_FILEID),
+  (1 << (FATTR4_MODE - 32) |
+   1 << (FATTR4_NUMLINKS - 32) |
+   1 << (FATTR4_OWNER - 32) |
+   1 << (FATTR4_OWNER_GROUP - 32) |
+   1 << (FATTR4_SPACE_USED - 32) |
+   1 << (FATTR4_TIME_ACCESS - 32) |
+   1 << (FATTR4_TIME_METADATA - 32) |
+   1 << (FATTR4_TIME_MODIFY - 32))
+};
+
+static uint32_t statfs_attr[2] = {
+  (1 << FATTR4_FSID |
+   1 << FATTR4_FILES_AVAIL |
+   1 << FATTR4_FILES_FREE |
+   1 << FATTR4_FILES_TOTAL |
+   1 << FATTR4_MAXNAME),
+  (1 << (FATTR4_SPACE_AVAIL - 32) |
+   1 << (FATTR4_SPACE_FREE - 32) |
+   1 << (FATTR4_SPACE_TOTAL - 32) |
+   1 << (FATTR4_SPACE_USED - 32))
+};
 
 Nfs4ApiHandle::Nfs4ApiHandle(NfsConnectionGroup *ptr) : NfsApiHandle(ptr)
 {
@@ -123,10 +147,8 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsError &status)
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   carg.argop = OP_GETFH;
@@ -234,10 +256,8 @@ bool Nfs4ApiHandle::readDirV4(NfsFh     &dirFh,
   memcpy(&(readdir->cookieverf), &(vref), NFS4_VERIFIER_SIZE);
   readdir->dircount = 8192;
   readdir->maxcount = 8192;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
   readdir->attr_request.bitmap4_len = 2;
-  readdir->attr_request.bitmap4_val = mask;
+  readdir->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
@@ -273,7 +293,7 @@ bool Nfs4ApiHandle::readDirV4(NfsFh     &dirFh,
     file.name = std::string(dirent->name.utf8string_val, dirent->name.utf8string_len);
     file.path = "";
 
-    NfsUtil::decode_fattr4(&dirent->attrs, mask[0], mask[1], file.attr);
+    NfsUtil::decode_fattr4(&dirent->attrs, std_attr[0], std_attr[1], file.attr);
     file.type = file.attr.fileType;
 
     files.push_back(file);
@@ -314,10 +334,8 @@ bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, Nf
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   carg.argop = OP_GETFH;
@@ -370,10 +388,8 @@ bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError 
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   carg.argop = OP_GETFH;
@@ -420,10 +436,8 @@ bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   carg.argop = OP_SAVEFH;
@@ -508,10 +522,8 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   carg.argop = OP_SAVEFH;
@@ -760,10 +772,8 @@ bool Nfs4ApiHandle::open(const std::string filePath,
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   carg.argop = OP_ACCESS;
@@ -1529,7 +1539,6 @@ bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &
 
   for (std::string &comp : exp_components)
   {
-    cout<< "comp =" << comp <<endl;
     nfs_argop4 carg;
     carg.argop = OP_LOOKUP;
     LOOKUP4args *largs = &carg.nfs_argop4_u.oplookup;
@@ -1540,10 +1549,8 @@ bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2];
-  mask[0] = 0x00100012; mask[1] = 0x0030a03a;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   carg.argop = OP_GETFH;
@@ -1632,10 +1639,8 @@ bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  // mask to get fsstat attr
-  uint32_t mask[2] = {0}; mask[0] = 0x20E00100; mask[1] = 0x00003C00;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = statfs_attr;
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
@@ -1656,7 +1661,7 @@ bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
 
   NfsAttr attr;
   GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
-  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, mask[0], mask[1], attr) < 0)
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, statfs_attr[0], statfs_attr[1], attr) < 0)
   {
     cout << "Failed to decode OP_GETATTR result" << endl;
     return false;
