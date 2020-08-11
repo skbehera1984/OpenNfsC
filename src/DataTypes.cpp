@@ -113,8 +113,6 @@ NfsAttr::NfsAttr()
   memset(&attr3, 0, sizeof(v3_attrs));
   attr3.lattr.obj_attr_present = false;
   attr3.lattr.dir_attr_present = false;
-  memset(&v3Attr, 0, sizeof(fattr3));
-  memset(&v3sAttr, 0, sizeof(sattr3));
 }
 
 void NfsAttr::fill_fsstat4(NfsFsStat &stat)

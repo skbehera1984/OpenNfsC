@@ -150,9 +150,8 @@ public:
   uint64_t    bytes_total;
   uint64_t    bytes_used;
 
-  v3_attrs    attr3;   // houses all types of nfs v3 attr structs
-  fattr3      v3Attr;  // for NFS v3 attr
-  sattr3      v3sAttr; // for NFS v3 setAttr
+  // houses all types of nfs v3 attr structs
+  v3_attrs    attr3;
 };
 
 struct NfsAccess

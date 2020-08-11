@@ -66,7 +66,8 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
 
   if (inAttr)
   {
-    memcpy(&(createArg.create3_how.createhow3_u.create3_obj_attributes), &(inAttr->v3sAttr), sizeof(sattr3));
+    memcpy(&(createArg.create3_how.createhow3_u.create3_obj_attributes),
+           &(inAttr->attr3.sattr), sizeof(sattr3));
   }
   else
   {
@@ -184,12 +185,12 @@ bool Nfs3ApiHandle::read(NfsFh       &fileFH,
   // return the post op file attrs
   if (res.READ3res_u.read3ok.read3_file_attributes.attributes_follow)
   {
-    postAttr.v3Attr = res.READ3res_u.read3ok.read3_file_attributes.post_op_attr_u.post_op_attr;
+    postAttr.attr3.gattr = res.READ3res_u.read3ok.read3_file_attributes.post_op_attr_u.post_op_attr;
   }
   else
   {
     syslog(LOG_DEBUG, "Nfs3ApiHandle::%s() failed no post op attrs returned\n", __func__);
-    memset(&postAttr.v3Attr, 0, sizeof(fattr3));
+    memset(&postAttr.attr3.gattr, 0, sizeof(fattr3));
   }
 
   return true;
@@ -440,7 +441,7 @@ bool Nfs3ApiHandle::readDirPlus(NfsFh       &dirFh,
     file.cookie = ptCurr->entryplus3_cookie;
     file.name = string( ptCurr->entryplus3_name );
     file.path = "";
-    file.attr.v3Attr = ptCurr->entryplus3_name_attributes.post_op_attr_u.post_op_attr;
+    file.attr.attr3.gattr = ptCurr->entryplus3_name_attributes.post_op_attr_u.post_op_attr;
     files.push_back(file);
     cookie = ptCurr -> entryplus3_cookie;
     ptCurr = ptCurr -> entryplus3_nextentry;
@@ -670,7 +671,7 @@ bool Nfs3ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 
   sattrArg.setattr3_object.fh3_data.fh3_data_len = fh.getLength();
   sattrArg.setattr3_object.fh3_data.fh3_data_val = (char*)fh.getData();
-  memcpy (&(sattrArg.setattr3_new_attributes), &attr.v3sAttr, sizeof(sattr3));
+  memcpy(&(sattrArg.setattr3_new_attributes), &attr.attr3.sattr, sizeof(sattr3));
   sattrArg.setattr3_guard.check = 0; // don't check for a ctime match
 
   NFSv3::SetAttrCall nfsSetattrCall(sattrArg);
@@ -717,7 +718,7 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   }
 
   // copy the object attributes out of the result struct
-  memcpy(&attr.v3Attr, &(res.GETATTR3res_u.getattr3ok.getattr3_obj_attributes), sizeof(fattr3));
+  memcpy(&attr.attr3.gattr, &(res.GETATTR3res_u.getattr3ok.getattr3_obj_attributes), sizeof(fattr3));
 
   return true;
 }
