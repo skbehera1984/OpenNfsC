@@ -139,7 +139,7 @@ class NfsConnectionGroup : public SmartRef
     bool access(const std::string &filePath, uint32_t accessRequested, NfsAccess &acc, NfsError &status);
     bool mkdir(const NfsFh &parentFH, const std::string dirName, uint32_t mode, NfsFh &dirFH, NfsError &status);
     bool mkdir(const std::string &path, uint32_t mode, NfsError &status, bool createPath = false);
-    bool rmdir(const std::string &path, NfsError &status);
+    bool rmdir(std::string &exp, const std::string &path, NfsError &status);
     bool rmdir(const NfsFh &parentFH, const string &name, NfsError &status);
     bool commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *writeverf, NfsError &status);
     bool lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status, bool reclaim = false);

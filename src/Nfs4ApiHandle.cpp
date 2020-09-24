@@ -1468,13 +1468,12 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &stat
 
 bool Nfs4ApiHandle::rmdir(const NfsFh &parentFH, const string &name, NfsError &status)
 {
-  NfsError err;
-  return remove(parentFH, name, err);
+  return remove(parentFH, name, status);
 }
 
-bool Nfs4ApiHandle::rmdir(const std::string &path, NfsError &status)
+bool Nfs4ApiHandle::rmdir(std::string &exp, const std::string &path, NfsError &status)
 {
-//  return remove(path, status); TODO sarat
+  return remove(exp, path, status);
 }
 
 /* To lock the entire file use offset = 0 and length = 0xFFFFFFFFFFFFFFFF

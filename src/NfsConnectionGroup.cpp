@@ -643,9 +643,9 @@ bool NfsConnectionGroup::mkdir(const std::string &path, uint32_t mode, NfsError 
   return m_NfsApiHandle->mkdir(path, mode, status, createPath);
 }
 
-bool NfsConnectionGroup::rmdir(const std::string &path, NfsError &status)
+bool NfsConnectionGroup::rmdir(std::string &exp, const std::string &path, NfsError &status)
 {
-  return m_NfsApiHandle->rmdir(path, status);
+  return m_NfsApiHandle->rmdir(exp, path, status);
 }
 
 bool NfsConnectionGroup::rmdir(const NfsFh &parentFH, const string &name, NfsError &status)

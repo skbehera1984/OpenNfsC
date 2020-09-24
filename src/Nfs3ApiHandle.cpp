@@ -705,7 +705,7 @@ bool Nfs3ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &stat
   return true;
 }
 
-bool Nfs3ApiHandle::rmdir(const std::string &path, NfsError &status)
+bool Nfs3ApiHandle::rmdir(std::string &exp, const std::string &path, NfsError &status)
 {
   return true;
 }
