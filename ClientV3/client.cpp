@@ -66,9 +66,7 @@ int main(int argc, char* argv[])
     }
   }
 
-  NfsError err;
   /* Test for readDir */
-  /*
   NfsFiles files;
   NfsError err;
 
@@ -86,14 +84,15 @@ int main(int argc, char* argv[])
     cout << file.name << ":"<< type <<endl;
   }
   cout << "No of files - " << files.size() <<endl;
-  */
 
   /* Test for RENAME using PATH */
+/*
   err.clear();
   if (svrPtr->rename("/ctafs1", "dir1", "dir2", err) != false)
   {
     cout << "NFSV3 RENAME successful" << endl;
   }
+*/
 
   return 0;
 }
