@@ -575,6 +575,32 @@ bool Nfs3ApiHandle::rename(const std::string &nfs_export,
 
 bool Nfs3ApiHandle::readDir(std::string &exp, const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
+  NfsFh rootFh;
+  NfsFh parentFH;
+
+  std::vector<std::string> path_components;
+  NfsUtil::splitNfsPath(dirPath, path_components);
+
+  std::string name = path_components.back();
+
+  if(!getRootFH(exp, rootFh, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getRootFH using export\n", __func__);
+    return false;
+  }
+
+  if(!getDirFh(rootFh, dirPath, parentFH, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh\n", __func__);
+    return false;
+  }
+
+  if(!readDir(parentFH, files, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for readDir using parentFH\n", __func__);
+    return false;
+  }
+
   return true;
 }
 
