@@ -829,6 +829,7 @@ bool Nfs3ApiHandle::rmdir(std::string &exp, const std::string &path, NfsError &s
   NfsUtil::splitNfsPath(path, path_components);
 
   std::string name = path_components.back();
+  path_components.pop_back();
 
   if(!getRootFH(exp, rootFh, status))
   {
@@ -836,11 +837,18 @@ bool Nfs3ApiHandle::rmdir(std::string &exp, const std::string &path, NfsError &s
     return false;
   }
 
-  if(!getDirFh(rootFh, path, parentFH, status))
+  if (path_components.size())
   {
-    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh\n", __func__);
-    return false;
+    std::string parentPath;
+    NfsUtil::buildNfsPath(parentPath, path_components);
+    if(!getDirFh(rootFh, parentPath, parentFH, status))
+    {
+      syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh\n", __func__);
+      return false;
+    }
   }
+  else
+    parentFH = rootFh;
 
   if (!rmdir(parentFH, name, status))
   {

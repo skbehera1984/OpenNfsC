@@ -156,6 +156,10 @@ int main(int argc, char* argv[])
     if(svrPtr->getFileHandle(rootFh, path, fileFH, attr, err))
     {
       cout << "getFileHandle success"<<endl;
+      cout <<"size=" <<attr.size<<endl;
+      cout <<"fmode="<<attr.fmode<<endl;
+      cout <<"owner="<<attr.owner<<endl;
+      cout <<"group="<<attr.owner<<endl;
     }
     if(svrPtr->getAttr(fileFH, attr, err))
     {
@@ -167,6 +171,20 @@ int main(int argc, char* argv[])
     cout <<"group="<<attr.owner<<endl;
     cout<<"\n##########################################\n"<<endl;
    }
+
+  /* Test for RMDIR using PATH */
+  {
+    cout <<"Test for RMDIR using Path\n"<<endl;
+    NfsFh parentFH, rootFh, dirFH;
+    std::string path ="dir2/new";
+    err.clear();
+
+    if(svrPtr->rmdir(exp_path, path, err))
+    {
+      cout <<"NFSV3 rmdir successful deleted a dir under path="<<path<<endl;
+    }
+    cout<<"\n##########################################\n"<<endl;
+  }
 
   return 0;
 }
