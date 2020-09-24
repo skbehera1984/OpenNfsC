@@ -38,6 +38,50 @@ bool Nfs3ApiHandle::connect(std::string &serverIP, NfsError &status)
 
 bool Nfs3ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
+  NfsFh currentFH = rootFH;
+
+  vector<string> segments;
+  NfsUtil::splitNfsPath(dirPath, segments);
+
+  vector<string>::iterator Iter = segments.begin();
+  for (string CurrSegment : segments)
+  {
+    LOOKUP3args lkpArg = {};
+    lkpArg.lookup3_what.dirop3_dir.fh3_data.fh3_data_len = currentFH.getLength();
+    lkpArg.lookup3_what.dirop3_dir.fh3_data.fh3_data_val = (char*)currentFH.getData();
+    lkpArg.lookup3_what.dirop3_name = (char*)CurrSegment.c_str();
+
+    NFSv3::LookUpCall nfsLookupCall(lkpArg);
+    enum clnt_stat tLookupRet = nfsLookupCall.call(m_pConn);
+    if (tLookupRet != RPC_SUCCESS)
+    {
+      //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+      return false;
+    }
+
+    LOOKUP3res &res = nfsLookupCall.getResult();
+    if (res.status != NFS3_OK)
+    {
+      //rtNfsErrorMsg = res.status;
+      if (res.status == NFS3ERR_NOENT)
+      {
+        syslog(LOG_DEBUG, "Nfs3ApiHandle::getDirFh(): nfs_v3_lookup didn't find the file %s %s\n", dirPath.c_str(), CurrSegment.c_str());
+      }
+      else
+      {
+        syslog(LOG_ERR, "Nfs3ApiHandle::getDirFh(): nfs_v3_lookup error: %d  <%s %s>\n", res.status, dirPath.c_str(), CurrSegment.c_str());
+      }
+      return false;
+    }
+
+    nfs_fh3 *fh3 = &(res.LOOKUP3res_u.lookup3ok.lookup3_object);
+    NfsFh fh(fh3->fh3_data.fh3_data_len, fh3->fh3_data.fh3_data_val);
+    currentFH = fh;
+  }
+
+  //currentFH has the file handle for the file we're looking for, save the value to return
+  dirFH = currentFH;
+
   return true;
 }
 
