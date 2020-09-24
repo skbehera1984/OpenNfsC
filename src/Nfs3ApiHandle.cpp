@@ -438,7 +438,6 @@ bool Nfs3ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
 {
   NfsFh rootFh;
   NfsFh parentFH;
-  NfsAttr attr;
 
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(path, path_components);
@@ -451,9 +450,9 @@ bool Nfs3ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
     return false;
   }
 
-  if(!getFileHandle(rootFh, path, parentFH, attr, status))
+  if (!getDirFh(rootFh, path, parentFH, status))
   {
-    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh\n", __func__);
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getDirFh using rootFh\n", __func__);
     return false;
   }
 
