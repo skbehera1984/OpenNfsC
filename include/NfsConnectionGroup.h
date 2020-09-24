@@ -149,6 +149,14 @@ class NfsConnectionGroup : public SmartRef
     bool lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status);
     bool lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status);
     bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status);
+    bool link(NfsFh           &tgtFh,
+              NfsFh           &parentFh,
+              const string    &linkName,
+              NfsError        &status);
+    bool symlink(const string &tgtPath,
+                 NfsFh        &parentFh,
+                 const string &linkName,
+                 NfsError     &status);
 
   public:
     char *getInitialClientVerifier() { return m_initialClientVerifier; }

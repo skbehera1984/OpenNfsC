@@ -1748,5 +1748,111 @@ bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
   return true;
 }
 
+// hard link
+bool Nfs4ApiHandle::link(NfsFh        &tgtFh,
+                         NfsFh        &parentFh,
+                         const string &linkName,
+                         NfsError     &status)
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = tgtFh.getLength();
+  pfhgargs->object.nfs_fh4_val = tgtFh.getData();
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_SAVEFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_PUTFH;
+  pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = parentFh.getLength();
+  pfhgargs->object.nfs_fh4_val = parentFh.getData();
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_LINK;
+  LINK4args *lnkargs = &carg.nfs_argop4_u.oplink;
+  lnkargs->newname.utf8string_len = linkName.length();
+  lnkargs->newname.utf8string_val = const_cast<char*>(linkName.c_str());
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_RESTOREFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  uint32_t mask[2] = {0}; mask[0] = 0x0010011a; mask[1] = 0x00b0a23a;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = mask;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    status.setError4(res.status, "nfs v4 hard link failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LINK failed\n", __func__);
+    return false;
+  }
+
+  return true;
+}
+
+// symlink
+bool Nfs4ApiHandle::symlink(const string &tgtPath,
+                            NfsFh        &parentFh,
+                            const string &linkName,
+                            NfsError     &status)
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = parentFh.getLength();
+  pfhgargs->object.nfs_fh4_val = parentFh.getData();
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_CREATE;
+  CREATE4args *crargs = &carg.nfs_argop4_u.opcreate;
+  crargs->objtype.type = NF4LNK;
+  crargs->objtype.createtype4_u.linkdata.utf8string_len = tgtPath.length();
+  crargs->objtype.createtype4_u.linkdata.utf8string_val = const_cast<char*>(tgtPath.c_str());
+  crargs->objname.utf8string_val = const_cast<char*>(linkName.c_str());
+  crargs->objname.utf8string_len = linkName.length();
+  uint32_t mask[2] = {0}; mask[1] = 0x00000002;
+  crargs->createattrs.attrmask.bitmap4_len = 2;
+  crargs->createattrs.attrmask.bitmap4_val = mask;
+  crargs->createattrs.attr_vals.attrlist4_len = 4;
+  uint32_t mode = 0511;
+  crargs->createattrs.attr_vals.attrlist4_val = (char*)&mode;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  mask[0] = 0x0010011a; mask[1] = 0x00b0a23a;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = mask;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    status.setError4(res.status, "nfs v4 link failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed\n", __func__);
+    return false;
+  }
+
+  return true;
+}
+
 /* send RENEW client Id every 12 secs to keep the connection alive
  */

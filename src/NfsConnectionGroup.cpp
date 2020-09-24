@@ -693,4 +693,14 @@ bool NfsConnectionGroup::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec
   return m_NfsApiHandle->fsstat(rootFh, stat, invarSec, status);
 }
 
+bool NfsConnectionGroup::link(NfsFh &tgtFh, NfsFh &parentFh, const string &linkName, NfsError &status)
+{
+  return m_NfsApiHandle->link(tgtFh, parentFh, linkName, status);
+}
+
+bool NfsConnectionGroup::symlink(const string &tgtPath, NfsFh &parentFh, const string &linkName, NfsError &status)
+{
+  return m_NfsApiHandle->symlink(tgtPath, parentFh, linkName, status);
+}
+
 } //end of namespace

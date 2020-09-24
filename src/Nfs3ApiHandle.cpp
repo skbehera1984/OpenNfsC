@@ -908,3 +908,73 @@ bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
 
   return true;
 }
+
+// hard link
+bool Nfs3ApiHandle::link(NfsFh        &tgtFh,
+                         NfsFh        &parentFh,
+                         const string &linkName,
+                         NfsError     &status)
+{
+  LINK3args lnkArg = {};
+
+  lnkArg.link3_file.fh3_data.fh3_data_len = tgtFh.getLength();
+  lnkArg.link3_file.fh3_data.fh3_data_val = (char*)tgtFh.getData();
+  lnkArg.link3_link.dirop3_dir.fh3_data.fh3_data_len = parentFh.getLength();
+  lnkArg.link3_link.dirop3_dir.fh3_data.fh3_data_val = (char*)parentFh.getData();
+  string Name = linkName;
+  lnkArg.link3_link.dirop3_name = (char *)Name.c_str();
+
+  NFSv3::LinkCall nfsLinkCall(lnkArg);
+  enum clnt_stat ret = nfsLinkCall.call(m_pConn);
+
+  if (ret != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  LINK3res &res = nfsLinkCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    // If we see an attempt to create a link that crosses file systems, report it - NFS3ERR_XDEV
+    syslog(LOG_ERR, "Nfs3ApiHandle::link(): nfs_v3_link error: %d  <%s>\n", res.status, linkName.c_str());
+    return false;
+  }
+  return true;
+}
+
+// symlink
+bool Nfs3ApiHandle::symlink(const string &tgtPath,
+                            NfsFh        &parentFh,
+                            const string &linkName,
+                            NfsError     &status)
+{
+  SYMLINK3args smlnk = {};
+  sattr3 dummyAttr;
+  dummyAttr.sattr3_mode.set_it             = true;
+  dummyAttr.sattr3_mode.set_mode3_u.mode   = 0511;
+
+  smlnk.symlink3_where.dirop3_dir.fh3_data.fh3_data_len = parentFh.getLength();
+  smlnk.symlink3_where.dirop3_dir.fh3_data.fh3_data_val = (char*)parentFh.getData();
+  string lnkNmae = linkName;
+  string target  = tgtPath;
+  smlnk.symlink3_where.dirop3_name = (char*)lnkNmae.c_str(); //TODO sarat - is this link name or target??
+  smlnk.symlink3_symlink.symlink3_attributes = dummyAttr;
+  smlnk.symlink3_symlink.symlink3_data = (char*)target.c_str(); // same is this target or link name
+
+  NFSv3::SymLinkCall nfsSymLinkCall(smlnk);
+  enum clnt_stat ret = nfsSymLinkCall.call(m_pConn);
+  if (ret != RPC_SUCCESS)
+  {
+    return false;
+  }
+
+  SYMLINK3res &res = nfsSymLinkCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    // If we see an attempt to create a link that crosses file systems, report it - NFS3ERR_XDEV
+    syslog(LOG_ERR, "Nfs3ApiHandle::symlink(): nfs_v3_link error: %d  <%s>\n", res.status, linkName.c_str());
+    return false;
+  }
+
+  return true;
+}
