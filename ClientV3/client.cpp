@@ -46,6 +46,10 @@ int main(int argc, char* argv[])
 
   NfsConnectionGroupPtr svrPtr = NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP);
 
+  NfsError err;
+
+  cout<<"\n##########################################\n"<<endl;
+  cout <<"Test for GetExportList\n"<<endl;
   Mount::ExportCall exportCall;
   enum clnt_stat clientState = exportCall.call(svrPtr);
 
@@ -65,10 +69,34 @@ int main(int argc, char* argv[])
       exportList = exportList->ex_next;
     }
   }
+  cout<<"\n##########################################\n"<<endl;
 
-  NfsError err;
+  /*Test for FSSTAT using ROOTFH */
+  {
+    cout <<"Test for FSSTAT using ROOTFH\n"<<endl;
+    NfsFsStat stat;
+    uint32 inter;
+    NfsFh rootFh;
+    if(svrPtr->getRootFH(exp_path, rootFh, err))
+    {
+      cout <<"Got the RootFH for exp_path=" <<exp_path<<endl;
+    }
+    inter = 5;
+    if(svrPtr->fsstat(rootFh, stat, inter, err))
+    {
+      cout << "NFSV4 FSSTAT successful" << endl;
+      cout<<"Total Bytes          =" <<stat.stat_u.stat3.fsstat3_tbytes<<endl;
+      cout<<"Total Free Bytes     =" <<stat.stat_u.stat3.fsstat3_fbytes<<endl;
+      cout<<"Total Available Bytes="<<stat.stat_u.stat3.fsstat3_abytes<<endl;
+      cout<<"Total Files          ="<< stat.stat_u.stat3.fsstat3_tfiles<<endl;
+      cout<<"Total Free Files     ="<<stat.stat_u.stat3.fsstat3_ffiles<<endl;
+      cout<<"Total Available Files="<<stat.stat_u.stat3.fsstat3_afiles<<endl;
+    }
+    cout<<"\n##########################################\n"<<endl;
+  }
 
   /* Test for readDir */
+  cout<<"Test for READDIR\n"<<endl;
   NfsFiles files;
   if (svrPtr->readDir(exp_path, res_path, files, err) != false)
   {
@@ -84,20 +112,19 @@ int main(int argc, char* argv[])
     cout << file.name << ":"<< type <<endl;
   }
   cout << "No of files - " << files.size() <<endl;
+  cout<<"\n##########################################\n"<<endl;
 
   /* Test for RENAME using PATH */
-  cout <<"Test RENAME using PATH\n"<<endl;
-/*
+  cout <<"Test for RENAME using PATH\n"<<endl;
   err.clear();
   if (svrPtr->rename("/ctafs1", "dir1", "dir2", err) != false)
   {
     cout << "NFSV3 RENAME successful" << endl;
   }
-*/
+  cout<<"\n##########################################\n"<<endl;
 
   /* Test for MKDIR using ParentFH */
-
-  cout <<"Test for MKDIR using ParentFH"<<endl;
+  cout <<"Test for MKDIR using ParentFH\n"<<endl;
   NfsFh parentFH, rootFh, dirFH;
   std::string path ="dir2/rabi";
   err.clear();
@@ -113,6 +140,7 @@ int main(int argc, char* argv[])
   {
     cout <<"NFSV3 mkdir successful Created a dir newdir under path="<<path<<endl;
   }
+  cout<<"\n##########################################\n"<<endl;
 
   return 0;
 }
