@@ -567,15 +567,17 @@ bool Nfs3ApiHandle::rename(const std::string &nfs_export,
   NfsFh fromDirFH;
   NfsFh toDirFH;
 
-  std::vector<std::string> path_fromdir;
-  NfsUtil::splitNfsPath(fromPath, path_fromdir);
+  std::vector<std::string> fromPathSegments;
+  NfsUtil::splitNfsPath(fromPath, fromPathSegments);
 
-  std::string fromName = path_fromdir.back();
+  std::string fromName = fromPathSegments.back();
+  fromPathSegments.pop_back();
 
-  std::vector<std::string> path_todir;
-  NfsUtil::splitNfsPath(toPath, path_todir);
+  std::vector<std::string> toPathSegments;
+  NfsUtil::splitNfsPath(toPath, toPathSegments);
 
-  std::string toName = path_todir.back();
+  std::string toName = toPathSegments.back();
+  toPathSegments.pop_back();
 
   if(!getRootFH(nfs_export, rootFh, status))
   {
@@ -583,17 +585,31 @@ bool Nfs3ApiHandle::rename(const std::string &nfs_export,
     return false;
   }
 
-  if(!getDirFh(rootFh, fromPath, fromDirFH, status))
+  if (fromPathSegments.size())
   {
-    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh for fromDirFH\n", __func__);
-    return false;
+    std::string fromDirPath;
+    NfsUtil::buildNfsPath(fromDirPath, fromPathSegments);
+    if(!getDirFh(rootFh, fromDirPath, fromDirFH, status))
+    {
+      syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh for fromDirFH\n", __func__);
+      return false;
+    }
   }
+  else
+    fromDirFH = rootFh;
 
-  if(!getDirFh(rootFh, toPath, toDirFH, status))
+  if (toPathSegments.size())
   {
-    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh for toDirFH\n", __func__);
-    return false;
+    std::string toDirPath;
+    NfsUtil::buildNfsPath(toDirPath, toPathSegments);
+    if(!getDirFh(rootFh, toDirPath, toDirFH, status))
+    {
+      syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh for toDirFH\n", __func__);
+      return false;
+    }
   }
+  else
+    toDirFH = rootFh;
 
   if(!rename(fromDirFH, fromName, toDirFH, toName, status))
   {
@@ -606,8 +622,14 @@ bool Nfs3ApiHandle::rename(const std::string &nfs_export,
 
 bool Nfs3ApiHandle::readDir(std::string &exp, const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
+  std::string fullpath;
   NfsFh rootFh;
   NfsFh parentFH;
+
+  if ( dirPath.empty() )
+    fullpath = exp;
+  else
+    fullpath = exp + "/" + dirPath;
 
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(dirPath, path_components);
