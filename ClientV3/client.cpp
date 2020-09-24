@@ -156,19 +156,12 @@ int main(int argc, char* argv[])
     if(svrPtr->getFileHandle(rootFh, path, fileFH, attr, err))
     {
       cout << "getFileHandle success"<<endl;
-      cout <<"size=" <<attr.size<<endl;
-      cout <<"fmode="<<attr.fmode<<endl;
-      cout <<"owner="<<attr.owner<<endl;
-      cout <<"group="<<attr.owner<<endl;
     }
     if(svrPtr->getAttr(fileFH, attr, err))
     {
       cout << "getAttr success"<<endl;
+      cout <<"size=" <<attr.attr3.gattr.fattr3_size<<endl;
     }
-    cout <<"size=" <<attr.size<<endl;
-    cout <<"fmode="<<attr.fmode<<endl;
-    cout <<"owner="<<attr.owner<<endl;
-    cout <<"group="<<attr.owner<<endl;
     cout<<"\n##########################################\n"<<endl;
    }
 
