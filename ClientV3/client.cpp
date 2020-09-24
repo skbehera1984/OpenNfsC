@@ -186,5 +186,30 @@ int main(int argc, char* argv[])
     cout<<"\n##########################################\n"<<endl;
   }
 
+  /* Test for CREATE using DIRFH */
+  {
+    cout <<"Test for CREATE using DirFH\n"<<endl;
+
+    NfsFh parentFH, rootFh, fileFH;
+    NfsAttr attr;
+    std::string path ="dir2/rabi";
+    std::string filename = "newfile";
+    err.clear();
+
+    if(svrPtr->getRootFH(exp_path, rootFh, err))
+    {
+      cout <<"Got the RootFH for exp_path=" <<exp_path<<endl;
+    }
+    if(svrPtr->getDirFh(rootFh, path, parentFH, err))
+    {
+      cout <<"Got the DirFh for path="<<path<<endl;
+    }
+    if(svrPtr->create(parentFH, filename, NULL, fileFH, attr, err))
+    {
+      cout <<"NFSV3 CREATE successful Created a file newfile under path="<<path<<endl;
+    }
+    cout<<"\n##########################################\n"<<endl;
+  }
+
   return 0;
 }
