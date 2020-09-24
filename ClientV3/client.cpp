@@ -142,5 +142,31 @@ int main(int argc, char* argv[])
   }
   cout<<"\n##########################################\n"<<endl;
 
+  /* Test for GETATTR using FILEFH */
+  {
+    cout <<"NFSV3 mkdir successful Created a dir newdir under path="<<path<<endl;
+    cout <<"Test for GETATTR using FILEFH\n"<<endl;
+    std::string path = "dir2/file1";
+    NfsFh fileFH, rootFh;
+    NfsAttr attr;
+    if(svrPtr->getRootFH(exp_path, rootFh, err))
+    {
+      cout <<"Got the RootFH for exp_path=" <<exp_path<<endl;
+    }
+    if(svrPtr->getFileHandle(rootFh, path, fileFH, attr, err))
+    {
+      cout << "getFileHandle success"<<endl;
+    }
+    if(svrPtr->getAttr(fileFH, attr, err))
+    {
+      cout << "getAttr success"<<endl;
+    }
+    cout <<"size=" <<attr.size<<endl;
+    cout <<"fmode="<<attr.fmode<<endl;
+    cout <<"owner="<<attr.owner<<endl;
+    cout <<"group="<<attr.owner<<endl;
+    cout<<"\n##########################################\n"<<endl;
+   }
+
   return 0;
 }

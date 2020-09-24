@@ -243,7 +243,8 @@ bool Nfs3ApiHandle::getRootFH(const string &nfs_export, NfsFh &rootFh, NfsError 
 
 bool Nfs3ApiHandle::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &fileFh, NfsAttr &attr, NfsError &status)
 {
-  NfsFh currentFH = rootFH;
+  NfsFh currentFH;
+  currentFH = rootFH;
 
   vector<string> segments;
   NfsUtil::splitNfsPath(path, segments);
