@@ -508,6 +508,11 @@ bool NfsConnectionGroup::connect(std::string serverIP, NfsError &status)
   return m_NfsApiHandle->connect(serverIP, status);
 }
 
+bool NfsConnectionGroup::getExports(list<string>& Exports)
+{
+  return m_NfsApiHandle->getExports(Exports);
+}
+
 bool NfsConnectionGroup::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsError &status)
 {
   return m_NfsApiHandle->getRootFH(nfs_export, rootFh, status);

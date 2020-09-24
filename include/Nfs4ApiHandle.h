@@ -31,6 +31,7 @@ class Nfs4ApiHandle : public NfsApiHandle
 
   public:
     bool connect(std::string &serverIP, NfsError &status);
+    bool getExports(list<string>& Exports);
     bool getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsError &status);
     bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status);
     bool getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status);

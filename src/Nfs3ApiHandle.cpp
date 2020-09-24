@@ -36,6 +36,32 @@ bool Nfs3ApiHandle::connect(std::string &serverIP, NfsError &status)
   return true;
 }
 
+bool Nfs3ApiHandle::getExports(list<string>& Exports)
+{
+  bool sts = false;
+
+  Exports.clear();
+
+  Mount::ExportCall tExportCall;
+  enum clnt_stat tClientState = tExportCall.call(m_pConn);
+  if ( tClientState == ::RPC_SUCCESS )
+  {
+    exports ExportList = tExportCall.getResult();
+    while (ExportList != NULL)
+    {
+      string exPath(ExportList->ex_dir);
+      Exports.push_back(exPath);
+      ExportList = ExportList->ex_next;
+    }
+    sts = true;
+  }
+  else
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() - Failed to get exports from server '%s'\n", __func__, m_pConn->getServerIpStr());
+  }
+  return sts;
+}
+
 bool Nfs3ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
   NfsFh currentFH = rootFH;

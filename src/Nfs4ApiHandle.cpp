@@ -122,6 +122,11 @@ bool Nfs4ApiHandle::connect(std::string &serverIP, NfsError &status)
   return true;
 }
 
+bool Nfs4ApiHandle::getExports(list<string>& Exports)
+{
+  return true;
+}
+
 bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsError &status)
 {
   std::vector<std::string> exp_components;
