@@ -181,6 +181,7 @@ class NfsFh
   public:
     NfsFh();
     NfsFh(uint32_t len, const char *val);
+    NfsFh(const NfsFh &fromFH);
     ~NfsFh() { clear(); }
     const NfsFh &operator=(const NfsFh &fromFH);
     void clear();

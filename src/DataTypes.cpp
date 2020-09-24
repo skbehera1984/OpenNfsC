@@ -45,6 +45,25 @@ NfsFh::NfsFh(uint32_t len, const char *val)
   memset(LSID.other, 0, 12);
 }
 
+NfsFh::NfsFh(const NfsFh &fromFH)
+{
+  // copy fromFH to this
+  fhLen = fromFH.fhLen;
+  if (fromFH.fhVal != NULL)
+  {
+    fhVal = (char *)malloc(fhLen);
+    if (fhVal == NULL)
+      throw std::string("NfsFh::assign Failed to allocate buffer");
+
+    memcpy(fhVal, fromFH.fhVal , fhLen);
+  }
+
+  OSID.seqid = fromFH.OSID.seqid;
+  memcpy(OSID.other, fromFH.OSID.other, 12);
+  LSID.seqid = fromFH.LSID.seqid;
+  memcpy(LSID.other, fromFH.LSID.other, 12);
+}
+
 const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
 {
   // get rid of any old value we have before we copy
