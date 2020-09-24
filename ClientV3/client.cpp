@@ -20,50 +20,6 @@
 using namespace std;
 using namespace OpenNfsC;
 
-void fdTest(const std::string& server, const std::string& resource, int count)
-{
-  //struct in_addr ip = {0};
- // inet_aton(server.c_str(), &ip);
-
-  NfsConnectionGroupPtr conn;
-
-  {
-    std::vector<NfsConnectionGroupPtr> p;
-    p.push_back(NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP));
-    p.push_back(NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_UDP));
-    p.push_back(NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP));
-    p.push_back(NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP));
-
-    for ( std::vector<NfsConnectionGroupPtr>::iterator it = p.begin(); it != p.end(); it++ )
-    {
-      *it = NULL;
-    }
-  }
-
-  cout << conn.ptr() << endl;
-  return;
-  for ( int i = 0; i < count; i++ )
-  {
-    cout << "PID: " << getpid() << "; Count: " << (i+1) << "/" << count << endl;
-    try
-    {
-      conn = NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP);
-      conn = NULL;
-    }
-    catch (const std::string& err)
-    {
-      cout << err << endl;
-    }
-    catch (...)
-    {
-      cout << "Unhandled exception" << endl;
-    }
-  }
-  cout << "Press ENTER to exit" << endl;
-  getchar();
-}
-
-
 int main(int argc, char* argv[])
 {
   std::string server, resource;
@@ -84,20 +40,16 @@ int main(int argc, char* argv[])
     cerr << "Usage: " << argv[0] << " <serverOrIP> <resource> [COUNT]" << endl;
     return -1;
   }
-  ConnectionMgr::startMgr();
-  fdTest(server, resource, count);
-  ConnectionMgr::stopMgr();
-  return 0;
 
   const char *serverIp = server.c_str();
   char *path = const_cast<char*>(resource.c_str());
   struct in_addr ip = {0};
   inet_aton(server.c_str(), &ip);
 
-    NfsConnectionGroupPtr svrPtr = NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP);
+  NfsConnectionGroupPtr svrPtr = NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP);
 
     //std::string path = "/fen_fs1";
-    
+
     Mount::ExportCall exportCall;
     enum clnt_stat clientState = exportCall.call(svrPtr);
 
