@@ -85,7 +85,7 @@ class NfsApiHandle : public SmartRef
                         const std::string  &fromPath,
                         const std::string  &toPath,
                         NfsError           &status) = 0;
-    virtual bool readDir(const std::string &dirPath, NfsFiles &files, NfsError &status) = 0;
+    virtual bool readDir(std::string &exp, const std::string &dirPath, NfsFiles &files, NfsError &status) = 0;
     virtual bool readDir(NfsFh &dirFh, NfsFiles &files, NfsError &status) = 0;
     virtual bool truncate(NfsFh &fh, uint64_t size, NfsError &status) = 0;
     virtual bool truncate(const std::string &path, uint64_t size, NfsError &status) = 0;

@@ -132,7 +132,7 @@ class NfsConnectionGroup : public SmartRef
     bool remove(const NfsFh &parentFH, const string &name, NfsError &status);
     bool rename(NfsFh &fromDirFh, const std::string &fromName, NfsFh &toDirFh, const std::string toName, NfsError &status);
     bool rename(const std::string &nfs_export, const std::string &fromPath, const std::string &toPath, NfsError &status);
-    bool readDir(const std::string &dirPath, NfsFiles &files, NfsError &status);
+    bool readDir(std::string &exp, const std::string &dirPath, NfsFiles &files, NfsError &status);
     bool readDir(NfsFh &dirFh, NfsFiles &files, NfsError &status);
     bool truncate(NfsFh &fh, uint64_t size, NfsError &status);
     bool truncate(const std::string &path, uint64_t size, NfsError &status);

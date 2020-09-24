@@ -573,7 +573,7 @@ bool Nfs3ApiHandle::rename(const std::string &nfs_export,
   return true;
 }
 
-bool Nfs3ApiHandle::readDir(const std::string &dirPath, NfsFiles &files, NfsError &status)
+bool Nfs3ApiHandle::readDir(std::string &exp, const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
   return true;
 }

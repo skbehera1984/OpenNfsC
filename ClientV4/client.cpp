@@ -25,23 +25,25 @@ using namespace OpenNfsC;
 
 int main(int argc, char* argv[])
 {
-  std::string server, resource;
+  std::string server, exp_path, res_path;
   int count = 2;
 
   if ( argc >= 2 )
     server = argv[1];
   if ( argc >=3 )
-    resource = argv[2];
+    exp_path = argv[2];
   if ( argc >=4 )
+    res_path = argv[3];
+  if ( argc >=5 )
   {
     // can use std::stoi
-    try { count = atoi(argv[3]); } catch (...) {}
+    try { count = atoi(argv[4]); } catch (...) {}
     if ( count < 1 ) count = 1;
   }
 
-  if ( server.empty() || resource.empty() )
+  if ( server.empty() || exp_path.empty() )
   {
-    cerr << "Usage: " << argv[0] << " <serverOrIP> <resource> [COUNT]" << endl;
+    cerr << "Usage: " << argv[0] << " <serverOrIP> <export_path> <resource_path> [COUNT]" << endl;
     return -1;
   }
 
@@ -55,9 +57,8 @@ int main(int argc, char* argv[])
     cout << "NFSV4 connect successful" << endl;
   }
 
-  std::string path = resource;
   NfsFiles files;
-  if (svr4Ptr->readDir(path, files, status) != false)
+  if (svr4Ptr->readDir(exp_path, res_path, files, status) != false)
   {
     cout << "NFSV4 READDIR successful" << endl;
   }

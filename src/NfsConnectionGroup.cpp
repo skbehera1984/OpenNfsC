@@ -608,9 +608,9 @@ bool NfsConnectionGroup::rename(const std::string &nfs_export,
   return m_NfsApiHandle->rename(nfs_export, fromPath, toPath, status);
 }
 
-bool NfsConnectionGroup::readDir(const std::string &dirPath, NfsFiles &files, NfsError &status)
+bool NfsConnectionGroup::readDir(std::string &exp, const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
-  return m_NfsApiHandle->readDir(dirPath, files, status);
+  return m_NfsApiHandle->readDir(exp, dirPath, files, status);
 }
 
 bool NfsConnectionGroup::readDir(NfsFh &dirFh, NfsFiles &files, NfsError &status)

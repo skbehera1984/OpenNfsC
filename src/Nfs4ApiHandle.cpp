@@ -176,10 +176,17 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsE
   return true;
 }
 
-bool Nfs4ApiHandle::readDir(const std::string &dirPath, NfsFiles &files, NfsError &status)
+bool Nfs4ApiHandle::readDir(std::string &expPath, const std::string &dirPath, NfsFiles &files, NfsError &status)
 {
+  std::string fullpath;
   NfsFh dirFh;
-  if (!getDirFh(dirPath, dirFh, status))
+
+  if ( dirPath.empty() )
+    fullpath = expPath;
+  else
+    fullpath = expPath + "/" + dirPath;
+
+  if (!getDirFh(fullpath, dirFh, status))
   {
     return false;
   }
