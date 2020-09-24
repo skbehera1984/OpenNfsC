@@ -123,6 +123,7 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
   enum clnt_stat createRet = nfsCreateCall.call(m_pConn);
   if (createRet != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "create(): nfs v3 rpc failed for create");
     return false;
   }
 
@@ -183,7 +184,7 @@ bool Nfs3ApiHandle::getRootFH(const string &nfs_export, NfsFh &rootFh, NfsError 
   retval = mountMntCall.call(m_pConn);
   if ( retval != RPC_SUCCESS )
   {
-    //rtMountError = MNT3ERR_SERVERFAULT;
+    status.setError3(NFS3ERR_SERVERFAULT, "getRootFH(): nfs v3 rpc failed for mount");
     return false;
   }
 
@@ -232,7 +233,7 @@ bool Nfs3ApiHandle::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &
     enum clnt_stat tLookupRet = nfsLookupCall.call(m_pConn);
     if (tLookupRet != RPC_SUCCESS)
     {
-      //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+      status.setError3(NFS3ERR_SERVERFAULT, "getFileHandle(): nfs v3 rpc failed for lookup");
       return false;
     }
 
@@ -268,7 +269,7 @@ bool Nfs3ApiHandle::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &
   enum clnt_stat GetAttrRet = nfsGetattrCall.call(m_pConn);
   if (GetAttrRet != RPC_SUCCESS)
   {
-    //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+    status.setError3(NFS3ERR_SERVERFAULT, "getFileHandle(): nfs v3 rpc failed for getattr");
     return false;
   }
 
@@ -315,6 +316,7 @@ bool Nfs3ApiHandle::read(NfsFh       &fileFH,
   enum clnt_stat readRet = nfsReadCall.call(m_pConn);
   if (readRet != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "read(): nfs v3 rpc failed for read");
     return false;
   }
 
@@ -369,7 +371,7 @@ bool Nfs3ApiHandle::write(NfsFh       &fileFH,
   enum clnt_stat ret = nfsWriteCall.call(m_pConn);
   if ( ret != RPC_SUCCESS )
   {
-    //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+    status.setError3(NFS3ERR_SERVERFAULT, "write(): nfs v3 rpc failed for write");
     return false;
   }
 
@@ -408,6 +410,7 @@ bool Nfs3ApiHandle::write_unstable(NfsFh       &fileFH,
   enum clnt_stat writeRet = nfsWriteCall.call(m_pConn);
   if (writeRet != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "write_unstable(): nfs v3 rpc failed for write");
     return false;
   }
 
@@ -477,12 +480,13 @@ bool Nfs3ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &
   enum clnt_stat ret = nfsRemoveCall.call(m_pConn);
   if ( ret != RPC_SUCCESS )
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "remove(): nfs v3 rpc failed for remove");
     return false;
   }
 
   REMOVE3res &res = nfsRemoveCall.getResult();
 
-  if ( res.status != NFS3_OK)
+  if (res.status != NFS3_OK)
   {
     status.setError3(res.status, string("NFSV3 remove Failed"));
     syslog(LOG_ERR, "Nfs3ApiHandle::remove(): nfs_v3_remove error: %d  <%s>\n", res.status, name.c_str());
@@ -513,6 +517,7 @@ bool Nfs3ApiHandle::rename(NfsFh &fromDirFh,
   enum clnt_stat ret = nfsRenameCall.call(m_pConn);
   if ( ret != RPC_SUCCESS )
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "rename(): nfs v3 rpc failed for rename");
     return false;
   }
 
@@ -646,7 +651,7 @@ bool Nfs3ApiHandle::readDirPlus(NfsFh       &dirFh,
   enum clnt_stat readDirPlusRet = nfsReaddirPlusCall.call(m_pConn);
   if (readDirPlusRet != RPC_SUCCESS)
   {
-    //rtNfsError = NFS3ERR_SERVERFAULT;
+    status.setError3(NFS3ERR_SERVERFAULT, "readDirPlus(): nfs v3 rpc failed for readDirPlus");
     return false;
   }
 
@@ -727,6 +732,7 @@ bool Nfs3ApiHandle::mkdir(const NfsFh       &parentFH,
   enum clnt_stat mkdirRet = nfsMkdirCall.call(m_pConn);
   if ( mkdirRet != RPC_SUCCESS )
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "mkdir(): nfs v3 rpc failed for mkdir");
     return false;
   }
 
@@ -747,11 +753,12 @@ bool Nfs3ApiHandle::mkdir(const NfsFh       &parentFH,
   enum clnt_stat lookupRet = nfsLookupCall.call(m_pConn);
   if ( lookupRet != RPC_SUCCESS )
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "mkdir(): nfs v3 rpc failed for lookup");
     return false;
   }
 
   LOOKUP3res &lookupRes = nfsLookupCall.getResult();
-  if ( lookupRes.status != NFS3_OK)
+  if (lookupRes.status != NFS3_OK)
   {
     syslog(LOG_ERR, "Nfs3ApiHandle::mkdir(): nfs_v3_lookup error: %d  <%s>\n", lookupRes.status, dirName.c_str());
     return false;
@@ -812,6 +819,7 @@ bool Nfs3ApiHandle::rmdir(const NfsFh &parentFH, const string &name, NfsError &s
   enum clnt_stat ret = nfsRmdirCall.call(m_pConn);
   if ( ret != RPC_SUCCESS )
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "rmdir(): nfs v3 rpc failed for rmdir");
     return false;
   }
 
@@ -839,7 +847,7 @@ bool Nfs3ApiHandle::commit(NfsFh &fh, uint64_t offset, uint32_t bytes, char *wri
   enum clnt_stat commitRet = nfsCommitCall.call(m_pConn);
   if (commitRet != RPC_SUCCESS)
   {
-    //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+    status.setError3(NFS3ERR_SERVERFAULT, "commit(): nfs v3 rpc failed for commit");
     return false;
   }
 
@@ -883,6 +891,7 @@ bool Nfs3ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
   enum clnt_stat lockRet = nlmLockCall.call(m_pConn);
   if (lockRet != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "lock(): nlm v4 rpc failed for nlm lock");
     return false;
   }
 
@@ -919,6 +928,7 @@ bool Nfs3ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   enum clnt_stat tUnlockRet = nlmUnlockCall.call(m_pConn);
   if (tUnlockRet != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "unlock(): nlm v4 rpc failed for nlm unlock");
     return false;
   }
 
@@ -946,12 +956,11 @@ bool Nfs3ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 
   if (sattrRet != RPC_SUCCESS)
   {
-    //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+    status.setError3(NFS3ERR_SERVERFAULT, "setattr(): nfs v3 rpc failed for setattr");
     return false;
   }
 
   SETATTR3res &res = nfsSetattrCall.getResult();
-  //rtNfsErrorMsg = res.status;
   if (res.status != NFS3_OK)
   {
     status.setError3(res.status, "nfs v3 setAttr failed");
@@ -973,6 +982,7 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   enum clnt_stat getAttrRet = nfsGetattrCall.call(m_pConn);
   if (getAttrRet != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "getAttr(): nfs v3 rpc failedfor getAttr");
     return false;
   }
 
@@ -1008,6 +1018,7 @@ bool Nfs3ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_
   enum clnt_stat lkpRet = nfsLookupCall.call(m_pConn);
   if (lkpRet != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "lookup(): nfs v3 rpc failed for lookup");
     return false;
   }
 
@@ -1050,6 +1061,7 @@ bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
   enum clnt_stat FsStatRet = nfsFsstatCall.call(m_pConn);
   if (FsStatRet != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "fsstat(): nfs v3 rpc failed for fsstat");
     return false;
   }
 
@@ -1088,6 +1100,7 @@ bool Nfs3ApiHandle::link(NfsFh        &tgtFh,
 
   if (ret != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "link(): nfs v3 rpc failed for link");
     return false;
   }
 
@@ -1124,6 +1137,7 @@ bool Nfs3ApiHandle::symlink(const string &tgtPath,
   enum clnt_stat ret = nfsSymLinkCall.call(m_pConn);
   if (ret != RPC_SUCCESS)
   {
+    status.setError3(NFS3ERR_SERVERFAULT, "symlink(): nfs v3 rpc failed for symlink");
     return false;
   }
 
