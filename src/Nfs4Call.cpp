@@ -608,7 +608,8 @@ COMPOUNDCall::decode_OP_LOOKUPP(RpcPacketPtr packet, LOOKUPP4res *res)
 int
 COMPOUNDCall::encode_OP_NVERIFY(RpcPacketPtr packet, const NVERIFY4args *arg)
 {
-  return -1;
+  RETURN_ON_ERROR(NfsUtil::encode_fattr4(packet, &arg->obj_attributes));
+  return 0;
 }
 
 int
