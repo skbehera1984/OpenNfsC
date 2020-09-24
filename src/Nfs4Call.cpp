@@ -648,16 +648,18 @@ COMPOUNDCall::encode_OP_OPEN(RpcPacketPtr packet, const OPEN4args *arg)
         case UNCHECKED4:
         case GUARDED4:
         {
-#if 0
+          uint32_t length = arg->openhow.openflag4_u.how.createhow4_u.createattrs.attrmask.bitmap4_len;
+          RETURN_ON_ERROR(packet->xdrEncodeUint32(length));
           uint32_t *mask = arg->openhow.openflag4_u.how.createhow4_u.createattrs.attrmask.bitmap4_val;
           for (unsigned int i = 0; i < arg->openhow.openflag4_u.how.createhow4_u.createattrs.attrmask.bitmap4_len; i++)
           {
             RETURN_ON_ERROR(packet->xdrEncodeUint32(*mask));
             mask++;
           }
+/*
           RETURN_ON_ERROR(packet->xdrEncodeVarOpaque(arg->openhow.openflag4_u.how.createhow4_u.createattrs.attr_vals.attrlist4_val,
                                                      arg->openhow.openflag4_u.how.createhow4_u.createattrs.attr_vals.attrlist4_len));
-#endif
+*/
         }
         break;
         case EXCLUSIVE4:
