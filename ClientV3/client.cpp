@@ -211,5 +211,27 @@ int main(int argc, char* argv[])
     cout<<"\n##########################################\n"<<endl;
   }
 
+  /* Test for WRITE using FILEFH */
+  {
+    cout <<"Test for WRITE using FILEFH\n"<<endl;
+    std::string path = "dir2/file1";
+    std::string data = "i am writing more data";
+    uint32_t bytesWritten=0;
+    NfsFh fileFH, rootFh;
+    NfsAttr attr;
+    if(svrPtr->getRootFH(exp_path, rootFh, err))
+    {
+      cout <<"Got the RootFH for exp_path=" <<exp_path<<endl;
+    }
+    if(svrPtr->getFileHandle(rootFh, path, fileFH, attr, err))
+    {
+      cout << "getFileHandle success"<<endl;
+    }
+    if (svrPtr->write(fileFH, 0, data.length(), data, bytesWritten,err))
+    {
+      cout <<"NFSV3 write successful "<<endl;
+    }
+  }
+
   return 0;
 }
