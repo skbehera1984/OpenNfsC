@@ -390,8 +390,35 @@ bool Nfs3ApiHandle::close(NfsFh &fileFh, NfsAttr &postAttr, NfsError &status)
   return true;
 }
 
-bool Nfs3ApiHandle::remove(std::string path, NfsError &status)
+bool Nfs3ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
 {
+  NfsFh rootFh;
+  NfsFh parentFH;
+  NfsAttr attr;
+
+  std::vector<std::string> path_components;
+  NfsUtil::splitNfsPath(path, path_components);
+
+  std::string name = path_components.back();
+
+  if(!getRootFH(exp, rootFh, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getRootFH using export\n", __func__);
+    return false;
+  }
+
+  if(!getFileHandle(rootFh, path, parentFH, attr, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh\n", __func__);
+    return false;
+  }
+
+  if(!remove(parentFH, name, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for remove using parentFH\n", __func__);
+    return false;
+  }
+
   return true;
 }
 

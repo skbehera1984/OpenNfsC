@@ -69,7 +69,7 @@ class Nfs4ApiHandle : public NfsApiHandle
                         const bool          needverify,
                         NfsError            &status);
     bool close(NfsFh &fileFh, NfsAttr &postAttr, NfsError &status);
-    bool remove(std::string path, NfsError &status);
+    bool remove(std::string &exp, std::string path, NfsError &status);
     bool remove(const NfsFh &parentFH, const string &name, NfsError &status);
     bool rename(NfsFh &fromDirFh,
                 const std::string &fromName,

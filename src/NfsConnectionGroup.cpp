@@ -581,9 +581,9 @@ bool NfsConnectionGroup::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &statu
   return m_NfsApiHandle->close(fileFH, postAttr, status);
 }
 
-bool NfsConnectionGroup::remove(std::string path, NfsError &status)
+bool NfsConnectionGroup::remove(std::string &exp, std::string path, NfsError &status)
 {
-  return m_NfsApiHandle->remove(path, status);
+  return m_NfsApiHandle->remove(exp, path, status);
 }
 
 bool NfsConnectionGroup::remove(const NfsFh &parentFH, const string &name, NfsError &status)

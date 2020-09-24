@@ -1187,10 +1187,11 @@ bool Nfs4ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &
 /*
  * directory will be removed if it is non-empty
  */
-bool Nfs4ApiHandle::remove(std::string path, NfsError &status)
+bool Nfs4ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
 {
+  std::string fullpath = exp + "/" + path;
   std::vector<std::string> path_components;
-  NfsUtil::splitNfsPath(path, path_components);
+  NfsUtil::splitNfsPath(fullpath, path_components);
 
   std::string compRemove = path_components.back();
   path_components.pop_back();
@@ -1473,7 +1474,7 @@ bool Nfs4ApiHandle::rmdir(const NfsFh &parentFH, const string &name, NfsError &s
 
 bool Nfs4ApiHandle::rmdir(const std::string &path, NfsError &status)
 {
-  return remove(path, status);
+//  return remove(path, status); TODO sarat
 }
 
 /* To lock the entire file use offset = 0 and length = 0xFFFFFFFFFFFFFFFF
