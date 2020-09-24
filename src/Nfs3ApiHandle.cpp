@@ -707,6 +707,31 @@ bool Nfs3ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &stat
 
 bool Nfs3ApiHandle::rmdir(std::string &exp, const std::string &path, NfsError &status)
 {
+  NfsFh rootFh;
+  NfsFh parentFH;
+
+  std::vector<std::string> path_components;
+  NfsUtil::splitNfsPath(path, path_components);
+
+  std::string name = path_components.back();
+
+  if(!getRootFH(exp, rootFh, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getRootFH using export\n", __func__);
+    return false;
+  }
+
+  if(!getDirFh(rootFh, path, parentFH, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh\n", __func__);
+    return false;
+  }
+
+  if (!rmdir(parentFH, name, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for rmdir using parentFH\n", __func__);
+  }
+
   return true;
 }
 
