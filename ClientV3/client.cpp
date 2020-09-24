@@ -251,5 +251,49 @@ int main(int argc, char* argv[])
     cout<<"\n##########################################\n"<<endl;
   }
 
+  /* Test for LOCK using FILEFH */
+  {
+    cout <<"Test for LOCK using FILEFH\n"<<endl;
+    std::string path = "dir2/file1";
+    std::string data;
+    NfsFh fileFH, rootFh;
+    NfsAttr attr;
+    if(svrPtr->getRootFH(exp_path, rootFh, err))
+    {
+      cout <<"Got the RootFH for exp_path=" <<exp_path<<endl;
+    }
+    if(svrPtr->getFileHandle(rootFh, path, fileFH, attr, err))
+    {
+      cout << "getFileHandle success"<<endl;
+    }
+    if (svrPtr->lock(fileFH, 1, 0, 1024, err, false))
+    {
+      cout <<"NFSV3 LOCK successful for range=1024"<<endl;
+    }
+    cout<<"\n##########################################\n"<<endl;
+  }
+
+  /* Test for UNLOCK using FILEFH */
+  {
+    cout <<"Test for UNLOCK using FILEFH\n"<<endl;
+    std::string path = "dir2/file1";
+    std::string data;
+    NfsFh fileFH, rootFh;
+    NfsAttr attr;
+    if(svrPtr->getRootFH(exp_path, rootFh, err))
+    {
+      cout <<"Got the RootFH for exp_path=" <<exp_path<<endl;
+    }
+    if(svrPtr->getFileHandle(rootFh, path, fileFH, attr, err))
+    {
+      cout << "getFileHandle success"<<endl;
+    }
+    if (svrPtr->unlock(fileFH, 1, 0, 1024, err))
+    {
+      cout <<"NFSV3 UNLOCK successful for range=1024"<<endl;
+    }
+    cout<<"\n##########################################\n"<<endl;
+  }
+
   return 0;
 }
