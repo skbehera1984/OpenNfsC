@@ -66,10 +66,10 @@ int main(int argc, char* argv[])
     }
   }
 
-  /* Test for readDir */
-  NfsFiles files;
   NfsError err;
 
+  /* Test for readDir */
+  NfsFiles files;
   if (svrPtr->readDir(exp_path, res_path, files, err) != false)
   {
     cout << "NFSV4 READDIR successful" << endl;
@@ -86,6 +86,7 @@ int main(int argc, char* argv[])
   cout << "No of files - " << files.size() <<endl;
 
   /* Test for RENAME using PATH */
+  cout <<"Test RENAME using PATH\n"<<endl;
 /*
   err.clear();
   if (svrPtr->rename("/ctafs1", "dir1", "dir2", err) != false)
@@ -93,6 +94,25 @@ int main(int argc, char* argv[])
     cout << "NFSV3 RENAME successful" << endl;
   }
 */
+
+  /* Test for MKDIR using ParentFH */
+
+  cout <<"Test for MKDIR using ParentFH"<<endl;
+  NfsFh parentFH, rootFh, dirFH;
+  std::string path ="dir2/rabi";
+  err.clear();
+  if(svrPtr->getRootFH(exp_path, rootFh, err))
+  {
+    cout <<"Got the RootFH for exp_path=" <<exp_path<<endl;
+  }
+  if(svrPtr->getDirFh(rootFh, path, parentFH, err))
+  {
+    cout <<"Got the DirFh for path="<<path<<endl;
+  }
+  if(svrPtr->mkdir(parentFH, "newdir", 077, dirFH, err))
+  {
+    cout <<"NFSV3 mkdir successful Created a dir newdir under path="<<path<<endl;
+  }
 
   return 0;
 }
