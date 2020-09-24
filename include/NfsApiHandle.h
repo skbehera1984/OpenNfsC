@@ -39,6 +39,7 @@ class NfsApiHandle : public SmartRef
     virtual bool getRootFH(const std::string &nfs_export, NfsError &status) = 0;
     virtual bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status) = 0;
     virtual bool getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status) = 0;
+    virtual bool getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &fileFh, NfsAttr &attr, NfsError &status) = 0;
     virtual bool create(NfsFh             &dirFh,
                         std::string       &fileName,
                         NfsAttr           *inAttr,

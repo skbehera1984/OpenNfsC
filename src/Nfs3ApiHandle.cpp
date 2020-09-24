@@ -133,6 +133,78 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
   return true;
 }
 
+bool Nfs3ApiHandle::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &fileFh, NfsAttr &attr, NfsError &status)
+{
+  NfsFh currentFH = rootFH;
+
+  vector<string> segments;
+  NfsUtil::splitNfsPath(path, segments);
+
+  vector<string>::iterator Iter = segments.begin();
+  for (string CurrSegment : segments)
+  {
+    LOOKUP3args lkpArg = {};
+    lkpArg.lookup3_what.dirop3_dir.fh3_data.fh3_data_len = currentFH.getLength();
+    lkpArg.lookup3_what.dirop3_dir.fh3_data.fh3_data_val = (char*)currentFH.getData();
+    lkpArg.lookup3_what.dirop3_name = (char*)CurrSegment.c_str();
+
+    NFSv3::LookUpCall nfsLookupCall(lkpArg);
+    enum clnt_stat tLookupRet = nfsLookupCall.call(m_pConn);
+    if (tLookupRet != RPC_SUCCESS)
+    {
+      //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+      return false;
+    }
+
+    LOOKUP3res &res = nfsLookupCall.getResult();
+    if (res.status != NFS3_OK)
+    {
+      //rtNfsErrorMsg = res.status;
+      if (res.status == NFS3ERR_NOENT)
+      {
+        syslog(LOG_DEBUG, "Nfs3ApiHandle::getFileHandle(): nfs_v3_lookup didn't find the file %s %s\n", path.c_str(), CurrSegment.c_str());
+      }
+      else
+      {
+        syslog(LOG_ERR, "Nfs3ApiHandle::getFileHandle(): nfs_v3_lookup error: %d  <%s %s>\n", res.status, path.c_str(), CurrSegment.c_str());
+      }
+      return false;
+    }
+
+    nfs_fh3 *fh3 = &(res.LOOKUP3res_u.lookup3ok.lookup3_object);
+    NfsFh fh(fh3->fh3_data.fh3_data_len, fh3->fh3_data.fh3_data_val);
+    currentFH = fh;
+  }
+
+  //currentFH has the file handle for the file we're looking for, save the value to return
+  fileFh = currentFH;
+
+  //now get the attributes for the file handle
+  GETATTR3args getAttrArg = {};
+  getAttrArg.getattr3_object.fh3_data.fh3_data_len = fileFh.getLength();
+  getAttrArg.getattr3_object.fh3_data.fh3_data_val = (char*)fileFh.getData();
+
+  NFSv3::GetAttrCall nfsGetattrCall(getAttrArg);
+  enum clnt_stat GetAttrRet = nfsGetattrCall.call(m_pConn);
+  if (GetAttrRet != RPC_SUCCESS)
+  {
+    //rtNfsErrorMsg = NFS3ERR_SERVERFAULT;
+    return false;
+  }
+
+  GETATTR3res &res = nfsGetattrCall.getResult();
+  if (res.status != NFS3_OK)
+  {
+    //rtNfsErrorMsg = res.status;
+    syslog(LOG_ERR, "SL_NASFileServer::nfs_getFileHandle(): nfs_v3_getattr error: %d\n", res.status);
+    return false;
+  }
+
+  // copy the object attributes out of the result struct
+  memcpy(&attr.attr3.gattr, &(res.GETATTR3res_u.getattr3ok.getattr3_obj_attributes), sizeof(fattr3));
+  return true;
+}
+
 bool Nfs3ApiHandle::open(const std::string filePath,
                          uint32_t          access,
                          uint32_t          shareAccess,

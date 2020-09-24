@@ -523,6 +523,11 @@ bool NfsConnectionGroup::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsE
   return m_NfsApiHandle->getDirFh(dirPath, dirFH, status);
 }
 
+bool NfsConnectionGroup::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &fileFh, NfsAttr &attr, NfsError &status)
+{
+  return m_NfsApiHandle->getFileHandle(rootFH, path, fileFh, attr, status);
+}
+
 bool NfsConnectionGroup::create(NfsFh &dirFh, std::string &fileName, NfsAttr *inAttr, NfsFh &fileFh, NfsAttr &outAttr, NfsError &status)
 {
   return m_NfsApiHandle->create(dirFh, fileName, inAttr, fileFh, outAttr, status);

@@ -417,6 +417,82 @@ bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError 
   return true;
 }
 
+bool Nfs4ApiHandle::getFileHandle(NfsFh             &rootFH,
+                                  const std::string  path,
+                                  NfsFh             &fileFh,
+                                  NfsAttr           &attr,
+                                  NfsError          &status)
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+  nfs_argop4 carg;
+
+  std::vector<std::string> path_components;
+  NfsUtil::splitNfsPath(path, path_components);
+
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = rootFH.getLength();
+  pfhgargs->object.nfs_fh4_val = rootFH.getData();
+  compCall.appendCommand(&carg);
+
+  for (std::string &comp : path_components)
+  {
+    nfs_argop4 carg;
+    carg.argop = OP_LOOKUP;
+    LOOKUP4args *largs = &carg.nfs_argop4_u.oplookup;
+    largs->objname.utf8string_len = comp.length();
+    largs->objname.utf8string_val = const_cast<char *>(comp.c_str());
+    compCall.appendCommand(&carg);
+  }
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = std_attr;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETFH;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    status.setError4(res.status, "NFSV4 call getFh failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call getFh failed\n", __func__);
+    return false;
+  }
+
+  int index = compCall.findOPIndex(OP_GETFH);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH");
+    return false;
+  }
+
+  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
+  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
+  fileFh = fh;
+
+  index = compCall.findOPIndex(OP_GETATTR);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETATTR");
+    return false;
+  }
+
+  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, std_attr[0], std_attr[1], attr) < 0)
+  {
+    syslog(LOG_ERR, "Failed to decode OP_GETATTR result");
+    return false;
+  }
+
+  // TODO sarat - if this is a file do we need to open and get the fh??
+  return true;
+}
+
 bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
                            const std::string &fromName,
                            NfsFh &toDirFh,

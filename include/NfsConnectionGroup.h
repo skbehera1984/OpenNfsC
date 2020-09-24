@@ -121,6 +121,7 @@ class NfsConnectionGroup : public SmartRef
     bool getRootFH(const std::string &nfs_export, NfsError &status);
     bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status);
     bool getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status);
+    bool getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &fileFh, NfsAttr &attr, NfsError &status);
     bool create(NfsFh &dirFh, std::string &fileName, NfsAttr *inAttr, NfsFh &fileFh, NfsAttr &outAttr, NfsError &status);
     bool open(const std::string filePath, uint32_t access, uint32_t shareAccess, uint32_t shareDeny, NfsFh &file, NfsError &status);
     bool read(NfsFh &fileFH, uint64_t offset, uint32_t length, std::string &data, uint32_t &bytesRead, bool &eof, NfsAttr &postAttr, NfsError &status);
