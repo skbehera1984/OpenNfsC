@@ -1604,6 +1604,51 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
 
 bool Nfs4ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status)
 {
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTROOTFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_LOOKUP;
+  LOOKUP4args *largs = &carg.nfs_argop4_u.oplookup;
+  largs->objname.utf8string_len = dirFh.getLength();
+  largs->objname.utf8string_val = const_cast<char *>(dirFh.getData());
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = std_attr;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETFH;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    status.setError4(res.status, "NFSV4 call LOOKUP failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOOKUP failed\n", __func__);
+    return false;
+  }
+
+  int index = compCall.findOPIndex(OP_GETFH);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH");
+    return false;
+  }
+
+  lookup_fh.clear();
+
+  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
+  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
+  lookup_fh = fh;
+
   return true;
 }
 
