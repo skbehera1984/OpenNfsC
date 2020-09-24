@@ -231,6 +231,31 @@ int main(int argc, char* argv[])
     {
       cout <<"NFSV3 write successful "<<endl;
     }
+    cout<<"\n##########################################\n"<<endl;
+  }
+
+  /* Test for READ using FILEFH */
+  {
+    cout <<"Test for READ using FILEFH\n"<<endl;
+    std::string path = "dir2/file1";
+    std::string data;
+    uint32_t bytesRead=0;
+    NfsFh fileFH, rootFh;
+    NfsAttr attr;
+    bool val=false;
+    if(svrPtr->getRootFH(exp_path, rootFh, err))
+    {
+      cout <<"Got the RootFH for exp_path=" <<exp_path<<endl;
+    }
+    if(svrPtr->getFileHandle(rootFh, path, fileFH, attr, err))
+    {
+      cout << "getFileHandle success"<<endl;
+    }
+    if (svrPtr->read(fileFH, 0, 90, data, bytesRead, val, attr,err))
+    {
+      cout <<"NFSV3 read successful read data="<<data<<endl;
+    }
+    cout<<"\n##########################################\n"<<endl;
   }
 
   return 0;
