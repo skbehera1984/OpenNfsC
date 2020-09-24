@@ -532,6 +532,44 @@ bool Nfs3ApiHandle::rename(const std::string &nfs_export,
                            const std::string &toPath,
                            NfsError          &status)
 {
+  NfsFh rootFh;
+  NfsFh fromDirFH;
+  NfsFh toDirFH;
+
+  std::vector<std::string> path_fromdir;
+  NfsUtil::splitNfsPath(fromPath, path_fromdir);
+
+  std::string fromName = path_fromdir.back();
+
+  std::vector<std::string> path_todir;
+  NfsUtil::splitNfsPath(toPath, path_todir);
+
+  std::string toName = path_todir.back();
+
+  if(!getRootFH(nfs_export, rootFh, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getRootFH using export\n", __func__);
+    return false;
+  }
+
+  if(!getDirFh(rootFh, fromPath, fromDirFH, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh for fromDirFH\n", __func__);
+    return false;
+  }
+
+  if(!getDirFh(rootFh, toPath, toDirFH, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh for toDirFH\n", __func__);
+    return false;
+  }
+
+  if(!rename(fromDirFH, fromName, toDirFH, toName, status))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for rename\n", __func__);
+    return false;
+  }
+
   return true;
 }
 
