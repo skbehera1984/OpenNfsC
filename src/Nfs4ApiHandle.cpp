@@ -122,7 +122,7 @@ bool Nfs4ApiHandle::connect(std::string &serverIP, NfsError &status)
   return true;
 }
 
-bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsError &status)
+bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsError &status)
 {
   std::vector<std::string> exp_components;
   NfsUtil::splitNfsPath(nfs_export, exp_components);
@@ -169,11 +169,9 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsError &status)
     return false;
   }
 
-  m_rootFH.clear();
-
   GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
   NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
-  m_rootFH = fh;
+  rootFh = fh;
 
   return true;
 }
@@ -569,20 +567,22 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
   NfsUtil::buildNfsPath(fromDir, from_components);
   NfsUtil::buildNfsPath(toDir, to_components);
 
-  getRootFH(nfs_export, status);
+  NfsFh rootFh;
+  if (!getRootFH(nfs_export, rootFh, status))
+    return false;
 
   NfsFh fromDirFh;
 
   if (from_components.size())
-    getDirFh(m_rootFH, fromDir, fromDirFh, status);
+    getDirFh(rootFh, fromDir, fromDirFh, status);
   else
-    fromDirFh = m_rootFH;
+    fromDirFh = rootFh;
 
   NfsFh toDirFh;
   if (to_components.size())
-    getDirFh(m_rootFH, toDir, toDirFh, status);
+    getDirFh(rootFh, toDir, toDirFh, status);
   else
-    toDirFh = m_rootFH;
+    toDirFh = rootFh;
 
   // call rename
   NFSv4::COMPOUNDCall compCall;

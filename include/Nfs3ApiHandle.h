@@ -30,7 +30,7 @@ class Nfs3ApiHandle : public NfsApiHandle
 
   public:
     bool connect(std::string &serverIP, NfsError &status);
-    bool getRootFH(const std::string &nfs_export, NfsError &status);
+    bool getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsError &status);
     bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status);
     bool getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status);
     bool getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &fileFh, NfsAttr &attr, NfsError &status);

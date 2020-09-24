@@ -508,9 +508,9 @@ bool NfsConnectionGroup::connect(std::string serverIP, NfsError &status)
   return m_NfsApiHandle->connect(serverIP, status);
 }
 
-bool NfsConnectionGroup::getRootFH(const std::string &nfs_export, NfsError &status)
+bool NfsConnectionGroup::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsError &status)
 {
-  return m_NfsApiHandle->getRootFH(nfs_export, status);
+  return m_NfsApiHandle->getRootFH(nfs_export, rootFh, status);
 }
 
 bool NfsConnectionGroup::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status)

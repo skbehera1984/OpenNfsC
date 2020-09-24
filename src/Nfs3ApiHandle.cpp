@@ -14,6 +14,7 @@
 #include <nfsrpc/nlm.h>
 #include <nfsrpc/mount.h>
 #include <NlmCall.h>
+#include "MountCall.h"
 
 #include <arpa/inet.h>
 #include <iostream>
@@ -31,11 +32,6 @@ Nfs3ApiHandle::Nfs3ApiHandle(NfsConnectionGroup *ptr) : NfsApiHandle(ptr)
 }
 
 bool Nfs3ApiHandle::connect(std::string &serverIP, NfsError &status)
-{
-  return true;
-}
-
-bool Nfs3ApiHandle::getRootFH(const std::string &nfs_export, NfsError &status)
 {
   return true;
 }
@@ -130,6 +126,46 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
     return false;
   }
 
+  return true;
+}
+
+bool Nfs3ApiHandle::getRootFH(const string &nfs_export, NfsFh &rootFh, NfsError &status)
+{
+  enum clnt_stat retval;
+  dirpath pszMountPoint = (dirpath) nfs_export.c_str();
+  string serverIP = m_pConn->getIP();
+
+  Mount::MntCall mountMntCall(pszMountPoint);
+  retval = mountMntCall.call(m_pConn);
+  if ( retval != RPC_SUCCESS )
+  {
+    //rtMountError = MNT3ERR_SERVERFAULT;
+    return false;
+  }
+
+  mountres3 mntRes = mountMntCall.getResult();
+  if ( mntRes.fhs_status != MNT3_OK )
+  {
+    //rtMountError = mntRes.fhs_status;
+    syslog(LOG_ERR, "Nfs3ApiHandle::getRootFH(): mount failed to %s:%s: %d\n", serverIP.c_str(), nfs_export.c_str(), mntRes.fhs_status);
+    return false;
+  }
+
+  nfs_fh3 *fh3 = &(mntRes.mountres3_u.mount3_mountinfo.mount3_fhandle);
+  NfsFh fh(fh3->fh3_data.fh3_data_len, fh3->fh3_data.fh3_data_val);
+  rootFh = fh;
+
+  // if mount point is "/", then dont call unmount
+  if (nfs_export != "/")
+  {
+    Mount::UMountCall mountUmntCall(pszMountPoint);
+    retval = mountUmntCall.call(m_pConn);
+    if (retval != RPC_SUCCESS)
+    {
+      syslog(LOG_ERR, "Nfs3ApiHandle::getRootFH(): umount error to %s:%s:\n", serverIP.c_str(), nfs_export.c_str());
+      // Ignore umount failure
+    }
+  }
   return true;
 }
 
