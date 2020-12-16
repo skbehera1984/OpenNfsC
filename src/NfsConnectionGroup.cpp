@@ -708,4 +708,9 @@ bool NfsConnectionGroup::symlink(const string &tgtPath, NfsFh &parentFh, const s
   return m_NfsApiHandle->symlink(tgtPath, parentFh, linkName, status);
 }
 
+bool NfsConnectionGroup::renewCid()
+{
+  return m_NfsApiHandle->renewCid();
+}
+
 } //end of namespace

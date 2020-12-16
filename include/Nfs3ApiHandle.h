@@ -107,6 +107,8 @@ class Nfs3ApiHandle : public NfsApiHandle
                  const string &linkName,
                  NfsError     &status);
 
+    bool renewCid();
+
 private:
     bool readDirPlus(NfsFh       &dirFh,
                      cookie3     &cookie,

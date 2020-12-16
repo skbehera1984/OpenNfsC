@@ -108,6 +108,8 @@ class NfsApiHandle : public SmartRef
     virtual bool link(NfsFh &tgtFh, NfsFh &parentFh, const string &linkName, NfsError &status) = 0;
     virtual bool symlink(const string &tgtPath, NfsFh &parentFh, const string &linkName, NfsError &status) = 0;
 
+    virtual bool renewCid() = 0;
+
   protected:
     NfsConnectionGroup *m_pConn;
 };

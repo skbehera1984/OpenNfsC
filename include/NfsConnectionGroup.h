@@ -159,6 +159,8 @@ class NfsConnectionGroup : public SmartRef
                  const string &linkName,
                  NfsError     &status);
 
+    bool renewCid();
+
   public:
     char *getInitialClientVerifier() { return m_initialClientVerifier; }
     char *getClientVerifier() { return m_ClientVerifier; }

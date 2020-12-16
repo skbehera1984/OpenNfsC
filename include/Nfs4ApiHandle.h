@@ -110,6 +110,8 @@ class Nfs4ApiHandle : public NfsApiHandle
                  const string &linkName,
                  NfsError     &status);
 
+    bool renewCid();
+
   private:
     bool readDirV4(NfsFh &dirFh, uint64_t &Cookie, verifier4 &vref, NfsFiles &files, bool &eof, NfsError &status);
 

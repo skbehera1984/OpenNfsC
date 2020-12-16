@@ -1913,3 +1913,27 @@ bool Nfs4ApiHandle::symlink(const string &tgtPath,
 
 /* send RENEW client Id every 12 secs to keep the connection alive
  */
+bool Nfs4ApiHandle::renewCid()
+{
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+
+  nfs_argop4 carg;
+
+  carg.argop = OP_RENEW;
+  RENEW4args *renArgs = &carg.nfs_argop4_u.oprenew;
+  renArgs->clientid = m_pConn->getClientId();
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call RENEW failed\n", __func__);
+    return false;
+  }
+
+  //RENEW4res *renRes = &res.resarray.resarray_val[index].nfs_resop4_u.oprenew;
+
+  return true;
+}

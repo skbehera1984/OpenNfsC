@@ -1203,3 +1203,9 @@ bool Nfs3ApiHandle::symlink(const string &tgtPath,
 
   return true;
 }
+
+bool Nfs3ApiHandle::renewCid()
+{
+  // not a feature of NFS v3
+  return false;
+}
