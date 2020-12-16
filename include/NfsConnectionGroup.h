@@ -27,6 +27,10 @@
 #include <nfsrpc/nfs4.h>
 #include <Thread.h>
 #include <map>
+#include <thread>
+#include <mutex>
+#include <time.h>
+#include <unistd.h>
 
 namespace OpenNfsC {
 
@@ -181,6 +185,13 @@ class NfsConnectionGroup : public SmartRef
     std::mutex   m_seqid_mutex;
     uint32_t     m_file_op_seqid;
     uint32_t     m_file_lock_seqid;
+
+    // keepalive setup
+    bool         m_keepalive;
+    time_t       m_lastRenewCidTime;
+    std::thread  m_nfsKeepAliveThread;
+    std::mutex   m_mutex;
+    void         do_keepAlive();
 };
 
 } //end of namespace

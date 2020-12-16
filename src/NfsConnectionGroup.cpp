@@ -72,6 +72,10 @@ NfsConnectionGroup::NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersi
     for (int j = 0; j < MAX_TRANSP; ++j)
       m_connections[i][j] = NULL;
 
+  m_initialClientVerifier = NULL;
+  m_ClientVerifier = NULL;
+  m_keepalive = false;
+
   if (m_nfsVersion == NFSV3)
   {
     m_NfsApiHandle = new Nfs3ApiHandle(this);
@@ -105,6 +109,11 @@ NfsConnectionGroup::NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersi
     m_file_lock_seqid = 0;
 
     m_NfsApiHandle = new Nfs4ApiHandle(this);
+
+    // start the keepalive thread
+    m_keepalive = true;
+    m_lastRenewCidTime = time(0) - 12; // -12 to immediately send an echo
+    m_nfsKeepAliveThread = std::thread([&](){this->do_keepAlive();});
   }
 }
 
@@ -114,6 +123,14 @@ NfsConnectionGroup::~NfsConnectionGroup()
 
   // close syslog
   closelog();
+
+  if (m_nfsVersion == NFSV4)
+  {
+    // stop the keepalive thread
+    m_keepalive = false;
+    /* wait for keepalive thread to exit */
+    m_nfsKeepAliveThread.join();
+  }
 
   for (int i = 0; i < MAX_SERVICE; ++i)
     for (int j = 0; j < MAX_TRANSP; ++j)
@@ -128,6 +145,23 @@ NfsConnectionGroup::~NfsConnectionGroup()
   {
     free(m_ClientVerifier);
     m_ClientVerifier = NULL;
+  }
+}
+
+// Only used for NFS V4
+void NfsConnectionGroup::do_keepAlive()
+{
+  while(m_keepalive)
+  {
+    {
+      time_t now = time(0);
+      if ((now - m_lastRenewCidTime) > 12)
+      {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if ( renewCid() )
+          m_lastRenewCidTime = time(0); //update
+      }
+    }
   }
 }
 
