@@ -172,8 +172,10 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
 
   if (inAttr)
   {
+    sattr3 attr3;
+    inAttr->NfsAttrToSattr3(&attr3);
     memcpy(&(createArg.create3_how.createhow3_u.create3_obj_attributes),
-           &(inAttr->attr3.sattr), sizeof(sattr3));
+           &attr3, sizeof(sattr3));
   }
   else
   {
@@ -209,8 +211,7 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
       res.CREATE3res_u.create3_ok.create3_obj.handle_follows)
   {
     // return the fsid and fileid(inode) in the attr
-    outAttr.attr3.gattr.fattr3_fsid   = res.CREATE3res_u.create3_ok.create3_obj_attributes.post_op_attr_u.post_op_attr.fattr3_fsid;
-    outAttr.attr3.gattr.fattr3_fileid = res.CREATE3res_u.create3_ok.create3_obj_attributes.post_op_attr_u.post_op_attr.fattr3_fileid;
+    outAttr.Fattr3ToNfsAttr(&(res.CREATE3res_u.create3_ok.create3_obj_attributes.post_op_attr_u.post_op_attr));
     nfs_fh3 &fh3 = res.CREATE3res_u.create3_ok.create3_obj.post_op_fh3_u.post_op_fh3;
     NfsFh fh(fh3.fh3_data.fh3_data_len, fh3.fh3_data.fh3_data_val);
     fileFh = fh;
@@ -221,10 +222,9 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
   NfsAttr lkpAttr;
   if (lookup(dirFh, fileName, fileFh, lkpAttr, status))
   {
-    if (lkpAttr.attr3.lattr.obj_attr_present)
+    if (lkpAttr.lattr.obj_attr_present)
     {
-      outAttr.attr3.gattr.fattr3_fsid   = lkpAttr.attr3.lattr.obj_attr.fattr3_fsid;
-      outAttr.attr3.gattr.fattr3_fileid = lkpAttr.attr3.lattr.obj_attr.fattr3_fileid;
+      outAttr.Fattr3ToNfsAttr(&(lkpAttr.lattr.obj_attr));
     }
     else
     {
@@ -349,7 +349,7 @@ bool Nfs3ApiHandle::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &
   }
 
   // copy the object attributes out of the result struct
-  memcpy(&attr.attr3.gattr, &(res.GETATTR3res_u.getattr3ok.getattr3_obj_attributes), sizeof(fattr3));
+  attr.Fattr3ToNfsAttr(&(res.GETATTR3res_u.getattr3ok.getattr3_obj_attributes));
   return true;
 }
 
@@ -406,12 +406,12 @@ bool Nfs3ApiHandle::read(NfsFh       &fileFH,
   // return the post op file attrs
   if (res.READ3res_u.read3ok.read3_file_attributes.attributes_follow)
   {
-    postAttr.attr3.gattr = res.READ3res_u.read3ok.read3_file_attributes.post_op_attr_u.post_op_attr;
+    postAttr.Fattr3ToNfsAttr(&(res.READ3res_u.read3ok.read3_file_attributes.post_op_attr_u.post_op_attr));
   }
   else
   {
     syslog(LOG_DEBUG, "Nfs3ApiHandle::%s() failed no post op attrs returned\n", __func__);
-    memset(&postAttr.attr3.gattr, 0, sizeof(fattr3));
+    postAttr.clear();
   }
 
   return true;
@@ -771,7 +771,7 @@ bool Nfs3ApiHandle::readDirPlus(NfsFh       &dirFh,
     file.cookie = ptCurr->entryplus3_cookie;
     file.name = string( ptCurr->entryplus3_name );
     file.path = "";
-    file.attr.attr3.gattr = ptCurr->entryplus3_name_attributes.post_op_attr_u.post_op_attr;
+    file.attr.Fattr3ToNfsAttr(&(ptCurr->entryplus3_name_attributes.post_op_attr_u.post_op_attr));
     files.push_back(file);
     cookie = ptCurr -> entryplus3_cookie;
     ptCurr = ptCurr -> entryplus3_nextentry;
@@ -1039,7 +1039,9 @@ bool Nfs3ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 
   sattrArg.setattr3_object.fh3_data.fh3_data_len = fh.getLength();
   sattrArg.setattr3_object.fh3_data.fh3_data_val = (char*)fh.getData();
-  memcpy(&(sattrArg.setattr3_new_attributes), &attr.attr3.sattr, sizeof(sattr3));
+  sattr3 sattr;
+  attr.NfsAttrToSattr3(&sattr);
+  memcpy(&(sattrArg.setattr3_new_attributes), &sattr, sizeof(sattr3));
   sattrArg.setattr3_guard.check = 0; // don't check for a ctime match
 
   NFSv3::SetAttrCall nfsSetattrCall(sattrArg);
@@ -1086,7 +1088,7 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   }
 
   // copy the object attributes out of the result struct
-  memcpy(&attr.attr3.gattr, &(res.GETATTR3res_u.getattr3ok.getattr3_obj_attributes), sizeof(fattr3));
+  attr.Fattr3ToNfsAttr(&(res.GETATTR3res_u.getattr3ok.getattr3_obj_attributes));
 
   return true;
 }
@@ -1129,13 +1131,13 @@ bool Nfs3ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_
 
   if (res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.attributes_follow)
   {
-    attr.attr3.lattr.obj_attr_present = true;
-    attr.attr3.lattr.obj_attr = res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.post_op_attr_u.post_op_attr;
+    attr.lattr.obj_attr_present = true;
+    attr.lattr.obj_attr = res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.post_op_attr_u.post_op_attr;
   }
   if (res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.attributes_follow)
   {
-    attr.attr3.lattr.dir_attr_present = true;
-    attr.attr3.lattr.dir_attr = res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.post_op_attr_u.post_op_attr;
+    attr.lattr.dir_attr_present = true;
+    attr.lattr.dir_attr = res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.post_op_attr_u.post_op_attr;
   }
 
   return true;
@@ -1165,7 +1167,12 @@ bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
   }
 
   // return the values we're interested in
-  stat.stat_u.stat3 = res.FSSTAT3res_u.fsstat3ok.fsstat3_fsstat3;
+  stat.files_avail = res.FSSTAT3res_u.fsstat3ok.fsstat3_fsstat3.fsstat3_afiles;
+  stat.files_free  = res.FSSTAT3res_u.fsstat3ok.fsstat3_fsstat3.fsstat3_ffiles;
+  stat.files_total = res.FSSTAT3res_u.fsstat3ok.fsstat3_fsstat3.fsstat3_tfiles;
+  stat.bytes_avail = res.FSSTAT3res_u.fsstat3ok.fsstat3_fsstat3.fsstat3_abytes;
+  stat.bytes_free  = res.FSSTAT3res_u.fsstat3ok.fsstat3_fsstat3.fsstat3_fbytes;
+  stat.bytes_total = res.FSSTAT3res_u.fsstat3ok.fsstat3_fsstat3.fsstat3_tbytes;
   invarSec = res.FSSTAT3res_u.fsstat3ok.fsstat3_invarsec;
 
   return true;

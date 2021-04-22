@@ -2,6 +2,7 @@
 #include <nfsrpc/nfs4.h>
 #include <time.h>
 #include <iostream>
+#include <string>
 
 using namespace std;
 using namespace OpenNfsC;
@@ -100,27 +101,40 @@ void NfsFh::setLockState(NfsStateId& lkSt)
   memcpy(LSID.other, lkSt.other, 12);
 }
 
-NfsAttr::NfsAttr()
+void NfsAttr::clear()
 {
   mask[0] = 0; mask[1] = 0;
   fileType = FILE_TYPE_NON;
-  changeID = 0;
+  fmode = 0;
+  bSetMode = false;
+  nlinks = 0;
+  uid = 0;
+  bSetUid = false;
+  gid = 0;
+  bSetGid = false;
   size = 0;
+  bSetSize = false;
+  rawDevice = 0;
   fsid.FSIDMajor = 0;
   fsid.FSIDMinor = 0;
   fid = 0;
-  fmode = 0;
-  nlinks = 0;
-  owner = std::string("");
-  group = std::string("");
-  rawDevice = 0;
-  mountFid = 0;
   time_access.seconds = 0;
   time_access.nanosecs = 0;
+  bSetAtime = false;
+  aTimeHow = NFS_TIME_DONT_CHANGE;
   time_metadata.seconds = 0;
   time_metadata.nanosecs = 0;
+  bSetCtime = false;
+  cTimeHow = NFS_TIME_DONT_CHANGE;
   time_modify.seconds = 0;
   time_modify.nanosecs = 0;
+  bSetMtime = false;
+  mTimeHow = NFS_TIME_DONT_CHANGE;
+
+  owner = std::string("");
+  group = std::string("");
+  mountFid = 0;
+  changeID = 0;
   name_max = 0;
   files_avail = 0;
   files_free = 0;
@@ -129,22 +143,121 @@ NfsAttr::NfsAttr()
   bytes_free = 0;
   bytes_total = 0;
   bytes_used = 0;
-  memset(&attr3, 0, sizeof(v3_attrs));
-  attr3.lattr.obj_attr_present = false;
-  attr3.lattr.dir_attr_present = false;
+
+  memset(&lattr, 0, sizeof(lookup_attr));
+  lattr.obj_attr_present = false;
+  lattr.dir_attr_present = false;
 }
 
-void NfsAttr::fill_fsstat4(NfsFsStat &stat)
+NfsAttr::NfsAttr()
 {
-  stat.stat_u.stat4.fsid = fsid;
-  stat.stat_u.stat4.name_max = name_max;
-  stat.stat_u.stat4.files_avail = files_avail;
-  stat.stat_u.stat4.files_free = files_free;
-  stat.stat_u.stat4.files_total = files_total;
-  stat.stat_u.stat4.bytes_avail = bytes_avail;
-  stat.stat_u.stat4.bytes_free = bytes_free;
-  stat.stat_u.stat4.bytes_total = bytes_total;
-  stat.stat_u.stat4.bytes_used = bytes_used;
+  clear();
+}
+
+int NfsAttr::Fattr3ToNfsAttr(fattr3 *attr)
+{
+  switch (attr->fattr3_type)
+  {
+    case NF3NON:
+      fileType = FILE_TYPE_NON;
+    break;
+    case NF3REG:
+      fileType = FILE_TYPE_REG;
+    break;
+    case NF3DIR:
+      fileType = FILE_TYPE_DIR;
+    break;
+    case NF3BLK:
+      fileType = FILE_TYPE_BLK;
+    break;
+    case NF3CHR:
+      fileType = FILE_TYPE_CHR;
+    break;
+    case NF3LNK:
+      fileType = FILE_TYPE_LNK;
+    break;
+    case NF3SOCK:
+      fileType = FILE_TYPE_SOCK;
+    break;
+    case NF3FIFO:
+      fileType = FILE_TYPE_SOCK;
+    break;
+  }
+
+  fmode = attr->fattr3_mode;
+  nlinks = attr->fattr3_nlink;
+  uid = attr->fattr3_uid;
+  gid = attr->fattr3_gid;
+  owner = std::to_string(attr->fattr3_uid);
+  group = std::to_string(attr->fattr3_gid);
+  size = attr->fattr3_size;
+  bytes_used = attr->fattr3_used;
+  // don't need rdev
+  // TODO sarat how to convert fsid ??
+  fid = attr->fattr3_fileid;
+  time_access.seconds = attr->fattr3_atime.time3_seconds;
+  time_access.nanosecs = attr->fattr3_atime.time3_nseconds;
+  time_modify.seconds = attr->fattr3_mtime.time3_seconds;
+  time_modify.nanosecs = attr->fattr3_mtime.time3_nseconds;
+  time_metadata.seconds = attr->fattr3_ctime.time3_seconds;
+  time_metadata.nanosecs = attr->fattr3_ctime.time3_nseconds;
+
+  return 0;
+}
+
+int NfsAttr::NfsAttrToSattr3(sattr3 *sattr)
+{
+  if (bSetMode)
+  {
+    sattr->sattr3_mode.set_it = 1;
+    sattr->sattr3_mode.set_mode3_u.mode = fmode;
+  }
+  else
+    sattr->sattr3_mode.set_it = 0;
+
+  if (bSetUid)
+  {
+    sattr->sattr3_uid.set_it = 1;
+    sattr->sattr3_uid.set_uid3_u.uid = uid;
+  }
+  else
+    sattr->sattr3_uid.set_it = 0;
+
+  if (bSetGid)
+  {
+    sattr->sattr3_gid.set_it = 1;
+    sattr->sattr3_gid.set_gid3_u.gid = gid;
+  }
+  else
+    sattr->sattr3_gid.set_it = 0;
+
+  if (bSetSize)
+  {
+    sattr->sattr3_size.set_it = 1;
+    sattr->sattr3_size.set_size3_u.size = size;
+  }
+  else
+    sattr->sattr3_size.set_it = 0;
+
+  if (bSetAtime)
+  {
+    sattr->sattr3_atime.set_it = (time_how)aTimeHow;
+    sattr->sattr3_atime.set_atime_u.atime.time3_seconds = time_access.seconds;
+    sattr->sattr3_atime.set_atime_u.atime.time3_nseconds= time_access.nanosecs;
+  }
+  else
+    sattr->sattr3_atime.set_it = TIME_DONT_CHANGE;
+
+  if (bSetMtime)
+  {
+    sattr->sattr3_mtime.set_it = (time_how)mTimeHow;
+    sattr->sattr3_mtime.set_mtime_u.mtime.time3_seconds = time_modify.seconds;
+    sattr->sattr3_mtime.set_mtime_u.mtime.time3_nseconds= time_modify.nanosecs;
+  }
+  else
+    sattr->sattr3_mtime.set_it = TIME_DONT_CHANGE;
+
+  return 0;
 }
 
 void NfsAttr::print() const
@@ -168,7 +281,7 @@ void NfsAttr::print() const
       type = "Link";
     else if (fileType == FILE_TYPE_SOCK)
       type = "Socket";
-    else if (fileType == FILE_TYPE__FIFO)
+    else if (fileType == FILE_TYPE_FIFO)
       type = "FIFO";
     cout << "Type : " << type << endl;
   }

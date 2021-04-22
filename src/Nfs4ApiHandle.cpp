@@ -25,9 +25,9 @@
 
 using namespace OpenNfsC;
 
-//mask[0] = 0x00100012; mask[1] = 0x0030a03a;
+//mask[0] = 0x00100112; mask[1] = 0x0030a03a;
 static uint32_t std_attr[2] = {
-  (1 << FATTR4_TYPE | 1 << FATTR4_SIZE | 1 << FATTR4_FILEID),
+  (1 << FATTR4_TYPE | 1 << FATTR4_SIZE | 1 << FATTR4_FSID | 1 << FATTR4_FILEID),
   (1 << (FATTR4_MODE - 32) |
    1 << (FATTR4_NUMLINKS - 32) |
    1 << (FATTR4_OWNER - 32) |
@@ -1800,7 +1800,12 @@ bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
     return false;
   }
 
-  attr.fill_fsstat4(stat);
+  stat.files_avail = attr.getFilesAvailable();
+  stat.files_free  = attr.getFilesFree();
+  stat.files_total = attr.getFilesTotal();
+  stat.bytes_avail = attr.getBytesAvailable();
+  stat.bytes_free  = attr.getBytesFree();
+  stat.bytes_total = attr.getBytesTotal();
 
   return true;
 }

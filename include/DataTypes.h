@@ -63,7 +63,7 @@ enum NfsFileType
   FILE_TYPE_CHR = 4,
   FILE_TYPE_LNK = 5,
   FILE_TYPE_SOCK = 6,
-  FILE_TYPE__FIFO = 7,
+  FILE_TYPE_FIFO = 7,
   FILE_TYPE_ATTRDIR = 8,
   FILE_TYPE_NAMEDATTR = 9,
 };
@@ -76,31 +76,21 @@ struct NfsFsId
 
 struct NfsTime
 {
+  uint64_t getSeconds() { return seconds; }
+  uint32_t getNanoSecs() { return nanosecs; }
   uint64_t seconds;
   uint32_t nanosecs;
 };
 
 #define NFS_BLKSIZE 4096
-struct fsstat4
+struct NfsFsStat
 {
-  NfsFsId  fsid;
-  uint32_t name_max;
   uint64_t files_avail;
   uint64_t files_free;
   uint64_t files_total;
   uint64_t bytes_avail;
   uint64_t bytes_free;
   uint64_t bytes_total;
-  uint64_t bytes_used;
-};
-
-struct NfsFsStat
-{
-  union fs_stat
-  {
-    fsstat3 stat3;
-    fsstat4 stat4;
-  } stat_u;
 };
 
 struct lookup_attr
@@ -111,36 +101,202 @@ struct lookup_attr
   fattr3 dir_attr;
 };
 
-struct v3_attrs
+enum NfsTimeHow
 {
-  fattr3      gattr;
-  sattr3      sattr;
-  lookup_attr lattr;
+  NFS_TIME_DONT_CHANGE = 0,
+  NFS_TIME_SET_TO_SERVER_TIME = 1,
+  NFS_TIME_SET_TO_CLIENT_TIME = 2,
 };
 
 struct NfsAttr
 {
 public:
   NfsAttr();
+  void clear();
   void print() const;
-  void fill_fsstat4(NfsFsStat &stat);
+
+  // conversion functions
+  int Fattr3ToNfsAttr(fattr3 *attr);
+  int NfsAttrToFattr3(fattr3 *attr);
+  int NfsAttrToSattr3(sattr3 *sattr);
+
+  // getters
+  NfsFileType getFileType() { return fileType; }
+  uint32_t    getFileMode() { return fmode; }
+  uint32_t    getNumLinks() { return nlinks; }
+  uint32_t    getUid() { return uid; }
+  uint32_t    getGid() { return gid; }
+  std::string getOwner() { return owner; }
+  std::string getGroup() { return group; }
+  uint64_t    getSize() { return size; }
+  uint64_t    getSizeUsed() { return bytes_used; }
+  uint64_t    getFsId() { return fsid.FSIDMajor; /* TODO sarat what to return */}
+  uint64_t    getFid() { return fid; }
+  NfsTime     getAccessTime() { return time_access; }
+  uint64_t    getAccessTimeSecs() { return time_access.seconds; }
+  NfsTime     getChangeTime() { return time_metadata; }
+  uint64_t    getChangeTimeSecs() { return time_metadata.seconds; }
+  NfsTime     getModifyTime() { return time_modify; }
+  uint64_t    getModifyTimeSecs() { return time_modify.seconds; }
+
+  // setters
+  void setFileMode(uint32_t mode)
+  {
+    fmode = mode;
+    bSetMode = true;
+    mask[1] |= (1 << (FATTR4_MODE - 32));
+  }
+  void unsetFileMode()
+  {
+    bSetMode = false;
+    mask[1] &= ~(1 << (FATTR4_MODE - 32));
+  }
+  void setUid(uint32_t UID)
+  {
+    uid = UID;
+    bSetUid = true;
+    mask[1] |= (1 << (FATTR4_OWNER - 32));
+  }
+  void unsetUid()
+  {
+    bSetUid = false;
+    mask[1] &= ~(1 << (FATTR4_OWNER - 32));
+  }
+  void setGid(uint32_t GID)
+  {
+    gid = GID;
+    bSetGid = true;
+    mask[1] |= (1 << (FATTR4_OWNER_GROUP - 32));
+  }
+  void unsetGid()
+  {
+    bSetGid = false;
+    mask[1] &= ~(1 << (FATTR4_OWNER_GROUP - 32));
+  }
+  void setOwner(std::string& Owner)
+  {
+    owner = Owner;
+    bSetUid = true;
+    mask[1] |= (1 << (FATTR4_OWNER - 32));
+  }
+  void unsetOwner()
+  {
+    bSetUid = false;
+    mask[1] &= ~(1 << (FATTR4_OWNER - 32));
+  }
+  void setGroup(std::string& Group)
+  {
+    group= Group;
+    bSetGid = true;
+    mask[1] |= (1 << (FATTR4_OWNER_GROUP - 32));
+  }
+  void unsetGroup()
+  {
+    bSetGid = false;
+    mask[1] &= ~(1 << (FATTR4_OWNER_GROUP - 32));
+  }
+  void setSize(uint64_t ssize)
+  {
+    size = ssize;
+    bSetSize = true;
+    mask[0] |= (1 << FATTR4_SIZE);
+  }
+  void unsetSize()
+  {
+    bSetSize = false;
+    mask[0] &= ~(1 << FATTR4_SIZE);
+  }
+  void setAccessTime(NfsTime aTime, NfsTimeHow how)
+  {
+    time_access = aTime;
+    bSetAtime   = true;
+    aTimeHow    = how;
+    mask[1] |= (1 << (FATTR4_TIME_ACCESS - 32) | 1 << (FATTR4_TIME_ACCESS_SET - 32));
+  }
+  void setAccessTime(uint64_t seconds, uint32_t nanosecs = 0, NfsTimeHow how = NFS_TIME_DONT_CHANGE)
+  {
+    time_access.seconds = seconds;
+    time_access.nanosecs = nanosecs;
+    bSetAtime   = true;
+    aTimeHow    = how;
+    mask[1] |= (1 << (FATTR4_TIME_ACCESS - 32) | 1 << (FATTR4_TIME_ACCESS_SET - 32));
+  }
+  void unsetAccessTime()
+  {
+    bSetAtime   = false;
+    mask[1] &= ~((1 << (FATTR4_TIME_ACCESS - 32) | 1 << (FATTR4_TIME_ACCESS_SET - 32)));
+  }
+  void setModifyTime(NfsTime mTime, NfsTimeHow how)
+  {
+    time_modify = mTime;
+    bSetMtime   = true;
+    mTimeHow    = how;
+    mask[1] |= (1 << (FATTR4_TIME_MODIFY - 32) | 1 << (FATTR4_TIME_MODIFY_SET - 32));
+  }
+  void setModifyTime(uint64_t seconds, uint32_t nanosecs = 0, NfsTimeHow how = NFS_TIME_DONT_CHANGE)
+  {
+    time_modify.seconds = seconds;
+    time_modify.nanosecs = nanosecs;
+    bSetMtime   = true;
+    mTimeHow    = how;
+    mask[1] |= (1 << (FATTR4_TIME_MODIFY - 32) | 1 << (FATTR4_TIME_MODIFY_SET - 32));
+  }
+  void unsetModifyTime()
+  {
+    bSetMtime   = false;
+    mask[1] &= ~((1 << (FATTR4_TIME_MODIFY - 32) | 1 << (FATTR4_TIME_MODIFY_SET - 32)));
+  }
+  void setChangeTime(uint64_t seconds, uint32_t nanosecs = 0, NfsTimeHow how = NFS_TIME_DONT_CHANGE)
+  {
+    time_metadata.seconds = seconds;
+    time_metadata.nanosecs = nanosecs;
+    bSetCtime   = true;
+    cTimeHow    = how;
+    mask[1] |= 1 << (FATTR4_TIME_METADATA - 32);
+  }
+  void unsetChangeTime()
+  {
+    bSetCtime   = false;
+    mask[1] &= ~(1 << (FATTR4_TIME_METADATA - 32));
+  }
+
+  // FSSTAT getters
+  uint64_t getFilesAvailable() { return files_avail; }
+  uint64_t getFilesFree() { return files_free; }
+  uint64_t getFilesTotal() { return files_total; }
+  uint64_t getBytesAvailable() { return bytes_avail; }
+  uint64_t getBytesFree() { return bytes_free; }
+  uint64_t getBytesTotal() { return bytes_total; }
 
 public:
   uint32_t    mask[2];
   NfsFileType fileType;
-  uint64_t    changeID;
-  uint64_t    size;
-  NfsFsId     fsid;
-  uint64_t    fid;
   uint32_t    fmode;
+  bool        bSetMode;
   uint32_t    nlinks;
+  uint32_t    uid;
+  bool        bSetUid;
+  uint32_t    gid;
+  bool        bSetGid;
+  uint64_t    size;
+  bool        bSetSize;
+  uint64_t    rawDevice;
+  NfsFsId     fsid;
+  uint64_t    fid; // inode
+  NfsTime     time_access;
+  bool        bSetAtime;
+  NfsTimeHow  aTimeHow;
+  NfsTime     time_metadata;
+  bool        bSetCtime;
+  NfsTimeHow  cTimeHow;
+  NfsTime     time_modify;
+  bool        bSetMtime;
+  NfsTimeHow  mTimeHow;
+
   std::string owner;
   std::string group;
-  uint64_t    rawDevice;
   uint64_t    mountFid;
-  NfsTime     time_access;
-  NfsTime     time_metadata;
-  NfsTime     time_modify;
+  uint64_t    changeID;
   uint32_t    name_max;
   uint64_t    files_avail;
   uint64_t    files_free;
@@ -150,8 +306,8 @@ public:
   uint64_t    bytes_total;
   uint64_t    bytes_used;
 
-  // houses all types of nfs v3 attr structs
-  v3_attrs    attr3;
+  //V3 lookup attributes
+  lookup_attr lattr;
 };
 
 struct NfsAccess

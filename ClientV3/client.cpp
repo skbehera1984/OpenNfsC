@@ -85,12 +85,12 @@ int main(int argc, char* argv[])
     if(svrPtr->fsstat(rootFh, stat, inter, err))
     {
       cout << "NFSV4 FSSTAT successful" << endl;
-      cout<<"Total Bytes          =" <<stat.stat_u.stat3.fsstat3_tbytes<<endl;
-      cout<<"Total Free Bytes     =" <<stat.stat_u.stat3.fsstat3_fbytes<<endl;
-      cout<<"Total Available Bytes="<<stat.stat_u.stat3.fsstat3_abytes<<endl;
-      cout<<"Total Files          ="<< stat.stat_u.stat3.fsstat3_tfiles<<endl;
-      cout<<"Total Free Files     ="<<stat.stat_u.stat3.fsstat3_ffiles<<endl;
-      cout<<"Total Available Files="<<stat.stat_u.stat3.fsstat3_afiles<<endl;
+      cout<<"Total Bytes          =" <<stat.bytes_total <<endl;
+      cout<<"Total Free Bytes     =" <<stat.bytes_free <<endl;
+      cout<<"Total Available Bytes="<<stat.bytes_avail <<endl;
+      cout<<"Total Files          ="<< stat.files_total <<endl;
+      cout<<"Total Free Files     ="<<stat.files_free <<endl;
+      cout<<"Total Available Files="<<stat.files_avail <<endl;
     }
     cout<<"\n##########################################\n"<<endl;
   }
@@ -160,7 +160,7 @@ int main(int argc, char* argv[])
     if(svrPtr->getAttr(fileFH, attr, err))
     {
       cout << "getAttr success"<<endl;
-      cout <<"size=" <<attr.attr3.gattr.fattr3_size<<endl;
+      cout <<"size=" <<attr.getSize()<<endl;
     }
     cout<<"\n##########################################\n"<<endl;
    }
