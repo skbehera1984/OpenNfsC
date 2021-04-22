@@ -1372,9 +1372,8 @@ COMPOUNDCall::encode_OP_VERIFY(RpcPacketPtr packet, const VERIFY4args *arg)
     mask++;
   }
 
-  // TODO sarat - is this straight forward or attr encoding required ??
-  RETURN_ON_ERROR(packet->xdrEncodeString((unsigned char*)arg->obj_attributes.attr_vals.attrlist4_val,
-                                          arg->obj_attributes.attr_vals.attrlist4_len ));
+  RETURN_ON_ERROR(NfsUtil::encode_fattr4(packet, &arg->obj_attributes));
+
   return 0;
 }
 
