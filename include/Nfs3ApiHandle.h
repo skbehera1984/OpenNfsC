@@ -110,6 +110,11 @@ class Nfs3ApiHandle : public NfsApiHandle
     bool renewCid();
 
 private:
+    bool getAttrForDirEntry(const entryplus3* pEntry,
+                            NfsFh&            fh,
+                            std::string       name,
+                            fattr3&           attr);
+
     bool readDirPlus(NfsFh       &dirFh,
                      cookie3     &cookie,
                      cookieverf3 &cookieVref,

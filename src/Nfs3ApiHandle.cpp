@@ -715,6 +715,73 @@ bool Nfs3ApiHandle::readDir(NfsFh &dirFh, NfsFiles &files, NfsError &status)
   return sts;
 }
 
+bool Nfs3ApiHandle::getAttrForDirEntry(const entryplus3* pEntry,
+                                       NfsFh&            fh,
+                                       std::string       name,
+                                       fattr3&           attr)
+{
+  const nfs_fh3     *pHandle = NULL;
+
+  if (pEntry->entryplus3_name_attributes.attributes_follow)
+  {
+    attr = pEntry->entryplus3_name_attributes.post_op_attr_u.post_op_attr;
+    return true;
+  }
+
+  if (pEntry->entryplus3_name_handle.handle_follows)
+  {
+    pHandle = &pEntry->entryplus3_name_handle.post_op_fh3_u.post_op_fh3;
+    if (pHandle)
+    {
+      GETATTR3args arg = {};
+      arg.getattr3_object = *pHandle;
+
+      NFSv3::GetAttrCall getattrCall(arg);
+      enum clnt_stat ret = getattrCall.call(m_pConn);
+      if ( ret != RPC_SUCCESS )
+      {
+        return false;
+      }
+
+      GETATTR3res& getattrres = getattrCall.getResult();
+      if ( getattrres.status != NFS3_OK )
+      {
+        return false;
+      }
+      attr = getattrres.GETATTR3res_u.getattr3ok.getattr3_obj_attributes;
+      return true;
+    }
+  }
+  else
+  {
+    LOOKUP3args arg = {};
+    arg.lookup3_what.dirop3_dir.fh3_data.fh3_data_len = fh.getLength();
+    arg.lookup3_what.dirop3_dir.fh3_data.fh3_data_val = fh.getData();
+    arg.lookup3_what.dirop3_name =  pEntry->entryplus3_name;
+
+    NFSv3::LookUpCall lookupCall(arg);
+    enum clnt_stat ret = lookupCall.call(m_pConn);
+    if ( ret != RPC_SUCCESS )
+    {
+      return false;
+    }
+
+    LOOKUP3res& lookupres = lookupCall.getResult();
+    if ( lookupres.status != NFS3_OK )
+    {
+      return false;
+    }
+
+    pHandle = &lookupres.LOOKUP3res_u.lookup3ok.lookup3_object;
+    if ( lookupres.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.attributes_follow )
+    {
+      attr = lookupres.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.post_op_attr_u.post_op_attr;
+      return true;
+    }
+  }
+  return false;
+}
+
 bool Nfs3ApiHandle::readDirPlus(NfsFh       &dirFh,
                                 cookie3     &cookie,
                                 cookieverf3 &cookieVref,
@@ -771,7 +838,27 @@ bool Nfs3ApiHandle::readDirPlus(NfsFh       &dirFh,
     file.cookie = ptCurr->entryplus3_cookie;
     file.name = string( ptCurr->entryplus3_name );
     file.path = "";
-    file.attr.Fattr3ToNfsAttr(&(ptCurr->entryplus3_name_attributes.post_op_attr_u.post_op_attr));
+    fattr3 dattr;
+    bool excludedDir = false;
+
+    /* can't get attributes for . and .. */
+    if ( ::strcmp(ptCurr->entryplus3_name, ".") == 0 || ::strcmp(ptCurr->entryplus3_name, "..") == 0 )
+      excludedDir = true;
+
+    if (!excludedDir)
+    {
+      if (!getAttrForDirEntry(ptCurr, dirFh, file.name, dattr))
+      {
+        status.setError3(NFS3ERR_INVAL, "readDirPlus:failed to get attrib for entry");
+        return false;
+      }
+      file.attr.Fattr3ToNfsAttr(&dattr);
+      file.type = file.attr.fileType;
+    }
+    else
+    {
+      file.type = FILE_TYPE_DIR;
+    }
     files.push_back(file);
     cookie = ptCurr -> entryplus3_cookie;
     ptCurr = ptCurr -> entryplus3_nextentry;
