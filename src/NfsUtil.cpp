@@ -20,6 +20,8 @@
 #include "ByteBuffer.h"
 #include "RpcDefs.h"
 
+#include <string.h>
+
 namespace OpenNfsC {
 namespace NfsUtil {
 
@@ -338,12 +340,23 @@ int encode_fattr4(RpcPacketPtr packet, const fattr4 *attr)
     }
     if (mask2 & (1 << (FATTR4_NUMLINKS - 32)))
     {
+      // TODO sarat implement this
     }
     if (mask2 & (1 << (FATTR4_OWNER - 32)))
     {
+      // strings are padded with '\0' to differentiate, skip that null character
+      char *owner = avals;
+      size_t len = strlen(owner);
+      RETURN_ON_ERROR(packet->xdrEncodeString((unsigned char*)owner, len));
+      avals += (len + 1);
     }
     if (mask2 & (1 << (FATTR4_OWNER_GROUP - 32)))
     {
+      // strings are padded with '\0' to differentiate, skip that null character
+      char *group = avals;
+      size_t len = strlen(group);
+      RETURN_ON_ERROR(packet->xdrEncodeString((unsigned char*)group, len));
+      avals += (len + 1);
     }
     if (mask2 & (1 << (FATTR4_QUOTA_AVAIL_HARD - 32)))
     {
@@ -374,9 +387,20 @@ int encode_fattr4(RpcPacketPtr packet, const fattr4 *attr)
     }
     if (mask2 & (1 << (FATTR4_TIME_ACCESS - 32)))
     {
+      // Flag Not used to set access time
     }
     if (mask2 & (1 << (FATTR4_TIME_ACCESS_SET - 32)))
     {
+      // First set the setit to 1
+      uint32_t setit = 1;
+      RETURN_ON_ERROR(packet->xdrEncodeUint32(setit));
+
+      uint64_t *seconds = (uint64_t*)avals;
+      RETURN_ON_ERROR(packet->xdrEncodeUint64(*seconds));
+      avals += sizeof(uint64_t);
+      uint32_t *nanosec = (uint32_t*)avals;
+      RETURN_ON_ERROR(packet->xdrEncodeUint32(*nanosec));
+      avals += sizeof(uint32_t);
     }
     if (mask2 & (1 << (FATTR4_TIME_BACKUP - 32)))
     {
@@ -392,9 +416,20 @@ int encode_fattr4(RpcPacketPtr packet, const fattr4 *attr)
     }
     if (mask2 & (1 << (FATTR4_TIME_MODIFY - 32)))
     {
+      // Flag Not used to set modify time
     }
     if (mask2 & (1 << (FATTR4_TIME_MODIFY_SET - 32)))
     {
+      // First set the setit to 1
+      uint32_t setit = 1;
+      RETURN_ON_ERROR(packet->xdrEncodeUint32(setit));
+
+      uint64_t *seconds = (uint64_t*)avals;
+      RETURN_ON_ERROR(packet->xdrEncodeUint64(*seconds));
+      avals += sizeof(uint64_t);
+      uint32_t *nanosec = (uint32_t*)avals;
+      RETURN_ON_ERROR(packet->xdrEncodeUint32(*nanosec));
+      avals += sizeof(uint32_t);
     }
     if (mask2 & (1 << (FATTR4_MOUNTED_ON_FILEID - 32)))
     {
@@ -410,7 +445,7 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
   uint32_t mask1 = attr.mask[0];
   uint32_t mask2 = attr.mask[1];
   uint32_t buflen = 1024;
-  char * buf = (char*)calloc(1,buflen);
+  char * buf = (char*)calloc(1,buflen); // TODO sarat how to free this buffer??
 
   if (buf == NULL)
     return -1;
@@ -567,9 +602,43 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
     }
     if (mask2 & (1 << (FATTR4_OWNER - 32)))
     {
+      // padding the string with a '\0' to differentiate
+      char *owner = temp_attr;
+      int length = attr.owner.length();
+      int size = length + 1;
+      strncpy(owner, attr.owner.c_str(), length);
+      owner += length;
+      *owner = '\0';
+      temp_attr = temp_attr + size;
+      buflen -= size;
+      // calculate what actual size will be consumed by string after encoding
+      int padding = 0;
+      if ((length & 0x03) != 0)
+      {
+        padding = 4 - (length & 0x03);
+      }
+      // encoded size = length place holder + length + padding
+      fattr->attr_vals.attrlist4_len += (4 + length + padding);
     }
     if (mask2 & (1 << (FATTR4_OWNER_GROUP - 32)))
     {
+      // padding the string with a '\0' to differentiate
+      char *group = temp_attr;
+      int length = attr.group.length();
+      int size = length + 1;
+      strncpy(group, attr.group.c_str(), length);
+      group += length;
+      *group = '\0';
+      temp_attr = temp_attr + size;
+      buflen -= size;
+      // calculate what actual size will be consumed by string after encoding
+      int padding = 0;
+      if ((length & 0x03) != 0)
+      {
+        padding = 4 - (length & 0x03);
+      }
+      // encoded size = length place holder + length + padding
+      fattr->attr_vals.attrlist4_len += (4 + length + padding);
     }
     if (mask2 & (1 << (FATTR4_QUOTA_AVAIL_HARD - 32)))
     {
@@ -610,14 +679,21 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
     }
     if (mask2 & (1 << (FATTR4_TIME_ACCESS - 32)))
     {
-      NfsTime *ptr = (NfsTime*)temp_attr;
-      memcpy(ptr, &attr.time_access, sizeof(NfsTime));
-      fattr->attr_vals.attrlist4_len += sizeof(NfsTime);
-      temp_attr = temp_attr + sizeof(NfsTime);
-      buflen -= sizeof(NfsTime);
+      // Flag Not used for set access time
     }
     if (mask2 & (1 << (FATTR4_TIME_ACCESS_SET - 32)))
     {
+      fattr->attr_vals.attrlist4_len += sizeof(uint32_t); // for set it field
+      uint64_t *sec = (uint64_t*)temp_attr;
+      *sec = attr.time_access.seconds;
+      fattr->attr_vals.attrlist4_len += sizeof(uint64_t);
+      temp_attr = temp_attr + sizeof(uint64_t);
+      buflen -= sizeof(uint64_t);
+      uint32_t *nanosec = (uint32_t*)temp_attr;
+      *nanosec = attr.time_access.nanosecs;
+      fattr->attr_vals.attrlist4_len += sizeof(uint32_t);
+      temp_attr = temp_attr + sizeof(uint32_t);
+      buflen -= sizeof(uint32_t);
     }
     if (mask2 & (1 << (FATTR4_TIME_BACKUP - 32)))
     {
@@ -630,29 +706,32 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
     }
     if (mask2 & (1 << (FATTR4_TIME_METADATA - 32)))
     {
-      NfsTime *ptr = (NfsTime*)temp_attr;
-      memcpy(ptr, &attr.time_metadata, sizeof(NfsTime));
-      fattr->attr_vals.attrlist4_len += sizeof(NfsTime);
-      temp_attr = temp_attr + sizeof(NfsTime);
-      buflen -= sizeof(NfsTime);
+      // Meta time or ctime can't be set
     }
     if (mask2 & (1 << (FATTR4_TIME_MODIFY - 32)))
     {
-      NfsTime *ptr = (NfsTime*)temp_attr;
-      memcpy(ptr, &attr.time_modify, sizeof(NfsTime));
-      fattr->attr_vals.attrlist4_len += sizeof(NfsTime);
-      temp_attr = temp_attr + sizeof(NfsTime);
-      buflen -= sizeof(NfsTime);
+      // Flag Not used for set modify time
     }
     if (mask2 & (1 << (FATTR4_TIME_MODIFY_SET - 32)))
     {
+      fattr->attr_vals.attrlist4_len += sizeof(uint32_t); // for set it field
+      uint64_t *sec = (uint64_t*)temp_attr;
+      *sec = attr.time_modify.seconds;
+      fattr->attr_vals.attrlist4_len += sizeof(uint64_t);
+      temp_attr = temp_attr + sizeof(uint64_t);
+      buflen -= sizeof(uint64_t);
+      uint32_t *nanosec = (uint32_t*)temp_attr;
+      *nanosec = attr.time_modify.nanosecs;
+      fattr->attr_vals.attrlist4_len += sizeof(uint32_t);
+      temp_attr = temp_attr + sizeof(uint32_t);
+      buflen -= sizeof(uint32_t);
     }
     if (mask2 & (1 << (FATTR4_MOUNTED_ON_FILEID - 32)))
     {
     }
   }
 
-return 0;
+  return 0;
 }
 
 

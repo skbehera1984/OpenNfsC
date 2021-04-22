@@ -211,7 +211,7 @@ public:
     time_access = aTime;
     bSetAtime   = true;
     aTimeHow    = how;
-    mask[1] |= (1 << (FATTR4_TIME_ACCESS - 32) | 1 << (FATTR4_TIME_ACCESS_SET - 32));
+    mask[1] |= ( 1 << (FATTR4_TIME_ACCESS_SET - 32));
   }
   void setAccessTime(uint64_t seconds, uint32_t nanosecs = 0, NfsTimeHow how = NFS_TIME_DONT_CHANGE)
   {
@@ -219,7 +219,7 @@ public:
     time_access.nanosecs = nanosecs;
     bSetAtime   = true;
     aTimeHow    = how;
-    mask[1] |= (1 << (FATTR4_TIME_ACCESS - 32) | 1 << (FATTR4_TIME_ACCESS_SET - 32));
+    mask[1] |= (1 << (FATTR4_TIME_ACCESS_SET - 32));
   }
   void unsetAccessTime()
   {
@@ -231,7 +231,7 @@ public:
     time_modify = mTime;
     bSetMtime   = true;
     mTimeHow    = how;
-    mask[1] |= (1 << (FATTR4_TIME_MODIFY - 32) | 1 << (FATTR4_TIME_MODIFY_SET - 32));
+    mask[1] |= (1 << (FATTR4_TIME_MODIFY_SET - 32));
   }
   void setModifyTime(uint64_t seconds, uint32_t nanosecs = 0, NfsTimeHow how = NFS_TIME_DONT_CHANGE)
   {
@@ -239,7 +239,7 @@ public:
     time_modify.nanosecs = nanosecs;
     bSetMtime   = true;
     mTimeHow    = how;
-    mask[1] |= (1 << (FATTR4_TIME_MODIFY - 32) | 1 << (FATTR4_TIME_MODIFY_SET - 32));
+    mask[1] |= (1 << (FATTR4_TIME_MODIFY_SET - 32));
   }
   void unsetModifyTime()
   {
