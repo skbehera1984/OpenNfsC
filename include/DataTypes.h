@@ -93,14 +93,6 @@ struct NfsFsStat
   uint64_t bytes_total;
 };
 
-struct lookup_attr
-{
-  bool obj_attr_present;
-  bool dir_attr_present;
-  fattr3 obj_attr;
-  fattr3 dir_attr;
-};
-
 enum NfsTimeHow
 {
   NFS_TIME_DONT_CHANGE = 0,
@@ -131,8 +123,8 @@ public:
   uint32_t    getNumLinks() { return nlinks; }
   uint32_t    getUid() { return uid; }
   uint32_t    getGid() { return gid; }
-  //std::string getOwner() { return owner; }
-  //std::string getGroup() { return group; }
+  std::string getOwner() { return owner; }
+  std::string getGroup() { return group; }
   uint64_t    getSize() { return size; }
   uint64_t    getSizeUsed() { return bytes_used; }
   uint64_t    getFsId() { return fsid.FSIDMajor; }
@@ -180,7 +172,7 @@ public:
   }
   void setOwner(std::string& Owner)
   {
-    //owner = Owner;
+    owner = Owner;
     bSetUid = true;
     mask[1] |= (1 << (FATTR4_OWNER - 32));
   }
@@ -191,7 +183,7 @@ public:
   }
   void setGroup(std::string& Group)
   {
-    //group= Group;
+    group= Group;
     bSetGid = true;
     mask[1] |= (1 << (FATTR4_OWNER_GROUP - 32));
   }
@@ -298,8 +290,8 @@ public:
   bool        bSetMtime;
   NfsTimeHow  mTimeHow;
 
-  //std::string owner;
-  //std::string group;
+  std::string owner;
+  std::string group;
   uint64_t    mountFid;
   uint64_t    changeID;
   uint32_t    name_max;
@@ -310,9 +302,6 @@ public:
   uint64_t    bytes_free;
   uint64_t    bytes_total;
   uint64_t    bytes_used;
-
-  //V3 lookup attributes
-  lookup_attr lattr;
 };
 
 struct NfsAccess

@@ -157,8 +157,8 @@ void NfsAttr::clear()
   bSetMtime = false;
   mTimeHow = NFS_TIME_DONT_CHANGE;
 
-  //owner = std::string("");
-  //group = std::string("");
+  owner.clear();
+  group.clear();
   mountFid = 0;
   changeID = 0;
   name_max = 0;
@@ -169,10 +169,6 @@ void NfsAttr::clear()
   bytes_free = 0;
   bytes_total = 0;
   bytes_used = 0;
-
-  memset(&lattr, 0, sizeof(lookup_attr));
-  lattr.obj_attr_present = false;
-  lattr.dir_attr_present = false;
 }
 
 NfsAttr::NfsAttr()
@@ -220,8 +216,8 @@ NfsAttr::NfsAttr(const NfsAttr &obj)
   this->time_modify.nanosecs = obj.time_modify.nanosecs;
   this->bSetMtime = obj.bSetMtime;
   this->mTimeHow = obj.mTimeHow;
-  //this->owner = obj.owner;
-  //this->group = obj.group;
+  this->owner = obj.owner;
+  this->group = obj.group;
   this->mountFid = obj.mountFid;
   this->changeID = obj.changeID;
   this->name_max = obj.name_max;
@@ -232,10 +228,6 @@ NfsAttr::NfsAttr(const NfsAttr &obj)
   this->bytes_free = obj.bytes_free;
   this->bytes_total = obj.bytes_total;
   this->bytes_used = obj.bytes_used;
-  this->lattr.obj_attr_present = obj.lattr.obj_attr_present;
-  this->lattr.dir_attr_present= obj.lattr.dir_attr_present;
-  memcpy(&this->lattr.obj_attr, &obj.lattr.obj_attr, sizeof(fattr3));
-  memcpy(&this->lattr.dir_attr, &obj.lattr.dir_attr, sizeof(fattr3));
 }
 
 NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
@@ -268,8 +260,8 @@ NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
   this->time_modify.nanosecs = obj.time_modify.nanosecs;
   this->bSetMtime = obj.bSetMtime;
   this->mTimeHow = obj.mTimeHow;
-  //this->owner = obj.owner;
-  //this->group = obj.group;
+  this->owner = obj.owner;
+  this->group = obj.group;
   this->mountFid = obj.mountFid;
   this->changeID = obj.changeID;
   this->name_max = obj.name_max;
@@ -280,10 +272,6 @@ NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
   this->bytes_free = obj.bytes_free;
   this->bytes_total = obj.bytes_total;
   this->bytes_used = obj.bytes_used;
-  this->lattr.obj_attr_present = obj.lattr.obj_attr_present;
-  this->lattr.dir_attr_present= obj.lattr.dir_attr_present;
-  memcpy(&this->lattr.obj_attr, &obj.lattr.obj_attr, sizeof(fattr3));
-  memcpy(&this->lattr.dir_attr, &obj.lattr.dir_attr, sizeof(fattr3));
 
   return (*this);
 }

@@ -219,18 +219,11 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
   }
 
   // create didn't return the file handle and attributes we do a lookup to get them
-  NfsAttr lkpAttr;
-  if (lookup(dirFh, fileName, fileFh, lkpAttr, status))
+  if (lookup(dirFh, fileName, fileFh, outAttr, status))
   {
-    if (lkpAttr.lattr.obj_attr_present)
-    {
-      outAttr.Fattr3ToNfsAttr(&(lkpAttr.lattr.obj_attr));
-    }
-    else
-    {
-      // fail if the attributes aren't available
+    // fail if the attributes aren't available
+    if (outAttr.empty())
       return false;
-    }
   }
   else
   {
@@ -1218,13 +1211,12 @@ bool Nfs3ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_
 
   if (res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.attributes_follow)
   {
-    attr.lattr.obj_attr_present = true;
-    attr.lattr.obj_attr = res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.post_op_attr_u.post_op_attr;
+    attr.Fattr3ToNfsAttr(&(res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.post_op_attr_u.post_op_attr));
   }
   if (res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.attributes_follow)
   {
-    attr.lattr.dir_attr_present = true;
-    attr.lattr.dir_attr = res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.post_op_attr_u.post_op_attr;
+    // TODO sarat nfs - do we want dir attr??
+    //= res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.post_op_attr_u.post_op_attr;
   }
 
   return true;
