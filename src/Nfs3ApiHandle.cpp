@@ -112,8 +112,47 @@ bool Nfs3ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, Nf
   return true;
 }
 
+/* API to get the file handle to a path:-
+ * path may be export or any absolute path to a directory or file
+ * in nfs v3 we will get fh using mount
+ */
 bool Nfs3ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
+  enum clnt_stat retval;
+  const char* pszPath = dirPath.c_str();
+
+  dirpath pszMountPoint = (dirpath) pszPath;
+  Mount::MntCall mountCall(pszMountPoint);
+  retval = mountCall.call(m_pConn);
+  if ( retval != RPC_SUCCESS )
+  {
+    status.setError(retval, "NFS V3 mount call rpc error");
+    return false;
+  }
+
+  mountres3& mount_res = mountCall.getResult();
+  if ( mount_res.fhs_status != MNT3_OK )
+  {
+    status.setError(mount_res.fhs_status, "NFS V3 mount failed for - " + dirPath);
+    return false;
+    //throw pMntError(mount_res.fhs_status); // TODO sarat see if we need this to convert to err string
+  }
+
+  // Copy the starting file handle
+  nfs_fh3 *fh3 = &(mount_res.mountres3_u.mount3_mountinfo.mount3_fhandle);
+  NfsFh fh(fh3->fh3_data.fh3_data_len, fh3->fh3_data.fh3_data_val);
+  dirFH = fh;
+
+  Mount::UMountCall umountCall(pszMountPoint);
+  retval = umountCall.call(m_pConn);
+  if ( retval != RPC_SUCCESS )
+  {
+    status.setError(retval, "NFS V3 umount call rpc error");
+    return false;
+  }
+
+  // always returns success, because failure always throws an exception
+
   return true;
 }
 
