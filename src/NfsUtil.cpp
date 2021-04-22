@@ -602,6 +602,7 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
     }
     if (mask2 & (1 << (FATTR4_OWNER - 32)))
     {
+      #if 0
       // padding the string with a '\0' to differentiate
       char *owner = temp_attr;
       int length = attr.owner.length();
@@ -619,9 +620,11 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
       }
       // encoded size = length place holder + length + padding
       fattr->attr_vals.attrlist4_len += (4 + length + padding);
+      #endif
     }
     if (mask2 & (1 << (FATTR4_OWNER_GROUP - 32)))
     {
+      #if 0
       // padding the string with a '\0' to differentiate
       char *group = temp_attr;
       int length = attr.group.length();
@@ -639,6 +642,7 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
       }
       // encoded size = length place holder + length + padding
       fattr->attr_vals.attrlist4_len += (4 + length + padding);
+      #endif
     }
     if (mask2 & (1 << (FATTR4_QUOTA_AVAIL_HARD - 32)))
     {
@@ -908,17 +912,21 @@ int decode_fattr4(fattr4 *fattr, uint32_t mask1, uint32_t mask2, NfsAttr &attr)
     }
     if (mask2 & (1 << (FATTR4_OWNER - 32)))
     {
+      #if 0
       unsigned char *value = NULL;
       uint32 value_len = 0;
       RETURN_ON_ERROR(attrPacket->xdrDecodeString(value, value_len));
       attr.owner = std::string((char*)value, value_len);
+      #endif
     }
     if (mask2 & (1 << (FATTR4_OWNER_GROUP - 32)))
     {
+      #if 0
       unsigned char* value = NULL;
       uint32 value_len = 0;
       RETURN_ON_ERROR(attrPacket->xdrDecodeString(value, value_len));
       attr.group = std::string((char*)value, value_len);
+      #endif
     }
     if (mask2 & (1 << (FATTR4_QUOTA_AVAIL_HARD - 32)))
     {

@@ -157,8 +157,8 @@ void NfsAttr::clear()
   bSetMtime = false;
   mTimeHow = NFS_TIME_DONT_CHANGE;
 
-  owner = std::string("");
-  group = std::string("");
+  //owner = std::string("");
+  //group = std::string("");
   mountFid = 0;
   changeID = 0;
   name_max = 0;
@@ -176,6 +176,11 @@ void NfsAttr::clear()
 }
 
 NfsAttr::NfsAttr()
+{
+  clear();
+}
+
+NfsAttr::~NfsAttr()
 {
   clear();
 }
@@ -215,8 +220,8 @@ NfsAttr::NfsAttr(const NfsAttr &obj)
   this->time_modify.nanosecs = obj.time_modify.nanosecs;
   this->bSetMtime = obj.bSetMtime;
   this->mTimeHow = obj.mTimeHow;
-  this->owner = obj.owner;
-  this->group = obj.group;
+  //this->owner = obj.owner;
+  //this->group = obj.group;
   this->mountFid = obj.mountFid;
   this->changeID = obj.changeID;
   this->name_max = obj.name_max;
@@ -263,8 +268,8 @@ NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
   this->time_modify.nanosecs = obj.time_modify.nanosecs;
   this->bSetMtime = obj.bSetMtime;
   this->mTimeHow = obj.mTimeHow;
-  this->owner = obj.owner;
-  this->group = obj.group;
+  //this->owner = obj.owner;
+  //this->group = obj.group;
   this->mountFid = obj.mountFid;
   this->changeID = obj.changeID;
   this->name_max = obj.name_max;
@@ -317,8 +322,8 @@ int NfsAttr::Fattr3ToNfsAttr(fattr3 *attr)
   nlinks = attr->fattr3_nlink;
   uid = attr->fattr3_uid;
   gid = attr->fattr3_gid;
-  owner = std::to_string(attr->fattr3_uid);
-  group = std::to_string(attr->fattr3_gid);
+  //owner = std::to_string(attr->fattr3_uid);
+  //group = std::to_string(attr->fattr3_gid);
   size = attr->fattr3_size;
   bytes_used = attr->fattr3_used;
   // don't need rdev
@@ -525,11 +530,11 @@ void NfsAttr::print() const
   }
   if (mask[1] & (1 << (FATTR4_OWNER - 32)))
   {
-    cout << "Owner : " << owner << endl;
+    //cout << "Owner : " << owner << endl;
   }
   if (mask[1] & (1 << (FATTR4_OWNER_GROUP - 32)))
   {
-    cout << "Owner Group : " << group << endl;
+    //cout << "Owner Group : " << group << endl;
   }
   if (mask[1] & (1 << (FATTR4_QUOTA_AVAIL_HARD - 32)))
   {

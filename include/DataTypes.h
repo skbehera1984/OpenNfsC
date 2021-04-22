@@ -112,6 +112,7 @@ struct NfsAttr
 {
 public:
   NfsAttr();
+  ~NfsAttr();
   void clear();
   bool empty();
   void print() const;
@@ -130,8 +131,8 @@ public:
   uint32_t    getNumLinks() { return nlinks; }
   uint32_t    getUid() { return uid; }
   uint32_t    getGid() { return gid; }
-  std::string getOwner() { return owner; }
-  std::string getGroup() { return group; }
+  //std::string getOwner() { return owner; }
+  //std::string getGroup() { return group; }
   uint64_t    getSize() { return size; }
   uint64_t    getSizeUsed() { return bytes_used; }
   uint64_t    getFsId() { return fsid.FSIDMajor; }
@@ -179,7 +180,7 @@ public:
   }
   void setOwner(std::string& Owner)
   {
-    owner = Owner;
+    //owner = Owner;
     bSetUid = true;
     mask[1] |= (1 << (FATTR4_OWNER - 32));
   }
@@ -190,7 +191,7 @@ public:
   }
   void setGroup(std::string& Group)
   {
-    group= Group;
+    //group= Group;
     bSetGid = true;
     mask[1] |= (1 << (FATTR4_OWNER_GROUP - 32));
   }
@@ -297,8 +298,8 @@ public:
   bool        bSetMtime;
   NfsTimeHow  mTimeHow;
 
-  std::string owner;
-  std::string group;
+  //std::string owner;
+  //std::string group;
   uint64_t    mountFid;
   uint64_t    changeID;
   uint32_t    name_max;
