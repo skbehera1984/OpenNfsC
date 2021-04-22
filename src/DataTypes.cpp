@@ -193,7 +193,7 @@ int NfsAttr::Fattr3ToNfsAttr(fattr3 *attr)
   size = attr->fattr3_size;
   bytes_used = attr->fattr3_used;
   // don't need rdev
-  // TODO sarat how to convert fsid ??
+  fsid.FSIDMajor = attr->fattr3_fsid;
   fid = attr->fattr3_fileid;
   time_access.seconds = attr->fattr3_atime.time3_seconds;
   time_access.nanosecs = attr->fattr3_atime.time3_nseconds;
