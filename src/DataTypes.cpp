@@ -7,6 +7,32 @@
 using namespace std;
 using namespace OpenNfsC;
 
+bool NfsFile::isDirectory()
+{
+  return (type == FILE_TYPE_DIR);
+}
+
+bool NfsFile::isSymlink()
+{
+  return (type == FILE_TYPE_LNK);
+}
+
+bool NfsFile::isZeroByteFile()
+{
+  if ( !attr.empty() && (attr.getFileType() == FILE_TYPE_REG) )
+  {
+    if (attr.getSize() == 0)
+      return true;
+    else
+    {
+      if (attr.getSizeUsed() == 0)
+      {
+      }
+    }
+  }
+  return false;
+}
+
 void NfsFh::clear()
 {
   if (fhVal != NULL)
@@ -152,6 +178,109 @@ void NfsAttr::clear()
 NfsAttr::NfsAttr()
 {
   clear();
+}
+
+bool NfsAttr::empty()
+{
+  return (fileType == FILE_TYPE_NON);
+}
+
+NfsAttr::NfsAttr(const NfsAttr &obj)
+{
+  this->mask[0] = obj.mask[0];
+  this->mask[1] = obj.mask[1];
+  this->fileType = obj.fileType;
+  this->fmode = obj.fmode;
+  this->bSetMode = obj.bSetMode;
+  this->nlinks = obj.nlinks;
+  this->uid = obj.uid;
+  this->bSetUid = obj.bSetUid;
+  this->gid = obj.gid;
+  this->bSetGid = obj.bSetGid;
+  this->size = obj.size;
+  this->bSetSize = obj.bSetSize;
+  this->rawDevice = obj.rawDevice;
+  this->fsid.FSIDMajor = obj.fsid.FSIDMajor;
+  this->fsid.FSIDMinor = obj.fsid.FSIDMinor;
+  this->fid = obj.fid;
+  this->time_access.seconds = obj.time_access.seconds;
+  this->time_access.nanosecs = obj.time_access.nanosecs;
+  this->bSetAtime = obj.bSetAtime;
+  this->aTimeHow = obj.aTimeHow;
+  this->time_metadata.seconds = obj.time_metadata.seconds;
+  this->time_metadata.nanosecs = obj.time_metadata.nanosecs;
+  this->bSetCtime = obj.bSetCtime;
+  this->cTimeHow = obj.cTimeHow;
+  this->time_modify.seconds = obj.time_modify.seconds;
+  this->time_modify.nanosecs = obj.time_modify.nanosecs;
+  this->bSetMtime = obj.bSetMtime;
+  this->mTimeHow = obj.mTimeHow;
+  this->owner = obj.owner;
+  this->group = obj.group;
+  this->mountFid = obj.mountFid;
+  this->changeID = obj.changeID;
+  this->name_max = obj.name_max;
+  this->files_avail = obj.files_avail;
+  this->files_free = obj.files_free;
+  this->files_total = obj.files_total;
+  this->bytes_avail = obj.bytes_avail;
+  this->bytes_free = obj.bytes_free;
+  this->bytes_total = obj.bytes_total;
+  this->bytes_used = obj.bytes_used;
+  this->lattr.obj_attr_present = obj.lattr.obj_attr_present;
+  this->lattr.dir_attr_present= obj.lattr.dir_attr_present;
+  memcpy(&this->lattr.obj_attr, &obj.lattr.obj_attr, sizeof(fattr3));
+  memcpy(&this->lattr.dir_attr, &obj.lattr.dir_attr, sizeof(fattr3));
+}
+
+NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
+{
+  this->mask[0] = obj.mask[0];
+  this->mask[1] = obj.mask[1];
+  this->fileType = obj.fileType;
+  this->fmode = obj.fmode;
+  this->bSetMode = obj.bSetMode;
+  this->nlinks = obj.nlinks;
+  this->uid = obj.uid;
+  this->bSetUid = obj.bSetUid;
+  this->gid = obj.gid;
+  this->bSetGid = obj.bSetGid;
+  this->size = obj.size;
+  this->bSetSize = obj.bSetSize;
+  this->rawDevice = obj.rawDevice;
+  this->fsid.FSIDMajor = obj.fsid.FSIDMajor;
+  this->fsid.FSIDMinor = obj.fsid.FSIDMinor;
+  this->fid = obj.fid;
+  this->time_access.seconds = obj.time_access.seconds;
+  this->time_access.nanosecs = obj.time_access.nanosecs;
+  this->bSetAtime = obj.bSetAtime;
+  this->aTimeHow = obj.aTimeHow;
+  this->time_metadata.seconds = obj.time_metadata.seconds;
+  this->time_metadata.nanosecs = obj.time_metadata.nanosecs;
+  this->bSetCtime = obj.bSetCtime;
+  this->cTimeHow = obj.cTimeHow;
+  this->time_modify.seconds = obj.time_modify.seconds;
+  this->time_modify.nanosecs = obj.time_modify.nanosecs;
+  this->bSetMtime = obj.bSetMtime;
+  this->mTimeHow = obj.mTimeHow;
+  this->owner = obj.owner;
+  this->group = obj.group;
+  this->mountFid = obj.mountFid;
+  this->changeID = obj.changeID;
+  this->name_max = obj.name_max;
+  this->files_avail = obj.files_avail;
+  this->files_free = obj.files_free;
+  this->files_total = obj.files_total;
+  this->bytes_avail = obj.bytes_avail;
+  this->bytes_free = obj.bytes_free;
+  this->bytes_total = obj.bytes_total;
+  this->bytes_used = obj.bytes_used;
+  this->lattr.obj_attr_present = obj.lattr.obj_attr_present;
+  this->lattr.dir_attr_present= obj.lattr.dir_attr_present;
+  memcpy(&this->lattr.obj_attr, &obj.lattr.obj_attr, sizeof(fattr3));
+  memcpy(&this->lattr.dir_attr, &obj.lattr.dir_attr, sizeof(fattr3));
+
+  return (*this);
 }
 
 int NfsAttr::Fattr3ToNfsAttr(fattr3 *attr)

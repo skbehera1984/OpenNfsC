@@ -113,7 +113,11 @@ struct NfsAttr
 public:
   NfsAttr();
   void clear();
+  bool empty();
   void print() const;
+
+  NfsAttr(const NfsAttr &obj);
+  NfsAttr& operator=(const NfsAttr &obj);
 
   // conversion functions
   int Fattr3ToNfsAttr(fattr3 *attr);
@@ -323,6 +327,9 @@ struct NfsFile
   std::string path;
   NfsFileType type;
   NfsAttr     attr;
+  bool isDirectory();
+  bool isSymlink();
+  bool isZeroByteFile();
 };
 typedef std::vector<NfsFile> NfsFiles;
 
