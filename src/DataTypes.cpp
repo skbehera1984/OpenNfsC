@@ -310,8 +310,8 @@ int NfsAttr::Fattr3ToNfsAttr(fattr3 *attr)
   nlinks = attr->fattr3_nlink;
   uid = attr->fattr3_uid;
   gid = attr->fattr3_gid;
-  //owner = std::to_string(attr->fattr3_uid);
-  //group = std::to_string(attr->fattr3_gid);
+  owner = std::to_string(attr->fattr3_uid);
+  group = std::to_string(attr->fattr3_gid);
   size = attr->fattr3_size;
   bytes_used = attr->fattr3_used;
   // don't need rdev
@@ -518,11 +518,11 @@ void NfsAttr::print() const
   }
   if (mask[1] & (1 << (FATTR4_OWNER - 32)))
   {
-    //cout << "Owner : " << owner << endl;
+    cout << "Owner : " << owner << endl;
   }
   if (mask[1] & (1 << (FATTR4_OWNER_GROUP - 32)))
   {
-    //cout << "Owner Group : " << group << endl;
+    cout << "Owner Group : " << group << endl;
   }
   if (mask[1] & (1 << (FATTR4_QUOTA_AVAIL_HARD - 32)))
   {
