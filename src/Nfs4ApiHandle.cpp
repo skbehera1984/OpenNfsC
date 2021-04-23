@@ -160,9 +160,16 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsE
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::getRootFH failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::getRootFH failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call getRootFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -271,6 +278,12 @@ bool Nfs4ApiHandle::readDirV4(NfsFh     &dirFh,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::readDirV4 failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -352,9 +365,16 @@ bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, Nf
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::getDirFh failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::getDirFh failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call getDirFh failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -406,9 +426,16 @@ bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError 
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::getDirFh failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::getDirFh failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call getRootFH failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -466,6 +493,12 @@ bool Nfs4ApiHandle::getFileHandle(NfsFh             &rootFH,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::getFileHandle failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -544,6 +577,12 @@ bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::rename failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -632,9 +671,16 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::rename failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::rename failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call RENAME failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -668,9 +714,16 @@ bool Nfs4ApiHandle::commit(NfsFh     &fh,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::commit failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::commit failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call COMMIT failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -723,9 +776,16 @@ bool Nfs4ApiHandle::access(const std::string &filePath,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::access failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::access failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call ACCESS failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -787,9 +847,16 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::create failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::create failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed\n", __func__);
     return false;
   }
@@ -889,9 +956,16 @@ bool Nfs4ApiHandle::open(const std::string filePath,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::open failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::open failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call OPEN failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -961,6 +1035,12 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::read failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -1030,6 +1110,12 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::write failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -1090,9 +1176,16 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::write_unstable failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::write_unstable failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call WRITE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1140,9 +1233,16 @@ bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &status)
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::close failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::close failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CLOSE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1184,6 +1284,12 @@ bool Nfs4ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::remove failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -1236,9 +1342,16 @@ bool Nfs4ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::remove failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::remove failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call REMOVE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1276,9 +1389,16 @@ bool Nfs4ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::setattr failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::setattr failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call SETATTR failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1323,9 +1443,16 @@ bool Nfs4ApiHandle::truncate(NfsFh &fh, uint64_t size, NfsError &status)
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::truncate failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::truncate failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call TRUNCATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1398,9 +1525,16 @@ bool Nfs4ApiHandle::mkdir(const NfsFh       &parentFH,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::mkdir failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::mkdir failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1464,9 +1598,16 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &stat
     compCall.appendCommand(&carg);
 
     cst = compCall.call(m_pConn);
+    if (cst != RPC_SUCCESS)
+    {
+      status.setRpcError(cst, "Nfs4ApiHandle::mkdir failed - rpc error");
+      return false;
+    }
+
     COMPOUND4res res = compCall.getResult();
     if (res.status != NFS4_OK)
     {
+      status.setError4(res.status, "Nfs4ApiHandle::mkdir failed");
       syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed. NFS ERR - %ld\n", __func__, (long)res.status);
       return false;
     }
@@ -1529,9 +1670,16 @@ bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::lock failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::lock failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOCK failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1583,9 +1731,16 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::unlock failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "Nfs4ApiHandle::unlock failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOCKU failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1633,6 +1788,12 @@ bool Nfs4ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::lookup failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -1690,9 +1851,16 @@ bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::lookup failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
+    status.setError4(res.status, "NFSV4 call LOOKUP failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOOKUP failed. NFS ERR - %ld\n", __func__, (long)res.status);
     return false;
   }
@@ -1734,6 +1902,12 @@ bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::getAttr failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -1777,6 +1951,12 @@ bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::fsstat failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -1852,6 +2032,12 @@ bool Nfs4ApiHandle::link(NfsFh        &tgtFh,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::link failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
@@ -1905,10 +2091,16 @@ bool Nfs4ApiHandle::symlink(const string &tgtPath,
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    status.setRpcError(cst, "Nfs4ApiHandle::symlink failed - rpc error");
+    return false;
+  }
+
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    status.setError4(res.status, "nfs v4 link failed");
+    status.setError4(res.status, "nfs v4 symlink failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed\n", __func__);
     return false;
   }

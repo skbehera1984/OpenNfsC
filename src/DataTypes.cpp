@@ -590,12 +590,176 @@ void NfsAttr::print() const
   cout << "==================================================" << endl;
 }
 
+NfsError::v3ErrMap NfsError::g3Map[] =
+{
+  {NFS3_OK, "NFS3_OK"},
+  {NFS3ERR_PERM, "NFS3ERR_PERM"},
+  {NFS3ERR_NOENT, "NFS3ERR_NOENT"},
+  {NFS3ERR_IO, "NFS3ERR_IO"},
+  {NFS3ERR_NXIO, "NFS3ERR_NXIO"},
+  {NFS3ERR_ACCES, "NFS3ERR_ACCES"},
+  {NFS3ERR_EXIST, "NFS3ERR_EXIST"},
+  {NFS3ERR_XDEV, "NFS3ERR_XDEV"},
+  {NFS3ERR_NODEV, "NFS3ERR_NODEV"},
+  {NFS3ERR_NOTDIR, "NFS3ERR_NOTDIR"},
+  {NFS3ERR_ISDIR, "NFS3ERR_ISDIR"},
+  {NFS3ERR_INVAL, "NFS3ERR_INVAL"},
+  {NFS3ERR_FBIG, "NFS3ERR_FBIG"},
+  {NFS3ERR_NOSPC, "NFS3ERR_NOSPC"},
+  {NFS3ERR_ROFS, "NFS3ERR_ROFS"},
+  {NFS3ERR_MLINK, "NFS3ERR_MLINK"},
+  {NFS3ERR_NAMETOOLONG, "NFS3ERR_NAMETOOLONG"},
+  {NFS3ERR_NOTEMPTY, "NFS3ERR_NOTEMPTY"},
+  {NFS3ERR_DQUOT, "NFS3ERR_DQUOT"},
+  {NFS3ERR_STALE, "NFS3ERR_STALE"},
+  {NFS3ERR_REMOTE, "NFS3ERR_REMOTE"},
+  {NFS3ERR_BADHANDLE, "NFS3ERR_BADHANDLE"},
+  {NFS3ERR_NOT_SYNC, "NFS3ERR_NOT_SYNC"},
+  {NFS3ERR_BAD_COOKIE, "NFS3ERR_BAD_COOKIE"},
+  {NFS3ERR_NOTSUPP, "NFS3ERR_NOTSUPP"},
+  {NFS3ERR_TOOSMALL, "NFS3ERR_TOOSMALL"},
+  {NFS3ERR_SERVERFAULT, "NFS3ERR_SERVERFAULT"},
+  {NFS3ERR_BADTYPE, "NFS3ERR_BADTYPE"},
+  {NFS3ERR_JUKEBOX, "NFS3ERR_JUKEBOX"}
+};
+
+NfsError::v4ErrMap NfsError::g4Map[] =
+{
+  {NFS4_OK, ""},
+  {NFS4ERR_PERM, "NFS4ERR_PERM"},
+  {NFS4ERR_NOENT, "NFS4ERR_NOENT"},
+  {NFS4ERR_IO, "NFS4ERR_IO"},
+  {NFS4ERR_NXIO, "NFS4ERR_NXIO"},
+  {NFS4ERR_ACCESS, "NFS4ERR_ACCESS"},
+  {NFS4ERR_EXIST, "NFS4ERR_EXIST"},
+  {NFS4ERR_XDEV, "NFS4ERR_XDEV"},
+  {NFS4ERR_NOTDIR, "NFS4ERR_NOTDIR"},
+  {NFS4ERR_ISDIR, "NFS4ERR_ISDIR"},
+  {NFS4ERR_INVAL, "NFS4ERR_INVAL"},
+  {NFS4ERR_FBIG, "NFS4ERR_FBIG"},
+  {NFS4ERR_NOSPC, "NFS4ERR_NOSPC"},
+  {NFS4ERR_ROFS, "NFS4ERR_ROFS"},
+  {NFS4ERR_MLINK, "NFS4ERR_MLINK"},
+  {NFS4ERR_NAMETOOLONG, "NFS4ERR_NAMETOOLONG"},
+  {NFS4ERR_NOTEMPTY, "NFS4ERR_NOTEMPTY"},
+  {NFS4ERR_DQUOT, "NFS4ERR_DQUOT"},
+  {NFS4ERR_STALE, "NFS4ERR_STALE"},
+  {NFS4ERR_BADHANDLE, "NFS4ERR_BADHANDLE"},
+  {NFS4ERR_BAD_COOKIE, "NFS4ERR_BAD_COOKIE"},
+  {NFS4ERR_NOTSUPP, "NFS4ERR_NOTSUPP"},
+  {NFS4ERR_TOOSMALL, "NFS4ERR_TOOSMALL"},
+  {NFS4ERR_SERVERFAULT, "NFS4ERR_SERVERFAULT"},
+  {NFS4ERR_BADTYPE, "NFS4ERR_BADTYPE"},
+  {NFS4ERR_DELAY, "NFS4ERR_DELAY"},
+  {NFS4ERR_SAME, "NFS4ERR_SAME"},
+  {NFS4ERR_DENIED, "NFS4ERR_DENIED"},
+  {NFS4ERR_EXPIRED, "NFS4ERR_EXPIRED"},
+  {NFS4ERR_LOCKED, "NFS4ERR_LOCKED"},
+  {NFS4ERR_GRACE, "NFS4ERR_GRACE"},
+  {NFS4ERR_FHEXPIRED, "NFS4ERR_FHEXPIRED"},
+  {NFS4ERR_SHARE_DENIED, "NFS4ERR_SHARE_DENIED"},
+  {NFS4ERR_WRONGSEC, "NFS4ERR_WRONGSEC"},
+  {NFS4ERR_CLID_INUSE, "NFS4ERR_CLID_INUSE"},
+  {NFS4ERR_RESOURCE, "NFS4ERR_RESOURCE"},
+  {NFS4ERR_MOVED, "NFS4ERR_MOVED"},
+  {NFS4ERR_NOFILEHANDLE, "NFS4ERR_NOFILEHANDLE"},
+  {NFS4ERR_MINOR_VERS_MISMATCH, "NFS4ERR_MINOR_VERS_MISMATCH"},
+  {NFS4ERR_STALE_CLIENTID, "NFS4ERR_STALE_CLIENTID"},
+  {NFS4ERR_STALE_STATEID, "NFS4ERR_STALE_STATEID"},
+  {NFS4ERR_OLD_STATEID, "NFS4ERR_OLD_STATEID"},
+  {NFS4ERR_BAD_STATEID, "NFS4ERR_BAD_STATEID"},
+  {NFS4ERR_BAD_SEQID, "NFS4ERR_BAD_SEQID"},
+  {NFS4ERR_NOT_SAME, "NFS4ERR_NOT_SAME"},
+  {NFS4ERR_LOCK_RANGE, "NFS4ERR_LOCK_RANGE"},
+  {NFS4ERR_SYMLINK, "NFS4ERR_SYMLINK"},
+  {NFS4ERR_RESTOREFH, "NFS4ERR_RESTOREFH"},
+  {NFS4ERR_LEASE_MOVED, "NFS4ERR_LEASE_MOVED"},
+  {NFS4ERR_ATTRNOTSUPP, "NFS4ERR_ATTRNOTSUPP"},
+  {NFS4ERR_NO_GRACE, "NFS4ERR_NO_GRACE"},
+  {NFS4ERR_RECLAIM_BAD, "NFS4ERR_RECLAIM_BAD"},
+  {NFS4ERR_RECLAIM_CONFLICT, "NFS4ERR_RECLAIM_CONFLICT"},
+  {NFS4ERR_BADZDR, "NFS4ERR_BADZDR"},
+  {NFS4ERR_LOCKS_HELD, "NFS4ERR_LOCKS_HELD"},
+  {NFS4ERR_OPENMODE, "NFS4ERR_OPENMODE"},
+  {NFS4ERR_BADOWNER, "NFS4ERR_BADOWNER"},
+  {NFS4ERR_BADCHAR, "NFS4ERR_BADCHAR"},
+  {NFS4ERR_BADNAME, "NFS4ERR_BADNAME"},
+  {NFS4ERR_BAD_RANGE, "NFS4ERR_BAD_RANGE"},
+  {NFS4ERR_LOCK_NOTSUPP, "NFS4ERR_LOCK_NOTSUPP"},
+  {NFS4ERR_OP_ILLEGAL, "NFS4ERR_OP_ILLEGAL"},
+  {NFS4ERR_DEADLOCK, "NFS4ERR_DEADLOCK"},
+  {NFS4ERR_FILE_OPEN, "NFS4ERR_FILE_OPEN"},
+  {NFS4ERR_ADMIN_REVOKED, "NFS4ERR_ADMIN_REVOKED"},
+  {NFS4ERR_CB_PATH_DOWN, "NFS4ERR_CB_PATH_DOWN"}
+};
+
+NfsError::mntErrMap NfsError::gmntMap[] =
+{
+  {MNT3_OK, "MNT3_OK"},
+  {MNT3ERR_PERM, "MNT3ERR_PERM"},
+  {MNT3ERR_NOENT, "MNT3ERR_NOENT"},
+  {MNT3ERR_IO, "MNT3ERR_IO"},
+  {MNT3ERR_ACCES, "MNT3ERR_ACCES"},
+  {MNT3ERR_NOTDIR, "MNT3ERR_NOTDIR"},
+  {MNT3ERR_INVAL, "MNT3ERR_INVAL"},
+  {MNT3ERR_NAMETOOLONG, "MNT3ERR_NAMETOOLONG"},
+  {MNT3ERR_NOTSUPP, "MNT3ERR_NOTSUPP"},
+  {MNT3ERR_SERVERFAULT, "MNT3ERR_SERVERFAULT"}
+};
+
+NfsError::nlmErrMap NfsError::gnlmMap[] =
+{
+  {NLMSTAT4_GRANTED, "NLMSTAT4_GRANTED"},
+  {NLMSTAT4_DENIED, "NLMSTAT4_DENIED"},
+  {NLMSTAT4_DENIED_NOLOCKS, "NLMSTAT4_DENIED_NOLOCKS"},
+  {NLMSTAT4_BLOCKED, "NLMSTAT4_BLOCKED"},
+  {NLMSTAT4_DENIED_GRACE_PERIOD, "NLMSTAT4_DENIED_GRACE_PERIOD"},
+  {NLMSTAT4_DEADLCK, "NLMSTAT4_DEADLCK"},
+  {NLMSTAT4_ROFS, "NLMSTAT4_ROFS"},
+  {NLMSTAT4_STALE_FH, "NLMSTAT4_STALE_FH"},
+  {NLMSTAT4_FBIG, "NLMSTAT4_FBIG"},
+  {NLMSTAT4_FAILED, "NLMSTAT4_FAILED"}
+};
+
+NfsError::rpcErrMap NfsError::grpcMap[] =
+{
+  {RPC_SUCCESS, "RPC_SUCCESS"},
+  {RPC_CANTENCODEARGS, "RPC_CANTENCODEARGS"},
+  {RPC_CANTDECODERES, "RPC_CANTDECODERES"},
+  {RPC_CANTSEND, "RPC_CANTSEND"},
+  {RPC_CANTRECV, "RPC_CANTRECV"},
+  {RPC_TIMEDOUT, "RPC_TIMEDOUT"},
+  {RPC_VERSMISMATCH, "RPC_VERSMISMATCH"},
+  {RPC_AUTHERROR, "RPC_AUTHERROR"},
+  {RPC_PROGUNAVAIL, "RPC_PROGUNAVAIL"},
+  {RPC_PROGVERSMISMATCH, "RPC_PROGVERSMISMATCH"},
+  {RPC_PROCUNAVAIL, "RPC_PROCUNAVAIL"},
+  {RPC_CANTDECODEARGS, "RPC_CANTDECODEARGS"},
+  {RPC_SYSTEMERROR, "RPC_SYSTEMERROR"},
+  {RPC_NOBROADCAST, "RPC_NOBROADCAST"},
+  {RPC_UNKNOWNHOST, "RPC_UNKNOWNHOST"},
+  {RPC_UNKNOWNPROTO, "RPC_UNKNOWNPROTO"},
+  {RPC_UNKNOWNADDR, "RPC_UNKNOWNADDR"},
+  {RPC_PMAPFAILURE, "RPC_PMAPFAILURE"},
+  {RPC_PROGNOTREGISTERED, "RPC_PROGNOTREGISTERED"},
+  {RPC_N2AXLATEFAILURE, "RPC_N2AXLATEFAILURE"},
+  {RPC_FAILED, "RPC_FAILED"},
+  {RPC_INTR, "RPC_INTR"},
+  {RPC_TLIERROR, "RPC_TLIERROR"},
+  {RPC_UDERROR, "RPC_UDERROR"},
+  {RPC_INPROGRESS, "RPC_INPROGRESS"},
+  {RPC_STALERACHANDLE, "RPC_STALERACHANDLE"}
+};
+
 NfsError::NfsError(const NfsError &obj)
 {
   this->etype = obj.etype;
   this->err   = obj.err;
   this->err3  = obj.err3;
   this->err4  = obj.err4;
+  this->enlm  = obj.enlm;
+  this->emnt  = obj.emnt;
+  this->erpc  = obj.erpc;
   this->msg   = obj.msg;
 }
 
@@ -605,17 +769,23 @@ NfsError& NfsError::operator=(const NfsError &obj)
   err   = obj.err;
   err3  = obj.err3;
   err4  = obj.err4;
-  msg   =   obj.msg;
+  enlm  = obj.enlm;
+  emnt  = obj.emnt;
+  erpc  = obj.erpc;
+  msg   = obj.msg;
 
   return (*this);
 }
 
 bool NfsError::operator==(const NfsError &obj)const
 {
-  if((this->etype  == obj.etype)  &&
-      (this->err   == obj.err)    &&
+  if((this->etype  == obj.etype) &&
+      (this->err   == obj.err)   &&
       (this->err3  == obj.err3)  &&
       (this->err4  == obj.err4)  &&
+      (this->enlm  == obj.enlm)  &&
+      (this->emnt  == obj.emnt)  &&
+      (this->erpc  == obj.erpc)  &&
       (this->msg   == obj.msg))
     return true;
   else
@@ -624,60 +794,385 @@ bool NfsError::operator==(const NfsError &obj)const
 
 bool NfsError::operator==(const bool &val)const
 {
+  NfsECode ecode = getErrorCode();
+
   if (val == true)
   {
-    if (err == 0 && err3 == nfsstat3::NFS3_OK && err4 == nfsstat4::NFS4_OK)
+    if (ecode == NFSERR_INTERNAL_NON || ecode == NFS_MNT3_OK || ecode == NFS_NLMSTAT4_GRANTED || ecode == NFS_OK || ecode == NFS_RPC_SUCCESS)
       return true;
     else
       return false;
   }
   else
   {
-    if (err != 0 || err3 != nfsstat3::NFS3_OK || err4 != nfsstat4::NFS4_OK)
+    if (!(ecode == NFSERR_INTERNAL_NON || ecode == NFS_MNT3_OK || ecode == NFS_NLMSTAT4_GRANTED || ecode == NFS_OK || ecode == NFS_RPC_SUCCESS))
       return true;
     else
       return false;
   }
 }
 
+bool NfsError::operator==(NfsECode ecode)const
+{
+  return (getErrorCode() == ecode);
+}
+
 void NfsError::clear()
 {
   etype = EType::ETYPE_INTERNAL;
-  err   = 0;
+  err   = NFSERR_INTERNAL_NON;
   err3  = nfsstat3::NFS3_OK;
   err4  = nfsstat4::NFS4_OK;
+  enlm  = (nlm4_stats)0;
+  emnt  = (mountstat3)0;
+  erpc  = (clnt_stat)0;
   msg.clear();
 }
 
-void NfsError::setError4(nfsstat4 code, const std::string &err)
+void NfsError::setError4(nfsstat4 code, const std::string err)
 {
   etype = ETYPE_V4;
   err4  = code;
-  msg   = err;
+  if (!err.empty())
+  {
+    msg = err;
+  }
+  else
+  {
+    msg = getV4ErrorMsg(code);
+  }
 }
 
-void NfsError::setError3(nfsstat3 code, const std::string &err)
+void NfsError::setError3(nfsstat3 code, const std::string err)
 {
   etype = ETYPE_V3;
   err3  = code;
-  msg   = err;
+  if (!err.empty())
+  {
+    msg = err;
+  }
+  else
+  {
+    msg = getV3ErrorMsg(code);
+  }
 }
 
-void NfsError::setError(uint32_t code, const std::string &emsg)
+void NfsError::setNlmError(nlm4_stats code, const std::string err)
+{
+  etype = ETYPE_NLM;
+  enlm  = code;
+  if (!err.empty())
+  {
+    msg = err;
+  }
+  else
+  {
+    msg = getNlmErrorMsg(code);
+  }
+}
+
+void NfsError::setMntError(mountstat3 code, const std::string err)
+{
+  etype = ETYPE_MNT;
+  emnt  = code;
+  msg = err + ": ERROR - " + getMntErrorMsg(code);
+}
+
+void NfsError::setRpcError(clnt_stat code, const std::string err)
+{
+  etype = ETYPE_RPC;
+  erpc = code;
+  msg = err;
+}
+
+void NfsError::setError(NfsECode code, const std::string emsg)
 {
   etype = ETYPE_INTERNAL;
   err   = code;
   msg   = emsg;
 }
 
-uint32_t NfsError::getErrorCode()
+NfsECode NfsError::getErrorCode() const
 {
+  NfsECode ecode = NFS_OK;
+
   if (etype == ETYPE_INTERNAL)
+  {
     return err;
+  }
   else if (etype == ETYPE_V3)
-    return err3;
+  {
+    switch (err3)
+    {
+      case NFS3_OK: ecode = NFS_OK; break;
+      case NFS3ERR_PERM: ecode = NFSERR_PERM; break;
+      case NFS3ERR_NOENT: ecode = NFSERR_NOENT; break;
+      case NFS3ERR_IO: ecode = NFSERR_IO; break;
+      case NFS3ERR_NXIO: ecode = NFSERR_NXIO; break;
+      case NFS3ERR_ACCES: ecode = NFSERR_ACCESS; break;
+      case NFS3ERR_EXIST: ecode = NFSERR_EXIST; break;
+      case NFS3ERR_XDEV: ecode = NFSERR_XDEV; break;
+      case NFS3ERR_NODEV: ecode = NFSERR_NODEV; break;
+      case NFS3ERR_NOTDIR: ecode = NFSERR_NOTDIR; break;
+      case NFS3ERR_ISDIR: ecode = NFSERR_ISDIR; break;
+      case NFS3ERR_INVAL: ecode = NFSERR_INVAL; break;
+      case NFS3ERR_FBIG: ecode = NFSERR_FBIG; break;
+      case NFS3ERR_NOSPC: ecode = NFSERR_NOSPC; break;
+      case NFS3ERR_ROFS: ecode = NFSERR_ROFS; break;
+      case NFS3ERR_MLINK: ecode = NFSERR_MLINK; break;
+      case NFS3ERR_NAMETOOLONG: ecode = NFSERR_NAMETOOLONG; break;
+      case NFS3ERR_NOTEMPTY: ecode = NFSERR_NOTEMPTY; break;
+      case NFS3ERR_DQUOT: ecode = NFSERR_DQUOT; break;
+      case NFS3ERR_STALE: ecode = NFSERR_STALE; break;
+      case NFS3ERR_REMOTE: ecode = NFSERR_REMOTE; break;
+      case NFS3ERR_BADHANDLE: ecode = NFSERR_BADHANDLE; break;
+      case NFS3ERR_NOT_SYNC: ecode = NFSERR_NOT_SYNC; break;
+      case NFS3ERR_BAD_COOKIE: ecode = NFSERR_BAD_COOKIE; break;
+      case NFS3ERR_NOTSUPP: ecode = NFSERR_NOTSUPP; break;
+      case NFS3ERR_TOOSMALL: ecode = NFSERR_TOOSMALL; break;
+      case NFS3ERR_SERVERFAULT: ecode = NFSERR_SERVERFAULT; break;
+      case NFS3ERR_BADTYPE: ecode = NFSERR_BADTYPE; break;
+      case NFS3ERR_JUKEBOX: ecode = NFSERR_DELAY; break;
+    }
+    return ecode;
+  }
   else if (etype == ETYPE_V4)
-    return err4;
+  {
+    switch (err4)
+    {
+      case NFS4_OK: ecode = NFS_OK; break;
+      case NFS4ERR_PERM: ecode = NFSERR_PERM; break;
+      case NFS4ERR_NOENT: ecode = NFSERR_NOENT; break;
+      case NFS4ERR_IO: ecode = NFSERR_IO; break;
+      case NFS4ERR_NXIO: ecode = NFSERR_NXIO; break;
+      case NFS4ERR_ACCESS: ecode = NFSERR_ACCESS; break;
+      case NFS4ERR_EXIST: ecode = NFSERR_EXIST; break;
+      case NFS4ERR_XDEV: ecode = NFSERR_XDEV; break;
+      case NFS4ERR_NOTDIR: ecode = NFSERR_NOTDIR; break;
+      case NFS4ERR_ISDIR: ecode = NFSERR_ISDIR; break;
+      case NFS4ERR_INVAL: ecode = NFSERR_INVAL; break;
+      case NFS4ERR_FBIG: ecode = NFSERR_FBIG; break;
+      case NFS4ERR_NOSPC: ecode = NFSERR_NOSPC; break;
+      case NFS4ERR_ROFS: ecode = NFSERR_ROFS; break;
+      case NFS4ERR_MLINK: ecode = NFSERR_MLINK; break;
+      case NFS4ERR_NAMETOOLONG: ecode = NFSERR_NAMETOOLONG; break;
+      case NFS4ERR_NOTEMPTY: ecode = NFSERR_NOTEMPTY; break;
+      case NFS4ERR_DQUOT: ecode = NFSERR_DQUOT; break;
+      case NFS4ERR_STALE: ecode = NFSERR_STALE; break;
+      case NFS4ERR_BADHANDLE: ecode = NFSERR_BADHANDLE; break;
+      case NFS4ERR_BAD_COOKIE: ecode = NFSERR_BAD_COOKIE; break;
+      case NFS4ERR_NOTSUPP: ecode = NFSERR_NOTSUPP; break;
+      case NFS4ERR_TOOSMALL: ecode = NFSERR_TOOSMALL; break;
+      case NFS4ERR_SERVERFAULT: ecode = NFSERR_SERVERFAULT; break;
+      case NFS4ERR_BADTYPE: ecode = NFSERR_BADTYPE; break;
+      case NFS4ERR_DELAY: ecode = NFSERR_DELAY; break;
+      case NFS4ERR_SAME: ecode = NFSERR_SAME; break;
+      case NFS4ERR_DENIED: ecode = NFSERR_DENIED; break;
+      case NFS4ERR_EXPIRED: ecode = NFSERR_EXPIRED; break;
+      case NFS4ERR_LOCKED: ecode = NFSERR_LOCKED; break;
+      case NFS4ERR_GRACE: ecode = NFSERR_GRACE; break;
+      case NFS4ERR_FHEXPIRED: ecode = NFSERR_FHEXPIRED; break;
+      case NFS4ERR_SHARE_DENIED: ecode = NFSERR_SHARE_DENIED; break;
+      case NFS4ERR_WRONGSEC: ecode = NFSERR_WRONGSEC; break;
+      case NFS4ERR_CLID_INUSE: ecode = NFSERR_CLID_INUSE; break;
+      case NFS4ERR_RESOURCE: ecode = NFSERR_RESOURCE; break;
+      case NFS4ERR_MOVED: ecode = NFSERR_MOVED; break;
+      case NFS4ERR_NOFILEHANDLE: ecode = NFSERR_NOFILEHANDLE; break;
+      case NFS4ERR_MINOR_VERS_MISMATCH: ecode = NFSERR_MINOR_VERS_MISMATCH; break;
+      case NFS4ERR_STALE_CLIENTID: ecode = NFSERR_STALE_CLIENTID; break;
+      case NFS4ERR_STALE_STATEID: ecode = NFSERR_STALE_STATEID; break;
+      case NFS4ERR_OLD_STATEID: ecode = NFSERR_OLD_STATEID; break;
+      case NFS4ERR_BAD_STATEID: ecode = NFSERR_BAD_STATEID; break;
+      case NFS4ERR_BAD_SEQID: ecode = NFSERR_BAD_SEQID; break;
+      case NFS4ERR_NOT_SAME: ecode = NFSERR_NOT_SAME; break;
+      case NFS4ERR_LOCK_RANGE: ecode = NFSERR_LOCK_RANGE; break;
+      case NFS4ERR_SYMLINK: ecode = NFSERR_SYMLINK; break;
+      case NFS4ERR_RESTOREFH: ecode = NFSERR_RESTOREFH; break;
+      case NFS4ERR_LEASE_MOVED: ecode = NFSERR_LEASE_MOVED; break;
+      case NFS4ERR_ATTRNOTSUPP: ecode = NFSERR_ATTRNOTSUPP; break;
+      case NFS4ERR_NO_GRACE: ecode = NFSERR_NO_GRACE; break;
+      case NFS4ERR_RECLAIM_BAD: ecode = NFSERR_RECLAIM_BAD; break;
+      case NFS4ERR_RECLAIM_CONFLICT: ecode = NFSERR_RECLAIM_CONFLICT; break;
+      case NFS4ERR_BADZDR: ecode = NFSERR_BADZDR; break;
+      case NFS4ERR_LOCKS_HELD: ecode = NFSERR_LOCKS_HELD; break;
+      case NFS4ERR_OPENMODE: ecode = NFSERR_OPENMODE; break;
+      case NFS4ERR_BADOWNER: ecode = NFSERR_BADOWNER; break;
+      case NFS4ERR_BADCHAR: ecode = NFSERR_BADCHAR; break;
+      case NFS4ERR_BADNAME: ecode = NFSERR_BADNAME; break;
+      case NFS4ERR_BAD_RANGE: ecode = NFSERR_BAD_RANGE; break;
+      case NFS4ERR_LOCK_NOTSUPP: ecode = NFSERR_LOCK_NOTSUPP; break;
+      case NFS4ERR_OP_ILLEGAL: ecode = NFSERR_OP_ILLEGAL; break;
+      case NFS4ERR_DEADLOCK: ecode = NFSERR_DEADLOCK; break;
+      case NFS4ERR_FILE_OPEN: ecode = NFSERR_FILE_OPEN; break;
+      case NFS4ERR_ADMIN_REVOKED: ecode = NFSERR_ADMIN_REVOKED; break;
+      case NFS4ERR_CB_PATH_DOWN: ecode = NFSERR_CB_PATH_DOWN; break;
+    }
+    return ecode;
+  }
+  else if (etype == ETYPE_NLM)
+  {
+    switch (enlm)
+    {
+      case NLMSTAT4_GRANTED: ecode = NFS_NLMSTAT4_GRANTED; break;
+      case NLMSTAT4_DENIED: ecode = NFS_NLMSTAT4_DENIED; break;
+      case NLMSTAT4_DENIED_NOLOCKS: ecode = NFS_NLMSTAT4_DENIED_NOLOCKS; break;
+      case NLMSTAT4_BLOCKED: ecode = NFS_NLMSTAT4_BLOCKED; break;
+      case NLMSTAT4_DENIED_GRACE_PERIOD: ecode = NFS_NLMSTAT4_DENIED_GRACE_PERIOD; break;
+      case NLMSTAT4_DEADLCK: ecode = NFS_NLMSTAT4_DEADLCK; break;
+      case NLMSTAT4_ROFS: ecode = NFS_NLMSTAT4_ROFS; break;
+      case NLMSTAT4_STALE_FH: ecode = NFS_NLMSTAT4_STALE_FH; break;
+      case NLMSTAT4_FBIG: ecode = NFS_NLMSTAT4_FBIG; break;
+      case NLMSTAT4_FAILED: ecode = NFS_NLMSTAT4_FAILED; break;
+    }
+    return ecode;
+  }
+  else if (etype == ETYPE_MNT)
+  {
+    switch (emnt)
+    {
+      case MNT3_OK: ecode = NFS_MNT3_OK; break;
+      case MNT3ERR_PERM: ecode = NFS_MNT3ERR_PERM; break;
+      case MNT3ERR_NOENT: ecode = NFS_MNT3ERR_NOENT; break;
+      case MNT3ERR_IO: ecode = NFS_MNT3ERR_IO; break;
+      case MNT3ERR_ACCES: ecode = NFS_MNT3ERR_ACCES; break;
+      case MNT3ERR_NOTDIR: ecode = NFS_MNT3ERR_NOTDIR; break;
+      case MNT3ERR_INVAL: ecode = NFS_MNT3ERR_INVAL; break;
+      case MNT3ERR_NAMETOOLONG: ecode = NFS_MNT3ERR_NAMETOOLONG; break;
+      case MNT3ERR_NOTSUPP: ecode = NFS_MNT3ERR_NOTSUPP; break;
+      case MNT3ERR_SERVERFAULT: ecode = NFS_MNT3ERR_SERVERFAULT; break;
+    }
+    return ecode;
+  }
+  else if (etype == ETYPE_RPC)
+  {
+    switch (erpc)
+    {
+      case RPC_SUCCESS: ecode = NFS_RPC_SUCCESS; break;
+      case RPC_CANTENCODEARGS: ecode = NFS_RPC_CANTENCODEARGS; break;
+      case RPC_CANTDECODERES: ecode = NFS_RPC_CANTDECODERES; break;
+      case RPC_CANTSEND: ecode = NFS_RPC_CANTSEND; break;
+      case RPC_CANTRECV: ecode = NFS_RPC_CANTRECV; break;
+      case RPC_TIMEDOUT: ecode = NFS_RPC_TIMEDOUT; break;
+      case RPC_VERSMISMATCH: ecode = NFS_RPC_VERSMISMATCH; break;
+      case RPC_AUTHERROR: ecode = NFS_RPC_AUTHERROR; break;
+      case RPC_PROGUNAVAIL: ecode = NFS_RPC_PROGUNAVAIL; break;
+      case RPC_PROGVERSMISMATCH: ecode = NFS_RPC_PROGVERSMISMATCH; break;
+      case RPC_PROCUNAVAIL: ecode = NFS_RPC_PROCUNAVAIL; break;
+      case RPC_CANTDECODEARGS: ecode = NFS_RPC_CANTDECODEARGS; break;
+      case RPC_SYSTEMERROR: ecode = NFS_RPC_SYSTEMERROR; break;
+      case RPC_NOBROADCAST: ecode = NFS_RPC_NOBROADCAST; break;
+      case RPC_UNKNOWNHOST: ecode = NFS_RPC_UNKNOWNHOST; break;
+      case RPC_UNKNOWNPROTO: ecode = NFS_RPC_UNKNOWNPROTO; break;
+      case RPC_UNKNOWNADDR: ecode = NFS_RPC_UNKNOWNADDR; break;
+      case RPC_PMAPFAILURE: ecode = NFS_RPC_PMAPFAILURE; break;
+      case RPC_PROGNOTREGISTERED: ecode = NFS_RPC_PROGNOTREGISTERED; break;
+      case RPC_N2AXLATEFAILURE: ecode = NFS_RPC_N2AXLATEFAILURE; break;
+      case RPC_FAILED: ecode = NFS_RPC_FAILED; break;
+      case RPC_INTR: ecode = NFS_RPC_INTR; break;
+      case RPC_TLIERROR: ecode = NFS_RPC_TLIERROR; break;
+      case RPC_UDERROR: ecode = NFS_RPC_UDERROR; break;
+      case RPC_INPROGRESS: ecode = NFS_RPC_INPROGRESS; break;
+      case RPC_STALERACHANDLE: ecode = NFS_RPC_STALERACHANDLE; break;
+    }
+    return ecode;
+  }
   else
-    return 0;
+    return NFS_OK;
+}
+
+std::string NfsError::getErrorString()
+{
+  if (etype == ETYPE_V3)
+  {
+    int count = sizeof(g3Map)/sizeof(v3ErrMap);
+    for (int i = 0; i < count; i++)
+    {
+      if (g3Map[i].err == err3)
+        return g3Map[i].name;
+    }
+    return "NULL V3 ERROR";
+  }
+  else if (etype == ETYPE_V4)
+  {
+    int count = sizeof(g4Map)/sizeof(v4ErrMap);
+    for (int i = 0; i < count; i++)
+    {
+      if (g4Map[i].err == err4)
+        return g4Map[i].name;
+    }
+    return "NULL V4 ERROR";
+  }
+  else if (etype == ETYPE_NLM)
+  {
+    int count = sizeof(gnlmMap)/sizeof(nlmErrMap);
+    for (int i = 0; i < count; i++)
+    {
+      if (gnlmMap[i].err == enlm)
+        return gnlmMap[i].name;
+    }
+    return "NULL NLM ERROR";
+  }
+  else if (etype == ETYPE_MNT)
+  {
+    int count = sizeof(gmntMap)/sizeof(mntErrMap);
+    for (int i = 0; i < count; i++)
+    {
+      if (gmntMap[i].err == emnt)
+        return gmntMap[i].name;
+    }
+    return "NULL MNT ERROR";
+  }
+  else if (etype == ETYPE_RPC)
+  {
+    int count = sizeof(grpcMap)/sizeof(rpcErrMap);
+    for (int i = 0; i < count; i++)
+    {
+      if (grpcMap[i].err == erpc)
+        return grpcMap[i].name;
+    }
+    return "NULL RPC ERROR";
+  }
+  return "INVALID NFS ERROR";
+}
+
+std::string NfsError::getMntErrorMsg(mountstat3 status)
+{
+  switch ( status )
+  {
+    case MNT3ERR_PERM:
+      return "Not owner";
+    case MNT3ERR_NOENT:
+      return "No such file or directory";
+    case MNT3ERR_IO:
+      return  "I/O error";
+    case MNT3ERR_ACCES:
+      return  "Permission denied";
+    case MNT3ERR_NOTDIR:
+      return "Not a directory";
+    case MNT3ERR_INVAL:
+      return "Invalid argument";
+    case MNT3ERR_NAMETOOLONG:
+      return "Filename too long";
+    case MNT3ERR_NOTSUPP:
+      return "Operation not supported";
+    case MNT3ERR_SERVERFAULT:
+      return "A failure on the server";
+    default:
+      return "unknown error";
+  }
+}
+
+std::string NfsError::getV3ErrorMsg(nfsstat3 status)
+{
+  return "";
+}
+
+std::string NfsError::getV4ErrorMsg(nfsstat4 status)
+{
+  return "";
+}
+
+std::string NfsError::getNlmErrorMsg(nlm4_stats status)
+{
+  return "";
 }

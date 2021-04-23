@@ -22,8 +22,11 @@
 #include <vector>
 #include <mutex>
 #include <string.h>
-#include<nfsrpc/nfs4.h>
-#include<nfsrpc/nfs.h>
+#include <rpc/clnt.h>
+#include <nfsrpc/nfs4.h>
+#include <nfsrpc/nfs.h>
+#include <nfsrpc/nlm.h>
+#include <nfsrpc/mount.h>
 
 namespace OpenNfsC {
 
@@ -362,40 +365,218 @@ enum NfsLockType
   WRIT_WLOCK_BLOCKING = 4, // the client will wait till sever grants it
 };
 
+enum NfsECode
+{
+  NFS_OK = 0,
+  NFSERR_PERM = 1,
+  NFSERR_NOENT = 2,
+  NFSERR_IO = 5,
+  NFSERR_NXIO = 6,
+  NFSERR_ACCESS = 13,
+  NFSERR_EXIST = 17,
+  NFSERR_XDEV = 18,
+  NFSERR_NODEV = 19, // only v3
+  NFSERR_NOTDIR = 20,
+  NFSERR_ISDIR = 21,
+  NFSERR_INVAL = 22,
+  NFSERR_FBIG = 27,
+  NFSERR_NOSPC = 28,
+  NFSERR_ROFS = 30,
+  NFSERR_MLINK = 31,
+  NFSERR_NAMETOOLONG = 63,
+  NFSERR_NOTEMPTY = 66,
+  NFSERR_DQUOT = 69,
+  NFSERR_STALE = 70,
+  NFSERR_REMOTE = 71, // only v3
+  NFSERR_BADHANDLE = 10001,
+  NFSERR_NOT_SYNC = 10002, // only v3
+  NFSERR_BAD_COOKIE = 10003,
+  NFSERR_NOTSUPP = 10004,
+  NFSERR_TOOSMALL = 10005,
+  NFSERR_SERVERFAULT = 10006,
+  NFSERR_BADTYPE = 10007,
+  NFSERR_DELAY = 10008, // NFS3ERR_JUKEBOX in v3
+  NFSERR_SAME = 10009,
+  NFSERR_DENIED = 10010,
+  NFSERR_EXPIRED = 10011,
+  NFSERR_LOCKED = 10012,
+  NFSERR_GRACE = 10013,
+  NFSERR_FHEXPIRED = 10014,
+  NFSERR_SHARE_DENIED = 10015,
+  NFSERR_WRONGSEC = 10016,
+  NFSERR_CLID_INUSE = 10017,
+  NFSERR_RESOURCE = 10018,
+  NFSERR_MOVED = 10019,
+  NFSERR_NOFILEHANDLE = 10020,
+  NFSERR_MINOR_VERS_MISMATCH = 10021,
+  NFSERR_STALE_CLIENTID = 10022,
+  NFSERR_STALE_STATEID = 10023,
+  NFSERR_OLD_STATEID = 10024,
+  NFSERR_BAD_STATEID = 10025,
+  NFSERR_BAD_SEQID = 10026,
+  NFSERR_NOT_SAME = 10027,
+  NFSERR_LOCK_RANGE = 10028,
+  NFSERR_SYMLINK = 10029,
+  NFSERR_RESTOREFH = 10030,
+  NFSERR_LEASE_MOVED = 10031,
+  NFSERR_ATTRNOTSUPP = 10032,
+  NFSERR_NO_GRACE = 10033,
+  NFSERR_RECLAIM_BAD = 10034,
+  NFSERR_RECLAIM_CONFLICT = 10035,
+  NFSERR_BADZDR = 10036,
+  NFSERR_LOCKS_HELD = 10037,
+  NFSERR_OPENMODE = 10038,
+  NFSERR_BADOWNER = 10039,
+  NFSERR_BADCHAR = 10040,
+  NFSERR_BADNAME = 10041,
+  NFSERR_BAD_RANGE = 10042,
+  NFSERR_LOCK_NOTSUPP = 10043,
+  NFSERR_OP_ILLEGAL = 10044,
+  NFSERR_DEADLOCK = 10045,
+  NFSERR_FILE_OPEN = 10046,
+  NFSERR_ADMIN_REVOKED = 10047,
+  NFSERR_CB_PATH_DOWN = 10048,
+
+  NFS_MNT3_OK = 20000,
+  NFS_MNT3ERR_PERM = 20001,
+  NFS_MNT3ERR_NOENT = 20002,
+  NFS_MNT3ERR_IO = 20003,
+  NFS_MNT3ERR_ACCES = 20004,
+  NFS_MNT3ERR_NOTDIR = 20005,
+  NFS_MNT3ERR_INVAL = 20006,
+  NFS_MNT3ERR_NAMETOOLONG = 20007,
+  NFS_MNT3ERR_NOTSUPP = 20008,
+  NFS_MNT3ERR_SERVERFAULT = 20009,
+
+  NFS_NLMSTAT4_GRANTED = 30000,
+  NFS_NLMSTAT4_DENIED = 30001,
+  NFS_NLMSTAT4_DENIED_NOLOCKS = 30002,
+  NFS_NLMSTAT4_BLOCKED = 30003,
+  NFS_NLMSTAT4_DENIED_GRACE_PERIOD = 30004,
+  NFS_NLMSTAT4_DEADLCK = 30005,
+  NFS_NLMSTAT4_ROFS = 30006,
+  NFS_NLMSTAT4_STALE_FH = 30007,
+  NFS_NLMSTAT4_FBIG = 30008,
+  NFS_NLMSTAT4_FAILED = 30009,
+
+  NFS_RPC_SUCCESS = 40000,
+  NFS_RPC_CANTENCODEARGS = 40001,
+  NFS_RPC_CANTDECODERES = 40002,
+  NFS_RPC_CANTSEND = 40003,
+  NFS_RPC_CANTRECV = 40004,
+  NFS_RPC_TIMEDOUT = 40005,
+  NFS_RPC_VERSMISMATCH = 40006,
+  NFS_RPC_AUTHERROR = 40007,
+  NFS_RPC_PROGUNAVAIL = 40008,
+  NFS_RPC_PROGVERSMISMATCH = 40009,
+  NFS_RPC_PROCUNAVAIL = 40010,
+  NFS_RPC_CANTDECODEARGS = 40011,
+  NFS_RPC_SYSTEMERROR = 40012,
+  NFS_RPC_NOBROADCAST = 40013,
+  NFS_RPC_UNKNOWNHOST = 40014,
+  NFS_RPC_UNKNOWNPROTO = 40015,
+  NFS_RPC_UNKNOWNADDR = 40016,
+  NFS_RPC_PMAPFAILURE = 40017,
+  NFS_RPC_PROGNOTREGISTERED = 40018,
+  NFS_RPC_N2AXLATEFAILURE = 40019,
+  NFS_RPC_FAILED = 40020,
+  NFS_RPC_INTR = 40021,
+  NFS_RPC_TLIERROR = 40022,
+  NFS_RPC_UDERROR = 40023,
+  NFS_RPC_INPROGRESS = 40024,
+  NFS_RPC_STALERACHANDLE = 40025,
+
+  // Internal error codes
+  NFSERR_INTERNAL_NON = 50000,
+};
+
 class NfsError
 {
   public:
     enum EType
     {
       ETYPE_INTERNAL = 0,
+      ETYPE_MNT = 1,
+      ETYPE_NLM = 2,
       ETYPE_V3 = 3,
       ETYPE_V4 = 4,
+      ETYPE_RPC = 5,
     };
 
     void clear();
     NfsError() { clear(); }
     NfsError(EType type) { clear(); etype = type; }
 
-    void setError4(nfsstat4 code, const std::string &msg);
-    void setError3(nfsstat3 code, const std::string &msg);
-    void setError(uint32_t code, const std::string &err); // set internal error
+    void setError4(nfsstat4 code, const std::string err = "");
+    void setError3(nfsstat3 code, const std::string err = "");
+    void setNlmError(nlm4_stats code, const std::string err = "");
+    void setMntError(mountstat3 code, const std::string err = "");
+    void setRpcError(clnt_stat code, const std::string err = "");
+    void setError(NfsECode code, const std::string err);//internal error
 
-    uint32_t getErrorCode();
-    nfsstat3 getV3ErrorCode() { return err3; }
-    nfsstat4 getV4ErrorCode() { return err4; }
-    std::string& getErrorMsg() { return msg; }
+  private:
+    std::string getV3ErrorMsg(nfsstat3 status);
+    std::string getV4ErrorMsg(nfsstat4 status);
+    std::string getNlmErrorMsg(nlm4_stats status);
+    std::string getMntErrorMsg(mountstat3 status);
+
+  public:
+    NfsECode getErrorCode() const; // for internal use this uniform code
+    // Error string is the string representation of error code
+    std::string getErrorString(); // for logging and for cout use this
+    std::string getErrorMsg() { return msg; }
 
     NfsError(const NfsError &obj);
     NfsError& operator=(const NfsError &obj);
-    bool operator==(const NfsError &obj)const;
+
     bool operator==(const bool &val)const;
+    bool operator==(NfsECode ecode)const;
+    bool operator==(const NfsError &obj)const;
 
   private:
     enum EType  etype;
-    uint32_t    err;  // internal error code
+    NfsECode    err;  // internal error code
     nfsstat3    err3; // nfs v3 error code
     nfsstat4    err4; // nfs v4 error code
+    nlm4_stats  enlm; // nlm v4 error code
+    mountstat3  emnt; // mount v3 error code
+    clnt_stat   erpc; // RPC error code
     std::string msg;
+
+    struct v3ErrMap
+    {
+      nfsstat3           err;
+      const std::string  name;
+    };
+    static v3ErrMap g3Map[];
+
+    struct v4ErrMap
+    {
+      nfsstat4           err;
+      const std::string  name;
+    };
+    static v4ErrMap g4Map[];
+
+    struct mntErrMap
+    {
+      mountstat3         err;
+      const std::string  name;
+    };
+    static mntErrMap gmntMap[];
+
+    struct nlmErrMap
+    {
+      nlm4_stats         err;
+      const std::string  name;
+    };
+    static nlmErrMap gnlmMap[];
+
+    struct rpcErrMap
+    {
+      clnt_stat          err;
+      const std::string  name;
+    };
+    static rpcErrMap grpcMap[];
 };
 
 } // end of namespace
