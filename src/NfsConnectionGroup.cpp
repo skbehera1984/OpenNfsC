@@ -75,6 +75,7 @@ NfsConnectionGroup::NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersi
   m_initialClientVerifier = NULL;
   m_ClientVerifier = NULL;
   m_keepalive = false;
+  m_bConnected = false;
 
   if (m_nfsVersion == NFSV3)
   {
@@ -158,8 +159,11 @@ void NfsConnectionGroup::do_keepAlive()
       if ((now - m_lastRenewCidTime) > 12)
       {
         std::lock_guard<std::mutex> lock(m_mutex);
-        if ( renewCid() )
+        if (m_bConnected)
+        {
+          renewCid();
           m_lastRenewCidTime = time(0); //update
+        }
       }
     }
   }

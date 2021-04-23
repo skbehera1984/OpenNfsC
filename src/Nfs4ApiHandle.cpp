@@ -119,6 +119,8 @@ bool Nfs4ApiHandle::connect(std::string &serverIP, NfsError &status)
     return false;
   }
 
+  m_pConn->setConnected();
+
   return true;
 }
 

@@ -81,11 +81,11 @@ class NfsConnectionGroup : public SmartRef
 
     static void setUdpTransport() { gTransportConfig = TRANSP_UDP; }
     static void setTcpTransport() { gTransportConfig = TRANSP_TCP; }
+    void setConnected() { m_bConnected = true; } // used for nfs v4 keepalive
 
   private:
     NfsConnectionGroup();        // not implemented
     NfsConnectionGroup(const NfsConnectionGroup&); // not implemented
-
 
     NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersion = NFSV3);
 
@@ -182,6 +182,7 @@ class NfsConnectionGroup : public SmartRef
     char        *m_ClientVerifier; // confirmed by server
     std::string  m_ClientName;
     uint64_t     m_ClientId;
+    bool         m_bConnected;
     std::mutex   m_seqid_mutex;
     uint32_t     m_file_op_seqid;
     uint32_t     m_file_lock_seqid;
