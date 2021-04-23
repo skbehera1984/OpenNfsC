@@ -134,9 +134,9 @@ void NfsAttr::clear()
   fmode = 0;
   bSetMode = false;
   nlinks = 0;
-  uid = 0;
+  owner.clear();
   bSetUid = false;
-  gid = 0;
+  group.clear();
   bSetGid = false;
   size = 0;
   bSetSize = false;
@@ -157,8 +157,6 @@ void NfsAttr::clear()
   bSetMtime = false;
   mTimeHow = NFS_TIME_DONT_CHANGE;
 
-  owner.clear();
-  group.clear();
   mountFid = 0;
   changeID = 0;
   name_max = 0;
@@ -194,9 +192,9 @@ NfsAttr::NfsAttr(const NfsAttr &obj)
   this->fmode = obj.fmode;
   this->bSetMode = obj.bSetMode;
   this->nlinks = obj.nlinks;
-  this->uid = obj.uid;
+  this->owner = obj.owner;
   this->bSetUid = obj.bSetUid;
-  this->gid = obj.gid;
+  this->group = obj.group;
   this->bSetGid = obj.bSetGid;
   this->size = obj.size;
   this->bSetSize = obj.bSetSize;
@@ -216,8 +214,6 @@ NfsAttr::NfsAttr(const NfsAttr &obj)
   this->time_modify.nanosecs = obj.time_modify.nanosecs;
   this->bSetMtime = obj.bSetMtime;
   this->mTimeHow = obj.mTimeHow;
-  this->owner = obj.owner;
-  this->group = obj.group;
   this->mountFid = obj.mountFid;
   this->changeID = obj.changeID;
   this->name_max = obj.name_max;
@@ -238,9 +234,9 @@ NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
   this->fmode = obj.fmode;
   this->bSetMode = obj.bSetMode;
   this->nlinks = obj.nlinks;
-  this->uid = obj.uid;
+  this->owner = obj.owner;
   this->bSetUid = obj.bSetUid;
-  this->gid = obj.gid;
+  this->group = obj.group;
   this->bSetGid = obj.bSetGid;
   this->size = obj.size;
   this->bSetSize = obj.bSetSize;
@@ -260,8 +256,6 @@ NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
   this->time_modify.nanosecs = obj.time_modify.nanosecs;
   this->bSetMtime = obj.bSetMtime;
   this->mTimeHow = obj.mTimeHow;
-  this->owner = obj.owner;
-  this->group = obj.group;
   this->mountFid = obj.mountFid;
   this->changeID = obj.changeID;
   this->name_max = obj.name_max;
@@ -308,8 +302,6 @@ int NfsAttr::Fattr3ToNfsAttr(fattr3 *attr)
 
   fmode = attr->fattr3_mode;
   nlinks = attr->fattr3_nlink;
-  uid = attr->fattr3_uid;
-  gid = attr->fattr3_gid;
   owner = std::to_string(attr->fattr3_uid);
   group = std::to_string(attr->fattr3_gid);
   size = attr->fattr3_size;
@@ -340,7 +332,7 @@ int NfsAttr::NfsAttrToSattr3(sattr3 *sattr)
   if (bSetUid)
   {
     sattr->sattr3_uid.set_it = 1;
-    sattr->sattr3_uid.set_uid3_u.uid = uid;
+    sattr->sattr3_uid.set_uid3_u.uid = std::stoul(owner);
   }
   else
     sattr->sattr3_uid.set_it = 0;
@@ -348,7 +340,7 @@ int NfsAttr::NfsAttrToSattr3(sattr3 *sattr)
   if (bSetGid)
   {
     sattr->sattr3_gid.set_it = 1;
-    sattr->sattr3_gid.set_gid3_u.gid = gid;
+    sattr->sattr3_gid.set_gid3_u.gid = std::stoul(group);
   }
   else
     sattr->sattr3_gid.set_it = 0;
@@ -379,6 +371,27 @@ int NfsAttr::NfsAttrToSattr3(sattr3 *sattr)
   else
     sattr->sattr3_mtime.set_it = TIME_DONT_CHANGE;
 
+  return 0;
+}
+
+int NfsAttr::NfsAttrToFattr3(fattr3 *attr)
+{
+  attr->fattr3_type = (ftype3)fileType;
+  attr->fattr3_mode = fmode;
+  attr->fattr3_nlink = nlinks;
+  attr->fattr3_uid = std::stoul(owner);
+  attr->fattr3_gid = std::stoul(group);
+  attr->fattr3_size = size;
+  attr->fattr3_used = bytes_used;
+  //attr->fattr3_rdev = rawDevice;
+  attr->fattr3_fsid = fsid.FSIDMajor;
+  attr->fattr3_fileid = fid;
+  attr->fattr3_atime.time3_seconds = time_access.seconds;
+  attr->fattr3_atime.time3_nseconds = time_access.nanosecs;
+  attr->fattr3_mtime.time3_seconds = time_modify.seconds;
+  attr->fattr3_mtime.time3_nseconds = time_modify.nanosecs;
+  attr->fattr3_ctime.time3_seconds = time_metadata.seconds;
+  attr->fattr3_ctime.time3_nseconds = time_metadata.nanosecs;
   return 0;
 }
 

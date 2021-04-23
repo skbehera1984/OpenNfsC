@@ -124,8 +124,6 @@ public:
   NfsFileType getFileType() { return fileType; }
   uint32_t    getFileMode() { return fmode; }
   uint32_t    getNumLinks() { return nlinks; }
-  uint32_t    getUid() { return uid; }
-  uint32_t    getGid() { return gid; }
   std::string getOwner() { return owner; }
   std::string getGroup() { return group; }
   uint64_t    getSize() { return size; }
@@ -151,30 +149,10 @@ public:
     bSetMode = false;
     mask[1] &= ~(1 << (FATTR4_MODE - 32));
   }
-  void setUid(uint32_t UID)
-  {
-    uid = UID;
-    bSetUid = true;
-    mask[1] |= (1 << (FATTR4_OWNER - 32));
-  }
-  void unsetUid()
-  {
-    bSetUid = false;
-    mask[1] &= ~(1 << (FATTR4_OWNER - 32));
-  }
-  void setGid(uint32_t GID)
-  {
-    gid = GID;
-    bSetGid = true;
-    mask[1] |= (1 << (FATTR4_OWNER_GROUP - 32));
-  }
-  void unsetGid()
-  {
-    bSetGid = false;
-    mask[1] &= ~(1 << (FATTR4_OWNER_GROUP - 32));
-  }
   void setOwner(std::string& Owner)
   {
+    if (Owner.empty())
+      return;
     owner = Owner;
     bSetUid = true;
     mask[1] |= (1 << (FATTR4_OWNER - 32));
@@ -186,6 +164,8 @@ public:
   }
   void setGroup(std::string& Group)
   {
+    if (Group.empty())
+      return;
     group= Group;
     bSetGid = true;
     mask[1] |= (1 << (FATTR4_OWNER_GROUP - 32));
@@ -274,9 +254,9 @@ public:
   uint32_t    fmode;
   bool        bSetMode;
   uint32_t    nlinks;
-  uint32_t    uid;
+  std::string owner;
   bool        bSetUid;
-  uint32_t    gid;
+  std::string group;
   bool        bSetGid;
   uint64_t    size;
   bool        bSetSize;
@@ -293,8 +273,6 @@ public:
   bool        bSetMtime;
   NfsTimeHow  mTimeHow;
 
-  std::string owner;
-  std::string group;
   uint64_t    mountFid;
   uint64_t    changeID;
   uint32_t    name_max;
