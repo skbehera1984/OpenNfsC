@@ -62,6 +62,7 @@ class NfsConnectionGroup : public SmartRef
 
     std::string getIP() { return m_serverIP; }
     const char* getServerIpStr() { return m_serverIPStr; }
+    NFSVersion getNfsVersion() { return m_nfsVersion; }
     void setTransport(TransportType transp) { m_nfsTransp = transp; }
     bool update();
     bool ensureConnection();
@@ -75,6 +76,14 @@ class NfsConnectionGroup : public SmartRef
     static NfsConnectionGroupPtr create(const char* serverIpStr,
                                         bool        useUdp,
                                         NFSVersion  version=NFSV3);
+
+    static NfsConnectionGroupPtr forceCreate(std::string   serverIP,
+                                             TransportType transp,
+                                             NFSVersion    version=NFSV3);
+
+    static NfsConnectionGroupPtr forceCreate(const char* serverIpStr,
+                                             bool        useUdp,
+                                             NFSVersion  version=NFSV3);
 
     static bool addNfsConnectionGroup(std::string serverIP, TransportType transp);
     static NfsConnectionGroupPtr findNfsConnectionGroup(std::string serverIP);

@@ -457,6 +457,26 @@ NfsConnectionGroupPtr NfsConnectionGroup::create(const char* serverIpStr, bool u
   return svr;
 }
 
+/* These forceCreate APIs are used to create on the fly connections, which are short lived.
+ * These won't be saved in global serverTble
+ */
+NfsConnectionGroupPtr NfsConnectionGroup::forceCreate(std::string serverIp, TransportType proto, NFSVersion version)
+{
+  NfsConnectionGroupPtr svr = new NfsConnectionGroup(serverIp, version);
+  svr->initNfs();
+  return svr;
+}
+
+NfsConnectionGroupPtr NfsConnectionGroup::forceCreate(const char* serverIpStr, bool useUdp, NFSVersion version)
+{
+  NfsConnectionGroupPtr svr;
+
+  TransportType transp = useUdp ? TRANSP_UDP : TRANSP_TCP;
+  std::string srvIP=serverIpStr;
+  svr = forceCreate(srvIP, transp, version);
+
+  return svr;
+}
 
 bool NfsConnectionGroup::addNfsConnectionGroup(std::string  serverIp, TransportType proto)
 {
