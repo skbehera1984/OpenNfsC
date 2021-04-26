@@ -307,7 +307,7 @@ int NfsAttr::Fattr3ToNfsAttr(fattr3 *attr)
   size = attr->fattr3_size;
   bytes_used = attr->fattr3_used;
   // don't need rdev
-  fsid.FSIDMajor = attr->fattr3_fsid;
+  fsid.FSIDMinor = attr->fattr3_fsid;
   fid = attr->fattr3_fileid;
   time_access.seconds = attr->fattr3_atime.time3_seconds;
   time_access.nanosecs = attr->fattr3_atime.time3_nseconds;
@@ -384,7 +384,7 @@ int NfsAttr::NfsAttrToFattr3(fattr3 *attr)
   attr->fattr3_size = size;
   attr->fattr3_used = bytes_used;
   //attr->fattr3_rdev = rawDevice;
-  attr->fattr3_fsid = fsid.FSIDMajor;
+  attr->fattr3_fsid = fsid.FSIDMinor;
   attr->fattr3_fileid = fid;
   attr->fattr3_atime.time3_seconds = time_access.seconds;
   attr->fattr3_atime.time3_nseconds = time_access.nanosecs;

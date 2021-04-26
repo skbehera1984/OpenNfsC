@@ -128,7 +128,7 @@ public:
   std::string getGroup() { return group; }
   uint64_t    getSize() { return size; }
   uint64_t    getSizeUsed() { return bytes_used; }
-  uint64_t    getFsId() { return fsid.FSIDMajor; }
+  uint64_t    getFsId() { return fsid.FSIDMinor; }
   uint64_t    getFid() { return fid; }
   NfsTime     getAccessTime() { return time_access; }
   uint64_t    getAccessTimeSecs() { return time_access.seconds; }
