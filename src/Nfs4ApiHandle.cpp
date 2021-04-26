@@ -1179,6 +1179,12 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
   memcpy(rdargs->stateid.other, stid.other, 12);
   compCall.appendCommand(&carg);
 
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = std_attr;
+  compCall.appendCommand(&carg);
+
   cst = compCall.call(m_pConn);
   if (cst != RPC_SUCCESS)
   {
@@ -1212,6 +1218,20 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
   {
     bytesRead = rdres->data.data_len;
     data = std::string(rdres->data.data_val, rdres->data.data_len);
+  }
+
+  index = compCall.findOPIndex(OP_GETATTR);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_GETATTR\n", __func__);
+    return false;
+  }
+
+  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, std_attr[0], std_attr[1], postAttr) < 0)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to decode OP_GETATTR result\n", __func__);
+    return false;
   }
 
   return true;
