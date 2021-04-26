@@ -1186,12 +1186,22 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   return true;
 }
 
+bool Nfs3ApiHandle::getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+{
+  NfsFh tmpFh;
+  return lookupPath(exp, path, tmpFh, attr, err);
+}
+
 bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
   return false;
 }
 
-bool Nfs3ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status)
+bool Nfs3ApiHandle::lookup(NfsFh             &dirFh,
+                           const std::string &file,
+                           NfsFh             &lookup_fh,
+                           NfsAttr           &attr,
+                           NfsError          &status)
 {
   LOOKUP3args lkpArg = {};
 
@@ -1223,9 +1233,12 @@ bool Nfs3ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_
   NfsFh fh(fh3->fh3_data.fh3_data_len, fh3->fh3_data.fh3_data_val);
   lookup_fh = fh;
 
+  bool gotAttributes = false;
+
   if (res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.attributes_follow)
   {
     attr.Fattr3ToNfsAttr(&(res.LOOKUP3res_u.lookup3ok.lookup3_obj_attributes.post_op_attr_u.post_op_attr));
+    gotAttributes = true;
   }
   if (res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.attributes_follow)
   {
@@ -1233,7 +1246,65 @@ bool Nfs3ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_
     //= res.LOOKUP3res_u.lookup3ok.lookup3_dir_attributes.post_op_attr_u.post_op_attr;
   }
 
+  if (gotAttributes)
+    return true;
+
+  //now get the attributes for the file handle
+  GETATTR3args getAttrArg = {};
+  getAttrArg.getattr3_object.fh3_data.fh3_data_len = lookup_fh.getLength();
+  getAttrArg.getattr3_object.fh3_data.fh3_data_val = (char*)lookup_fh.getData();
+
+  NFSv3::GetAttrCall nfsGetattrCall(getAttrArg);
+  enum clnt_stat GetAttrRet = nfsGetattrCall.call(m_pConn);
+  if (GetAttrRet != RPC_SUCCESS)
+  {
+    status.setRpcError(GetAttrRet, "Nfs3ApiHandle::lookup(): getattr rpc error");
+    return false;
+  }
+
+  GETATTR3res &attrres = nfsGetattrCall.getResult();
+  if (attrres.status != NFS3_OK)
+  {
+    status.setError3(attrres.status, "Nfs3ApiHandle::lookup(): getattr failed");
+    syslog(LOG_ERR, "SL_NASFileServer::lookup(): getattr error: %d\n", attrres.status);
+    return false;
+  }
+
+  // copy the object attributes out of the result struct
+  attr.Fattr3ToNfsAttr(&(attrres.GETATTR3res_u.getattr3ok.getattr3_obj_attributes));
+
   return true;
+}
+
+bool Nfs3ApiHandle::lookupPath(const std::string &exp_path,
+                               const std::string &pathFromRoot,
+                               NfsFh             &lookup_fh,
+                               NfsAttr           &lookup_attr,
+                               NfsError          &err)
+{
+  NfsFh rootFh;
+  if (!getRootFH(exp_path, rootFh, err))
+  {
+    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getRootFH\n", __func__);
+    return false;
+  }
+
+  return lookupPath(rootFh, pathFromRoot, lookup_fh, lookup_attr, err);
+}
+
+bool Nfs3ApiHandle::lookupPath(NfsFh             &rootFh,
+                               const std::string &pathFromRoot,
+                               NfsFh             &lookup_fh,
+                               NfsAttr           &lookup_attr,
+                               NfsError          &err)
+{
+  return getFileHandle(rootFh, pathFromRoot, lookup_fh, lookup_attr, err);
+}
+
+bool Nfs3ApiHandle::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+{
+  NfsFh tmpFh;
+  return lookupPath(exp, path, tmpFh, attr, err);
 }
 
 bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status)

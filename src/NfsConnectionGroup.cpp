@@ -741,6 +741,26 @@ bool NfsConnectionGroup::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   return m_NfsApiHandle->getAttr(fh, attr, status);
 }
 
+bool NfsConnectionGroup::getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+{
+  return m_NfsApiHandle->getAttr(exp, path, attr, err);
+}
+
+bool NfsConnectionGroup::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+{
+  return m_NfsApiHandle->fileExists(exp, path, attr, err);
+}
+
+bool NfsConnectionGroup::lookupPath(const std::string &exp_path, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &err)
+{
+  return m_NfsApiHandle->lookupPath(exp_path, pathFromRoot, lookup_fh, lookup_attr, err);
+}
+
+bool NfsConnectionGroup::lookupPath(NfsFh &rootFh, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &err)
+{
+  return m_NfsApiHandle->lookupPath(rootFh, pathFromRoot, lookup_fh, lookup_attr, err);
+}
+
 bool NfsConnectionGroup::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
   return m_NfsApiHandle->lookup(path, lookup_fh, status);
