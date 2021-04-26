@@ -143,7 +143,7 @@ COMPOUNDCall::decode_OP_ACCESS(RpcPacketPtr packet, ACCESS4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   uint32_t supported=0;
   uint32_t access=0;
@@ -174,7 +174,7 @@ COMPOUNDCall::decode_OP_CLOSE(RpcPacketPtr packet, CLOSE4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   uint32 seqid = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&seqid));
@@ -200,7 +200,7 @@ COMPOUNDCall::decode_OP_COMMIT(RpcPacketPtr packet, COMMIT4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   verifier4 cookieverf;
   RETURN_ON_ERROR(packet->xdrDecodeFixedOpaque((unsigned char*)&cookieverf, NFS4_VERIFIER_SIZE));
@@ -229,7 +229,7 @@ COMPOUNDCall::decode_OP_CREATE(RpcPacketPtr packet, CREATE4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   uint32 atmc = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&atmc));
@@ -272,11 +272,7 @@ COMPOUNDCall::decode_OP_DELEGPURGE(RpcPacketPtr packet, DELEGPURGE4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -293,11 +289,7 @@ COMPOUNDCall::decode_OP_DELEGRETURN(RpcPacketPtr packet, DELEGRETURN4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -322,7 +314,7 @@ COMPOUNDCall::decode_OP_GETATTR(RpcPacketPtr packet, GETATTR4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   uint32 bitMapLength = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&bitMapLength));
@@ -372,7 +364,7 @@ COMPOUNDCall::decode_OP_GETFH(RpcPacketPtr packet, GETFH4res *res)
 
   res->status = (nfsstat4)status;
   if (status != NFS4_OK)
-    return -1;
+    return 0;
 
   unsigned char* str = NULL;
   uint32 len = 0;
@@ -398,7 +390,7 @@ COMPOUNDCall::decode_OP_LINK(RpcPacketPtr packet, LINK4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   bool_t sato;
   RETURN_ON_ERROR(packet->xdrDecodeUint32((unsigned int*)&sato));
@@ -460,7 +452,7 @@ COMPOUNDCall::decode_OP_LOCK(RpcPacketPtr packet, LOCK4res *res)
     RETURN_ON_ERROR(packet->xdrDecodeUint32(&(res->LOCK4res_u.resok4.lock_stateid.seqid)));
     RETURN_ON_ERROR(packet->xdrDecodeFixedOpaque((unsigned char*)res->LOCK4res_u.resok4.lock_stateid.other, 12));
   }
-  else
+  else if (res->status == NFS4ERR_DENIED)
   {
     uint64 value = 0;
     RETURN_ON_ERROR(packet->xdrDecodeUint64(&value));
@@ -508,7 +500,7 @@ COMPOUNDCall::decode_OP_LOCKT(RpcPacketPtr packet, LOCKT4res *res)
 
   res->status = (nfsstat4)opSts;
 
-  if (res->status != NFS4_OK)
+  if (res->status == NFS4ERR_DENIED)
   {
     uint64 value = 0;
     RETURN_ON_ERROR(packet->xdrDecodeUint64(&value));
@@ -557,7 +549,7 @@ COMPOUNDCall::decode_OP_LOCKU(RpcPacketPtr packet, LOCKU4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&(res->LOCKU4res_u.lock_stateid.seqid)));
   RETURN_ON_ERROR(packet->xdrDecodeFixedOpaque((unsigned char*)res->LOCKU4res_u.lock_stateid.other, 12));
@@ -581,7 +573,7 @@ COMPOUNDCall::decode_OP_LOOKUP(RpcPacketPtr packet, LOOKUP4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   return 0;
 }
@@ -597,11 +589,7 @@ COMPOUNDCall::decode_OP_LOOKUPP(RpcPacketPtr packet, LOOKUPP4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -617,11 +605,7 @@ COMPOUNDCall::decode_OP_NVERIFY(RpcPacketPtr packet, NVERIFY4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -653,6 +637,7 @@ COMPOUNDCall::encode_OP_OPEN(RpcPacketPtr packet, const OPEN4args *arg)
         break;
         case EXCLUSIVE4:
         {
+          //TODO sarat nfs - exclusive not tested
           RETURN_ON_ERROR(packet->xdrEncodeFixedOpaque((void*)arg->openhow.openflag4_u.how.createhow4_u.createverf,
                                                        NFS4_VERIFIER_SIZE));
         }
@@ -723,7 +708,7 @@ COMPOUNDCall::decode_OP_OPEN(RpcPacketPtr packet, OPEN4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   /* get the state id */
   uint32 seqid = 0;
@@ -796,11 +781,7 @@ COMPOUNDCall::decode_OP_OPENATTR(RpcPacketPtr packet, OPENATTR4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -822,7 +803,7 @@ COMPOUNDCall::decode_OP_OPEN_CONFIRM(RpcPacketPtr packet, OPEN_CONFIRM4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   uint32 seqid = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&seqid));
@@ -853,7 +834,7 @@ COMPOUNDCall::decode_OP_OPEN_DOWNGRADE(RpcPacketPtr packet, OPEN_DOWNGRADE4res *
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   uint32 seqid = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&seqid));
@@ -876,11 +857,7 @@ COMPOUNDCall::decode_OP_PUTFH(RpcPacketPtr packet, PUTFH4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -895,11 +872,7 @@ COMPOUNDCall::decode_OP_PUTPUBFH(RpcPacketPtr packet, PUTPUBFH4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -914,11 +887,7 @@ COMPOUNDCall::decode_OP_PUTROOTFH(RpcPacketPtr packet, PUTROOTFH4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -940,7 +909,7 @@ COMPOUNDCall::decode_OP_READ(RpcPacketPtr packet, READ4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   uint32 iseof=false;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&iseof));
@@ -982,7 +951,7 @@ COMPOUNDCall::decode_OP_READDIR(RpcPacketPtr packet, READDIR4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   verifier4 cookieverf;
   RETURN_ON_ERROR(packet->xdrDecodeFixedOpaque((unsigned char*)&cookieverf,NFS4_VERIFIER_SIZE));
@@ -1089,7 +1058,7 @@ COMPOUNDCall::decode_OP_READLINK(RpcPacketPtr packet, READLINK4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   unsigned char* str = NULL;
   u_int len = 0;
@@ -1104,7 +1073,6 @@ COMPOUNDCall::decode_OP_READLINK(RpcPacketPtr packet, READLINK4res *res)
 int
 COMPOUNDCall::encode_OP_REMOVE(RpcPacketPtr packet, const REMOVE4args *arg)
 {
-
   RETURN_ON_ERROR(packet->xdrEncodeString((unsigned char*)arg->target.utf8string_val, arg->target.utf8string_len));
   return 0;
 }
@@ -1117,7 +1085,7 @@ COMPOUNDCall::decode_OP_REMOVE(RpcPacketPtr packet, REMOVE4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   bool_t sato;
   RETURN_ON_ERROR(packet->xdrDecodeUint32((unsigned int*)&sato));
@@ -1151,7 +1119,7 @@ COMPOUNDCall::decode_OP_RENAME(RpcPacketPtr packet, RENAME4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   bool_t sato;
   RETURN_ON_ERROR(packet->xdrDecodeUint32((unsigned int*)&sato));
@@ -1192,11 +1160,7 @@ COMPOUNDCall::decode_OP_RENEW(RpcPacketPtr packet, RENEW4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -1211,11 +1175,7 @@ COMPOUNDCall::decode_OP_RESTOREFH(RpcPacketPtr packet, RESTOREFH4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -1230,11 +1190,7 @@ COMPOUNDCall::decode_OP_SAVEFH(RpcPacketPtr packet, SAVEFH4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -1267,8 +1223,6 @@ COMPOUNDCall::decode_OP_SETATTR(RpcPacketPtr packet, SETATTR4res *res)
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
 
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
 
   uint32 bitMapLength = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&bitMapLength));
@@ -1311,19 +1265,32 @@ COMPOUNDCall::decode_OP_SETCLIENTID(RpcPacketPtr reply, SETCLIENTID4res *res)
   RETURN_ON_ERROR(reply->xdrDecodeUint32(&opSts));
 
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
 
-  uint64 clientid = 0;
-  RETURN_ON_ERROR(reply->xdrDecodeUint64(&clientid));
-  res->SETCLIENTID4res_u.resok4.clientid = clientid;
+  if (opSts == NFS4_OK)
+  {
+    uint64 clientid = 0;
+    RETURN_ON_ERROR(reply->xdrDecodeUint64(&clientid));
+    res->SETCLIENTID4res_u.resok4.clientid = clientid;
 
-  verifier4 verifierConfirm;
-  RETURN_ON_ERROR(reply->xdrDecodeFixedOpaque((unsigned char*)&verifierConfirm,
-                                              NFS4_VERIFIER_SIZE));
-  memcpy(res->SETCLIENTID4res_u.resok4.setclientid_confirm,
-         verifierConfirm,
-         NFS4_VERIFIER_SIZE);
+    verifier4 verifierConfirm;
+    RETURN_ON_ERROR(reply->xdrDecodeFixedOpaque((unsigned char*)&verifierConfirm,
+                                                NFS4_VERIFIER_SIZE));
+    memcpy(res->SETCLIENTID4res_u.resok4.setclientid_confirm,
+           verifierConfirm,
+           NFS4_VERIFIER_SIZE);
+  }
+  else if (opSts == NFS4ERR_CLID_INUSE)
+  {
+    //TODO sarat nfs - sectio not tested
+    unsigned char* r_netid = NULL;
+    uint32 r_netid_len;
+    RETURN_ON_ERROR(reply->xdrDecodeString(r_netid, r_netid_len));
+    unsigned char* r_addr = NULL;
+    uint32 r_addr_len;
+    RETURN_ON_ERROR(reply->xdrDecodeString(r_addr, r_addr_len));
+    res->SETCLIENTID4res_u.client_using.r_netid = (char*)r_netid;
+    res->SETCLIENTID4res_u.client_using.r_addr = (char*)r_addr;
+  }
 
   return 0;
 }
@@ -1342,11 +1309,7 @@ COMPOUNDCall::decode_OP_SETCLIENTID_CONFIRM(RpcPacketPtr request, SETCLIENTID_CO
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(request->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -1371,11 +1334,7 @@ COMPOUNDCall::decode_OP_VERIFY(RpcPacketPtr packet, VERIFY4res *res)
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
@@ -1398,7 +1357,7 @@ COMPOUNDCall::decode_OP_WRITE(RpcPacketPtr packet, WRITE4res *res)
 
   res->status = (nfsstat4)opSts;
   if (opSts != NFS4_OK)
-    return -1;
+    return 0;
 
   uint32 count = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&count));
@@ -1430,11 +1389,7 @@ COMPOUNDCall::decode_OP_RELEASE_LOCKOWNER(RpcPacketPtr packet, RELEASE_LOCKOWNER
 {
   uint32 opSts = 0;
   RETURN_ON_ERROR(packet->xdrDecodeUint32(&opSts));
-
   res->status = (nfsstat4)opSts;
-  if (opSts != NFS4_OK)
-    return -1;
-
   return 0;
 }
 
