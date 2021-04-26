@@ -783,7 +783,7 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
   else
   {
     // set the file mode
-    tmp_attr.setFileMode(0666);
+    tmp_attr.setFileMode(0777);
     NfsUtil::NfsAttr_fattr4(tmp_attr, &obj);
   }
 
