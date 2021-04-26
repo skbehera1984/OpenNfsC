@@ -1790,12 +1790,20 @@ bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
   pfhgargs->object.nfs_fh4_val = fh.getData();
   compCall.appendCommand(&carg);
 
+  uint64_t len = length;
+  if (len == 0)
+  {
+    // In V4 length 0 is invalid, But in V3 it means to the end of file.
+    // In V4 eof is identified by all bits set to 1 i.e 0xffffffffffffffff
+    len = 0xffffffffffffffff;
+  }
+
   carg.argop = OP_LOCK;
   LOCK4args *lkargs = &carg.nfs_argop4_u.oplock;
   lkargs->locktype = (nfs_lock_type4)lockType;
   lkargs->reclaim = (reclaim) ? 1 : 0;
   lkargs->offset = offset;
-  lkargs->length = length;
+  lkargs->length = len;
 
   if (!reclaim)
   {
@@ -1865,6 +1873,14 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   pfhgargs->object.nfs_fh4_val = fh.getData();
   compCall.appendCommand(&carg);
 
+  uint64_t len = length;
+  if (len == 0)
+  {
+    // In V4 length 0 is invalid, But in V3 it means to the end of file.
+    // In V4 eof is identified by all bits set to 1 i.e 0xffffffffffffffff
+    len = 0xffffffffffffffff;
+  }
+
   carg.argop = OP_LOCKU;
   LOCKU4args *ulkargs = &carg.nfs_argop4_u.oplocku;
   ulkargs->locktype = (nfs_lock_type4)lockType;
@@ -1873,7 +1889,7 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   ulkargs->lock_stateid.seqid = stid.seqid;
   memcpy(ulkargs->lock_stateid.other, stid.other, 12);
   ulkargs->offset = offset;
-  ulkargs->length = length;
+  ulkargs->length = len;
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
