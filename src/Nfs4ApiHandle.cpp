@@ -746,6 +746,7 @@ bool Nfs4ApiHandle::access(const std::string &filePath,
   return true;
 }
 
+/* File Create API */
 bool Nfs4ApiHandle::create(NfsFh             &dirFh,
                            std::string       &fileName,
                            NfsAttr           *inAttr,
@@ -771,11 +772,22 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
   compCall.appendCommand(&carg);
 
   fattr4 obj;
-  NfsUtil::NfsAttr_fattr4(*inAttr, &obj);
+
+  NfsAttr tmp_attr;
+  if (inAttr != NULL)
+  {
+    NfsUtil::NfsAttr_fattr4(*inAttr, &obj);
+  }
+  else
+  {
+    // set the file mode
+    tmp_attr.setFileMode(0666);
+    NfsUtil::NfsAttr_fattr4(tmp_attr, &obj);
+  }
 
   carg.argop = OP_CREATE;
   CREATE4args *crargs = &carg.nfs_argop4_u.opcreate;
-  crargs->objtype.type = NF4DIR;
+  crargs->objtype.type = NF4REG;
   crargs->objname.utf8string_val = const_cast<char*>(fileName.c_str());
   crargs->objname.utf8string_len = fileName.length();
   crargs->createattrs.attrmask.bitmap4_len = obj.attrmask.bitmap4_len;
@@ -809,32 +821,8 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
     return false;
   }
 
-  int index = compCall.findOPIndex(OP_GETFH);
-  if (index == -1)
-  {
-    cout << "Failed to find op index for - OP_GETFH" << endl;
-    return false;
-  }
-
-  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
-  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
-  fileFh = fh;
-
-  index = compCall.findOPIndex(OP_GETATTR);
-  if (index == -1)
-  {
-    cout << "Failed to find op index for - OP_GETATTR" << endl;
-    return false;
-  }
-
-  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
-  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, mask[0], mask[1], outAttr) < 0)
-  {
-    cout << "Failed to decode OP_GETATTR result" << endl;
-    return false;
-  }
-
-  return true;
+  // This is a file create, So, use open to get fh
+  return open(dirFh, fileName, fileFh, outAttr, status);
 }
 
 bool Nfs4ApiHandle::open(NfsFh             &rootFh,
@@ -956,7 +944,7 @@ bool Nfs4ApiHandle::open(NfsFh             &rootFh,
   uint32_t rflags = opres->rflags;
   if (rflags & OPEN4_RESULT_CONFIRM)
   {
-    // send open confirmation
+    // TODO sarat nfs send open confirmation
   }
 
   index = compCall.findOPIndex(OP_GETATTR);
