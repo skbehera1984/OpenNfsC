@@ -41,6 +41,11 @@ class Nfs3ApiHandle : public NfsApiHandle
                 NfsFh             &fileFh,
                 NfsAttr           &outAttr,
                 NfsError          &status);
+    bool open(NfsFh             &rootFh,
+              const std::string  filePath,
+              NfsFh             &fileFh,
+              NfsAttr           &fileAttr,
+              NfsError          &err);
     bool open(const std::string   filePath,
               uint32_t            access,
               uint32_t            shareAccess,

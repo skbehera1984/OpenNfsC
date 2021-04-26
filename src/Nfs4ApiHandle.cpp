@@ -126,7 +126,7 @@ bool Nfs4ApiHandle::connect(std::string &serverIP, NfsError &status)
 
 bool Nfs4ApiHandle::getExports(list<string>& Exports)
 {
-  return true;
+  return false;
 }
 
 bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsError &status)
@@ -462,80 +462,7 @@ bool Nfs4ApiHandle::getFileHandle(NfsFh             &rootFH,
                                   NfsAttr           &attr,
                                   NfsError          &status)
 {
-  NFSv4::COMPOUNDCall compCall;
-  enum clnt_stat cst = RPC_SUCCESS;
-  nfs_argop4 carg;
-
-  std::vector<std::string> path_components;
-  NfsUtil::splitNfsPath(path, path_components);
-
-  carg.argop = OP_PUTFH;
-  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
-  pfhgargs->object.nfs_fh4_len = rootFH.getLength();
-  pfhgargs->object.nfs_fh4_val = rootFH.getData();
-  compCall.appendCommand(&carg);
-
-  for (std::string &comp : path_components)
-  {
-    nfs_argop4 carg;
-    carg.argop = OP_LOOKUP;
-    LOOKUP4args *largs = &carg.nfs_argop4_u.oplookup;
-    largs->objname.utf8string_len = comp.length();
-    largs->objname.utf8string_val = const_cast<char *>(comp.c_str());
-    compCall.appendCommand(&carg);
-  }
-
-  carg.argop = OP_GETATTR;
-  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = std_attr;
-  compCall.appendCommand(&carg);
-
-  carg.argop = OP_GETFH;
-  compCall.appendCommand(&carg);
-
-  cst = compCall.call(m_pConn);
-  if (cst != RPC_SUCCESS)
-  {
-    status.setRpcError(cst, "Nfs4ApiHandle::getFileHandle failed - rpc error");
-    return false;
-  }
-
-  COMPOUND4res res = compCall.getResult();
-  if (res.status != NFS4_OK)
-  {
-    status.setError4(res.status, "NFSV4 call getFh failed");
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call getFh failed\n", __func__);
-    return false;
-  }
-
-  int index = compCall.findOPIndex(OP_GETFH);
-  if (index == -1)
-  {
-    syslog(LOG_ERR, "Failed to find op index for - OP_GETFH");
-    return false;
-  }
-
-  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
-  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
-  fileFh = fh;
-
-  index = compCall.findOPIndex(OP_GETATTR);
-  if (index == -1)
-  {
-    syslog(LOG_ERR, "Failed to find op index for - OP_GETATTR");
-    return false;
-  }
-
-  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
-  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, std_attr[0], std_attr[1], attr) < 0)
-  {
-    syslog(LOG_ERR, "Failed to decode OP_GETATTR result");
-    return false;
-  }
-
-  // TODO sarat - if this is a file do we need to open and get the fh??
-  return true;
+  return open(rootFH, path, fileFh, attr, status);
 }
 
 bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
@@ -887,6 +814,134 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
     cout << "Failed to decode OP_GETATTR result" << endl;
     return false;
   }
+
+  return true;
+}
+
+bool Nfs4ApiHandle::open(NfsFh             &rootFh,
+                         const std::string  filePath,
+                         NfsFh             &fileFh,
+                         NfsAttr           &fileAttr,
+                         NfsError          &err)
+{
+  std::vector<std::string> path_components;
+  NfsUtil::splitNfsPath(filePath, path_components);
+
+  std::string fileName = path_components.back();
+  path_components.pop_back();
+
+  std::string dirPath;
+  NfsUtil::buildNfsPath(dirPath, path_components);
+
+  NfsFh dirFH;
+  if (!getDirFh(rootFh, dirPath, dirFH, err))
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to get parent directory FH\n", __func__);
+    return false;
+  }
+
+  // Open the actual file
+  NFSv4::COMPOUNDCall compCall;
+  enum clnt_stat cst = RPC_SUCCESS;
+
+  nfs_argop4 carg;
+
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = dirFH.getLength();
+  pfhgargs->object.nfs_fh4_val = dirFH.getData();
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_OPEN;
+  OPEN4args *opargs = &carg.nfs_argop4_u.opopen;
+  opargs->seqid = m_pConn->getFileOPSeqId();
+  opargs->share_access = SHARE_ACCESS_BOTH;
+  opargs->share_deny = SHARE_DENY_NONE;
+  opargs->owner.clientid = m_pConn->getClientId();
+  opargs->owner.owner.owner_len = m_pConn->getClientName().length();
+  opargs->owner.owner.owner_val = const_cast<char *>(m_pConn->getClientName().c_str());
+  opargs->openhow.opentype = OPEN4_NOCREATE;
+  //TODO sarat - if the opentype is OPEN4_CREATE then we need to add createhow4
+  opargs->claim.claim = CLAIM_NULL;
+  //TODO sarat - if there is a claim type then we need to append it
+  opargs->claim.open_claim4_u.file.utf8string_len = fileName.length();
+  opargs->claim.open_claim4_u.file.utf8string_val = const_cast<char*>(fileName.c_str());
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETFH;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_ACCESS;
+  ACCESS4args *aargs = &carg.nfs_argop4_u.opaccess;
+  aargs->access = 0x2D;
+  compCall.appendCommand(&carg);
+
+  carg.argop = OP_GETATTR;
+  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
+  gargs->attr_request.bitmap4_len = 2;
+  gargs->attr_request.bitmap4_val = std_attr;
+  compCall.appendCommand(&carg);
+
+  cst = compCall.call(m_pConn);
+  if (cst != RPC_SUCCESS)
+  {
+    err.setRpcError(cst, "Nfs4ApiHandle::open failed - rpc error");
+    return false;
+  }
+
+  COMPOUND4res res = compCall.getResult();
+  if (res.status != NFS4_OK)
+  {
+    err.setError4(res.status, "NFSV4 OPEN failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: OPEN failed. Error - %d\n", __func__, res.status);
+    return false;
+  }
+
+  int index = compCall.findOPIndex(OP_GETFH);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_GETFH\n", __func__);
+    return false;
+  }
+
+  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
+  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
+
+  index = compCall.findOPIndex(OP_OPEN);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_OPEN\n", __func__);
+    return false;
+  }
+
+  OPEN4resok *opres = &res.resarray.resarray_val[index].nfs_resop4_u.opopen.OPEN4res_u.resok4;
+  NfsStateId stateid;
+  stateid.seqid = opres->stateid.seqid;
+  memcpy(stateid.other, opres->stateid.other, 12);
+  fh.setOpenState(stateid);
+
+  // get the rflags
+  uint32_t rflags = opres->rflags;
+  if (rflags & OPEN4_RESULT_CONFIRM)
+  {
+    // send open confirmation
+  }
+
+  index = compCall.findOPIndex(OP_GETATTR);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_GETATTR\n", __func__);
+    return false;
+  }
+
+  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, std_attr[0], std_attr[1], fileAttr) < 0)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to decode OP_GETATTR result\n", __func__);
+    return false;
+  }
+
+  fileFh = fh;
 
   return true;
 }
@@ -1800,7 +1855,7 @@ bool Nfs4ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_
   if (res.status != NFS4_OK)
   {
     status.setError4(res.status, "NFSV4 call LOOKUP failed");
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOOKUP failed\n", __func__);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: LOOKUP failed. Error - %d\n", __func__, res.status);
     return false;
   }
 
@@ -1863,7 +1918,7 @@ bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &
   if (res.status != NFS4_OK)
   {
     status.setError4(res.status, "NFSV4 call LOOKUP failed");
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOOKUP failed. NFS ERR - %ld\n", __func__, (long)res.status);
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: LOOKUP failed. Error %d\n", __func__, res.status);
     return false;
   }
 

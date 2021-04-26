@@ -345,6 +345,15 @@ bool Nfs3ApiHandle::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &
   return true;
 }
 
+bool Nfs3ApiHandle::open(NfsFh           &rootFh,
+                       const std::string  filePath,
+                       NfsFh             &fileFh,
+                       NfsAttr           &fileAttr,
+                       NfsError          &err)
+{
+  return false;
+}
+
 bool Nfs3ApiHandle::open(const std::string filePath,
                          uint32_t          access,
                          uint32_t          shareAccess,
@@ -352,7 +361,7 @@ bool Nfs3ApiHandle::open(const std::string filePath,
                          NfsFh             &file,
                          NfsError          &status)
 {
-  return true;
+  return false;
 }
 
 bool Nfs3ApiHandle::read(NfsFh       &fileFH,
@@ -494,7 +503,7 @@ bool Nfs3ApiHandle::write_unstable(NfsFh       &fileFH,
 
 bool Nfs3ApiHandle::close(NfsFh &fileFh, NfsAttr &postAttr, NfsError &status)
 {
-  return true;
+  return false;
 }
 
 bool Nfs3ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
@@ -862,17 +871,17 @@ bool Nfs3ApiHandle::readDirPlus(NfsFh       &dirFh,
 
 bool Nfs3ApiHandle::truncate(NfsFh &fh, uint64_t size, NfsError &status)
 {
-  return true;
+  return false;
 }
 
 bool Nfs3ApiHandle::truncate(const std::string &path, uint64_t size, NfsError &status)
 {
-  return true;
+  return false;
 }
 
 bool Nfs3ApiHandle::access(const std::string &filePath, uint32_t accessRequested, NfsAccess &acc, NfsError &status)
 {
-  return true;
+  return false;
 }
 
 bool Nfs3ApiHandle::mkdir(const NfsFh       &parentFH,
@@ -938,7 +947,7 @@ bool Nfs3ApiHandle::mkdir(const NfsFh       &parentFH,
 
 bool Nfs3ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &status, bool createPath)
 {
-  return true;
+  return false;
 }
 
 bool Nfs3ApiHandle::rmdir(std::string &exp, const std::string &path, NfsError &status)
@@ -1179,7 +1188,7 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 
 bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
-  return true;
+  return false;
 }
 
 bool Nfs3ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status)
