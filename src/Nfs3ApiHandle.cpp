@@ -31,7 +31,7 @@ Nfs3ApiHandle::Nfs3ApiHandle(NfsConnectionGroup *ptr) : NfsApiHandle(ptr)
 {
 }
 
-bool Nfs3ApiHandle::connect(std::string &serverIP, NfsError &status)
+bool Nfs3ApiHandle::connect(std::string &serverIP)
 {
   return true;
 }

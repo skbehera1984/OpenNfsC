@@ -441,7 +441,10 @@ NfsConnectionGroupPtr NfsConnectionGroup::create(std::string serverIp, Transport
   }
 
   if ( bNewConnection )
+  {
     svr->initNfs();
+    svr->connect(serverIp);
+  }
 
   return svr;
 }
@@ -464,6 +467,7 @@ NfsConnectionGroupPtr NfsConnectionGroup::forceCreate(std::string serverIp, Tran
 {
   NfsConnectionGroupPtr svr = new NfsConnectionGroup(serverIp, version);
   svr->initNfs();
+  svr->connect(serverIp);
   return svr;
 }
 
@@ -561,9 +565,9 @@ uint32_t NfsConnectionGroup::getFileLockSeqId()
   return seqid;
 }
 
-bool NfsConnectionGroup::connect(std::string serverIP, NfsError &status)
+bool NfsConnectionGroup::connect(std::string serverIP)
 {
-  return m_NfsApiHandle->connect(serverIP, status);
+  return m_NfsApiHandle->connect(serverIP);
 }
 
 bool NfsConnectionGroup::getExports(list<string>& Exports)

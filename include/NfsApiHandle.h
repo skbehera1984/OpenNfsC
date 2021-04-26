@@ -37,7 +37,7 @@ class NfsApiHandle : public SmartRef
     virtual ~NfsApiHandle() {}
 
   public:
-    virtual bool connect(std::string &serverIP, NfsError &status) = 0;
+    virtual bool connect(std::string &serverIP) = 0;
     virtual bool getExports(list<string>& Exports) = 0;
     virtual bool getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsError &status) = 0;
     virtual bool getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status) = 0;

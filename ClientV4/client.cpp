@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 
   NfsError status;
   NfsConnectionGroupPtr svr4Ptr = NfsConnectionGroup::create(server/*ip.s_addr*/, TRANSP_TCP, NFSV4);
-  if (svr4Ptr->connect(server, status) != false)
+  if (svr4Ptr->connect(server) != false)
   {
     cout << "NFSV4 connect successful" << endl;
   }

@@ -54,7 +54,7 @@ Nfs4ApiHandle::Nfs4ApiHandle(NfsConnectionGroup *ptr) : NfsApiHandle(ptr)
 {
 }
 
-bool Nfs4ApiHandle::connect(std::string &serverIP, NfsError &status)
+bool Nfs4ApiHandle::connect(std::string &serverIP)
 {
   NFSv4::NullCall  ncl;
   enum clnt_stat cst = ncl.call(m_pConn);
@@ -746,7 +746,9 @@ bool Nfs4ApiHandle::access(const std::string &filePath,
   return true;
 }
 
-/* File Create API */
+/* File Create API
+ * creating a regular file or named attribute needs OPEN call
+ */
 bool Nfs4ApiHandle::create(NfsFh             &dirFh,
                            std::string       &fileName,
                            NfsAttr           *inAttr,
@@ -785,25 +787,40 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
     NfsUtil::NfsAttr_fattr4(tmp_attr, &obj);
   }
 
-  carg.argop = OP_CREATE;
-  CREATE4args *crargs = &carg.nfs_argop4_u.opcreate;
-  crargs->objtype.type = NF4REG;
-  crargs->objname.utf8string_val = const_cast<char*>(fileName.c_str());
-  crargs->objname.utf8string_len = fileName.length();
-  crargs->createattrs.attrmask.bitmap4_len = obj.attrmask.bitmap4_len;
-  crargs->createattrs.attrmask.bitmap4_val = obj.attrmask.bitmap4_val;
-  crargs->createattrs.attr_vals.attrlist4_len = obj.attr_vals.attrlist4_len;
-  crargs->createattrs.attr_vals.attrlist4_val = obj.attr_vals.attrlist4_val;
+  carg.argop = OP_OPEN;
+  OPEN4args *opargs = &carg.nfs_argop4_u.opopen;
+  opargs->seqid = m_pConn->getFileOPSeqId();
+  opargs->share_access = SHARE_ACCESS_BOTH;
+  opargs->share_deny = SHARE_DENY_NONE;
+  opargs->owner.clientid = m_pConn->getClientId();
+  opargs->owner.owner.owner_len = m_pConn->getClientName().length();
+  opargs->owner.owner.owner_val = const_cast<char *>(m_pConn->getClientName().c_str());
+  opargs->openhow.opentype = OPEN4_CREATE;
+  //createhow
+  opargs->openhow.openflag4_u.how.mode = GUARDED4;
+  opargs->openhow.openflag4_u.how.createhow4_u.createattrs.attrmask.bitmap4_len = obj.attrmask.bitmap4_len;
+  opargs->openhow.openflag4_u.how.createhow4_u.createattrs.attrmask.bitmap4_val = obj.attrmask.bitmap4_val;
+  opargs->openhow.openflag4_u.how.createhow4_u.createattrs.attr_vals.attrlist4_len = obj.attr_vals.attrlist4_len;
+  opargs->openhow.openflag4_u.how.createhow4_u.createattrs.attr_vals.attrlist4_val = obj.attr_vals.attrlist4_val;
+  // claim args
+  opargs->claim.claim = CLAIM_NULL;
+  //TODO sarat - if there is a claim type then we need to append it
+  opargs->claim.open_claim4_u.file.utf8string_len = fileName.length();
+  opargs->claim.open_claim4_u.file.utf8string_val = const_cast<char*>(fileName.c_str());
   compCall.appendCommand(&carg);
 
   carg.argop = OP_GETFH;
   compCall.appendCommand(&carg);
 
+  carg.argop = OP_ACCESS;
+  ACCESS4args *aargs = &carg.nfs_argop4_u.opaccess;
+  aargs->access = 0x2D;
+  compCall.appendCommand(&carg);
+
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2] = {0}; mask[0] = 0x0010011a; mask[1] = 0x00b0a23a;
   gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = mask;
+  gargs->attr_request.bitmap4_val = std_attr;
   compCall.appendCommand(&carg);
 
   cst = compCall.call(m_pConn);
@@ -816,13 +833,58 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    status.setError4(res.status, "Nfs4ApiHandle::create failed");
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CREATE failed\n", __func__);
+    status.setError4(res.status, "Nfs4ApiHandle::create OPEN failed");
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: OPEN failed. Error - %d\n", __func__, res.status);
     return false;
   }
 
-  // This is a file create, So, use open to get fh
-  return open(dirFh, fileName, fileFh, outAttr, status);
+  int index = compCall.findOPIndex(OP_GETFH);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_GETFH\n", __func__);
+    return false;
+  }
+
+  GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
+  NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
+
+  index = compCall.findOPIndex(OP_OPEN);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_OPEN\n", __func__);
+    return false;
+  }
+
+  OPEN4resok *opres = &res.resarray.resarray_val[index].nfs_resop4_u.opopen.OPEN4res_u.resok4;
+  NfsStateId stateid;
+  stateid.seqid = opres->stateid.seqid;
+  memcpy(stateid.other, opres->stateid.other, 12);
+  fh.setOpenState(stateid);
+
+  // get the rflags
+  uint32_t rflags = opres->rflags;
+  if (rflags & OPEN4_RESULT_CONFIRM)
+  {
+    // TODO sarat nfs send open confirmation
+  }
+
+  index = compCall.findOPIndex(OP_GETATTR);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_GETATTR\n", __func__);
+    return false;
+  }
+
+  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, std_attr[0], std_attr[1], outAttr) < 0)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to decode OP_GETATTR result\n", __func__);
+    return false;
+  }
+
+  fileFh = fh;
+
+  return true;
 }
 
 bool Nfs4ApiHandle::open(NfsFh             &rootFh,
