@@ -333,6 +333,12 @@ bool Nfs4ApiHandle::readDirV4(NfsFh     &dirFh,
 
 bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
+  if (dirPath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::getDirFh dirPath can not be empty");
+    return false;
+  }
+
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(dirPath, path_components);
 
@@ -397,6 +403,12 @@ bool Nfs4ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, Nf
 
 bool Nfs4ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
+  if (dirPath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::getDirFh dir path can not be empty");
+    return false;
+  }
+
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(dirPath, path_components);
 
@@ -462,6 +474,12 @@ bool Nfs4ApiHandle::getFileHandle(NfsFh             &rootFH,
                                   NfsAttr           &attr,
                                   NfsError          &status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::getFileHandle path can not be empty");
+    return false;
+  }
+
   NfsFh tmpFh;
   NfsAttr tmpAttr;
   if (!lookupPath(rootFH, path, tmpFh, tmpAttr, status))
@@ -474,7 +492,6 @@ bool Nfs4ApiHandle::getFileHandle(NfsFh             &rootFH,
   {
     fileFh = tmpFh;
     attr = tmpAttr;
-    //return getDirFh(rootFH, path, fileFh, attr, status)
     return true;
   }
   else
@@ -490,6 +507,17 @@ bool Nfs4ApiHandle::rename(NfsFh &fromDirFh,
                            const std::string toName,
                            NfsError &status)
 {
+  if (fromName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::rename fromName can not be empty");
+    return false;
+  }
+  if (toName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::rename toName can not be empty");
+    return false;
+  }
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
 
@@ -551,6 +579,17 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
                            const std::string &toPath,
                            NfsError          &status)
 {
+  if (fromPath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::rename fromPath can not be empty");
+    return false;
+  }
+  if (toPath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::rename toPath can not be empty");
+    return false;
+  }
+
   std::vector<std::string> from_components;
   NfsUtil::splitNfsPath(fromPath, from_components);
 
@@ -583,58 +622,7 @@ bool Nfs4ApiHandle::rename(const std::string &nfs_export,
   else
     toDirFh = rootFh;
 
-  // call rename
-  NFSv4::COMPOUNDCall compCall;
-  enum clnt_stat cst = RPC_SUCCESS;
-
-  nfs_argop4 carg;
-
-  carg.argop = OP_PUTFH;
-  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
-  pfhgargs->object.nfs_fh4_len = fromDirFh.getLength();
-  pfhgargs->object.nfs_fh4_val = fromDirFh.getData();
-  compCall.appendCommand(&carg);
-
-  carg.argop = OP_GETATTR;
-  GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  gargs->attr_request.bitmap4_len = 2;
-  gargs->attr_request.bitmap4_val = std_attr;
-  compCall.appendCommand(&carg);
-
-  carg.argop = OP_SAVEFH;
-  compCall.appendCommand(&carg);
-
-  carg.argop = OP_PUTFH;
-  pfhgargs = &carg.nfs_argop4_u.opputfh;
-  pfhgargs->object.nfs_fh4_len = toDirFh.getLength();
-  pfhgargs->object.nfs_fh4_val = toDirFh.getData();
-  compCall.appendCommand(&carg);
-
-  carg.argop = OP_RENAME;
-  RENAME4args *oprename = &carg.nfs_argop4_u.oprename;
-  oprename->oldname.utf8string_len = fromFile.length();
-  oprename->oldname.utf8string_val = const_cast<char *>(fromFile.c_str());
-  oprename->newname.utf8string_len = toFile.length();
-  oprename->newname.utf8string_val = const_cast<char *>(toFile.c_str());
-  compCall.appendCommand(&carg);
-
-  cst = compCall.call(m_pConn);
-  if (cst != RPC_SUCCESS)
-  {
-    status.setRpcError(cst, "Nfs4ApiHandle::rename failed - rpc error");
-    return false;
-  }
-
-  COMPOUND4res res = compCall.getResult();
-  if (res.status != NFS4_OK)
-  {
-    status.setError4(res.status, "Nfs4ApiHandle::rename failed");
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call RENAME failed. NFS ERR - %ld\n", __func__, (long)res.status);
-    return false;
-  }
-
-  //TODO sarat - do we need the source_info and target_info from rename response??
-  return true;
+  return rename(fromDirFh, fromFile, toDirFh, toFile, status);
 }
 
 bool Nfs4ApiHandle::commit(NfsFh     &fh,
@@ -697,6 +685,12 @@ bool Nfs4ApiHandle::access(const std::string &filePath,
                            NfsAccess         &acc,
                            NfsError          &status)
 {
+  if (filePath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::access filePath can not be empty");
+    return false;
+  }
+
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(filePath, path_components);
 
@@ -759,6 +753,12 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
                            NfsAttr           &outAttr,
                            NfsError          &status)
 {
+  if (fileName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::create fileName can not be empty");
+    return false;
+  }
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
 
@@ -841,22 +841,35 @@ bool Nfs4ApiHandle::open(NfsFh             &rootFh,
                          const std::string  filePath,
                          NfsFh             &fileFh,
                          NfsAttr           &fileAttr,
-                         NfsError          &err)
+                         NfsError          &status)
 {
+  if (filePath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::open filePath can not be empty");
+    return false;
+  }
+
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(filePath, path_components);
 
   std::string fileName = path_components.back();
   path_components.pop_back();
 
-  std::string dirPath;
-  NfsUtil::buildNfsPath(dirPath, path_components);
-
   NfsFh dirFH;
-  if (!getDirFh(rootFh, dirPath, dirFH, err))
+  if (path_components.size() >0)
   {
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to get parent directory FH\n", __func__);
-    return false;
+    std::string dirPath;
+    NfsUtil::buildNfsPath(dirPath, path_components);
+
+    if (!getDirFh(rootFh, dirPath, dirFH, status))
+    {
+      syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to get parent directory FH\n", __func__);
+      return false;
+    }
+  }
+  else
+  {
+    dirFH = rootFh;
   }
 
   // Open the actual file
@@ -904,14 +917,14 @@ bool Nfs4ApiHandle::open(NfsFh             &rootFh,
   cst = compCall.call(m_pConn);
   if (cst != RPC_SUCCESS)
   {
-    err.setRpcError(cst, "Nfs4ApiHandle::open failed - rpc error");
+    status.setRpcError(cst, "Nfs4ApiHandle::open failed - rpc error");
     return false;
   }
 
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    err.setError4(res.status, "NFSV4 OPEN failed");
+    status.setError4(res.status, "NFSV4 OPEN failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: OPEN failed. Error - %d\n", __func__, res.status);
     return false;
   }
@@ -973,6 +986,12 @@ bool Nfs4ApiHandle::open(const std::string filePath,
                          NfsFh             &fileFh,
                          NfsError          &status)
 {
+  if (filePath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::open file path can not be empty");
+    return false;
+  }
+
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(filePath, path_components);
 
@@ -1342,6 +1361,12 @@ bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &status)
 
 bool Nfs4ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &status)
 {
+  if (name.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::remove name can not be empty");
+    return false;
+  }
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
 
@@ -1383,6 +1408,12 @@ bool Nfs4ApiHandle::remove(const NfsFh &parentFH, const string &name, NfsError &
  */
 bool Nfs4ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::remove path can not be empty");
+    return false;
+  }
+
   std::string fullpath = exp + "/" + path;
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(fullpath, path_components);
@@ -1400,39 +1431,7 @@ bool Nfs4ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
     return false;
   }
 
-  NFSv4::COMPOUNDCall compCall;
-  enum clnt_stat cst = RPC_SUCCESS;
-
-  nfs_argop4 carg;
-
-  carg.argop = OP_PUTFH;
-  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
-  pfhgargs->object.nfs_fh4_len = parentFH.getLength();
-  pfhgargs->object.nfs_fh4_val = parentFH.getData();
-  compCall.appendCommand(&carg);
-
-  carg.argop = OP_REMOVE;
-  REMOVE4args *rmargs = &carg.nfs_argop4_u.opremove;
-  rmargs->target.utf8string_len = compRemove.length();
-  rmargs->target.utf8string_val = const_cast<char*>(compRemove.c_str());
-  compCall.appendCommand(&carg);
-
-  cst = compCall.call(m_pConn);
-  if (cst != RPC_SUCCESS)
-  {
-    status.setRpcError(cst, "Nfs4ApiHandle::remove failed - rpc error");
-    return false;
-  }
-
-  COMPOUND4res res = compCall.getResult();
-  if (res.status != NFS4_OK)
-  {
-    status.setError4(res.status, "Nfs4ApiHandle::remove failed");
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call REMOVE failed. NFS ERR - %ld\n", __func__, (long)res.status);
-    return false;
-  }
-
-  return true;
+  return remove(parentFH, compRemove, status);
 }
 
 bool Nfs4ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
@@ -1538,6 +1537,14 @@ bool Nfs4ApiHandle::truncate(NfsFh &fh, uint64_t size, NfsError &status)
 
 bool Nfs4ApiHandle::truncate(const std::string &path, uint64_t size, NfsError &status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::truncate path can not be empty");
+    return false;
+  }
+
+  //TODO sarat nfs - check if path is dir??
+
   NfsFh fh;
   if (open(path, ACCESS4_MODIFY, SHARE_ACCESS_READ|SHARE_ACCESS_WRITE, SHARE_DENY_BOTH, fh, status) == false)
   {
@@ -1567,6 +1574,12 @@ bool Nfs4ApiHandle::mkdir(const NfsFh       &parentFH,
                           NfsFh             &dirFH,
                           NfsError          &status)
 {
+  if (dirName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::mkdir dirName can not be empty");
+    return false;
+  }
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
 
@@ -1631,6 +1644,12 @@ bool Nfs4ApiHandle::mkdir(const NfsFh       &parentFH,
 
 bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &status, bool createPath)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::mkdir path can not be empty");
+    return false;
+  }
+
   if (!createPath)
   {
     std::vector<std::string> path_components;
@@ -1649,7 +1668,8 @@ bool Nfs4ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &stat
       return false;
     }
 
-    //TODO sarat - do we need to check access befire create?
+    //TODO sarat nfs - call mkdir
+    //TODO sarat - do we need to check access before create?
     NFSv4::COMPOUNDCall compCall;
     enum clnt_stat cst = RPC_SUCCESS;
 
@@ -1840,18 +1860,27 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
 
 bool Nfs4ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status)
 {
+  if (file.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::lookup file can not be empty");
+    return false;
+  }
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
 
   nfs_argop4 carg;
 
-  carg.argop = OP_PUTROOTFH;
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = dirFh.getLength();
+  pfhgargs->object.nfs_fh4_val = dirFh.getData();
   compCall.appendCommand(&carg);
 
   carg.argop = OP_LOOKUP;
   LOOKUP4args *largs = &carg.nfs_argop4_u.oplookup;
-  largs->objname.utf8string_len = dirFh.getLength();
-  largs->objname.utf8string_val = const_cast<char *>(dirFh.getData());
+  largs->objname.utf8string_len = file.length();
+  largs->objname.utf8string_val = const_cast<char *>(file.c_str());
   compCall.appendCommand(&carg);
 
   carg.argop = OP_GETATTR;
@@ -1891,13 +1920,33 @@ bool Nfs4ApiHandle::lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_
   NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
   lookup_fh = fh;
 
+  index = compCall.findOPIndex(OP_GETATTR);
+  if (index == -1)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_GETATTR\n", __func__);
+    return false;
+  }
+
+  GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, std_attr[0], std_attr[1], attr) < 0)
+  {
+    syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to decode OP_GETATTR result\n", __func__);
+    return false;
+  }
+
   return true;
 }
 
 bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
-  std::vector<std::string> exp_components;
-  NfsUtil::splitNfsPath(path, exp_components);
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::lookup path can not be empty");
+    return false;
+  }
+
+  std::vector<std::string> path_components;
+  NfsUtil::splitNfsPath(path, path_components);
 
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1907,7 +1956,7 @@ bool Nfs4ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &
   carg.argop = OP_PUTROOTFH;
   compCall.appendCommand(&carg);
 
-  for (std::string &comp : exp_components)
+  for (std::string &comp : path_components)
   {
     nfs_argop4 carg;
     carg.argop = OP_LOOKUP;
@@ -1961,24 +2010,36 @@ bool Nfs4ApiHandle::lookupPath(const std::string &exp_path,
                                const std::string &pathFromRoot,
                                NfsFh             &lookup_fh,
                                NfsAttr           &lookup_attr,
-                               NfsError          &err)
+                               NfsError          &status)
 {
+  if (pathFromRoot.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::lookupPath pathFromRoot can not be empty");
+    return false;
+  }
+
   NfsFh rootFh;
-  if (!getRootFH(exp_path, rootFh, err))
+  if (!getRootFH(exp_path, rootFh, status))
   {
     syslog(LOG_ERR, "Nfs4ApiHandle::%s() failed for getRootFH\n", __func__);
     return false;
   }
 
-  return lookupPath(rootFh, pathFromRoot, lookup_fh, lookup_attr, err);
+  return lookupPath(rootFh, pathFromRoot, lookup_fh, lookup_attr, status);
 }
 
 bool Nfs4ApiHandle::lookupPath(NfsFh             &rootFh,
                                const std::string &pathFromRoot,
                                NfsFh             &lookup_fh,
                                NfsAttr           &lookup_attr,
-                               NfsError          &err)
+                               NfsError          &status)
 {
+  if (pathFromRoot.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::lookupPath pathFromRoot can not be empty");
+    return false;
+  }
+
   std::vector<std::string> path_components;
   NfsUtil::splitNfsPath(pathFromRoot, path_components);
 
@@ -2015,7 +2076,7 @@ bool Nfs4ApiHandle::lookupPath(NfsFh             &rootFh,
   cst = compCall.call(m_pConn);
   if (cst != RPC_SUCCESS)
   {
-    err.setRpcError(cst, "Nfs4ApiHandle::lookupPath failed - rpc error");
+    status.setRpcError(cst, "Nfs4ApiHandle::lookupPath failed - rpc error");
     return false;
   }
 
@@ -2054,10 +2115,16 @@ bool Nfs4ApiHandle::lookupPath(NfsFh             &rootFh,
   return true;
 }
 
-bool Nfs4ApiHandle::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+bool Nfs4ApiHandle::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::fileExists path can not be empty");
+    return false;
+  }
+
   NfsFh tmpFh;
-  return lookupPath(exp, path, tmpFh, attr, err);
+  return lookupPath(exp, path, tmpFh, attr, status);
 }
 
 bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
@@ -2181,6 +2248,12 @@ bool Nfs4ApiHandle::link(NfsFh        &tgtFh,
                          const string &linkName,
                          NfsError     &status)
 {
+  if (linkName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::link linkName can not be empty");
+    return false;
+  }
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
   nfs_argop4 carg;
@@ -2240,6 +2313,12 @@ bool Nfs4ApiHandle::symlink(const string &tgtPath,
                             const string &linkName,
                             NfsError     &status)
 {
+  if (linkName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::symlink linkName can not be empty");
+    return false;
+  }
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
   nfs_argop4 carg;

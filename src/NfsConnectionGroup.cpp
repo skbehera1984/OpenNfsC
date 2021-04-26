@@ -741,24 +741,24 @@ bool NfsConnectionGroup::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   return m_NfsApiHandle->getAttr(fh, attr, status);
 }
 
-bool NfsConnectionGroup::getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+bool NfsConnectionGroup::getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status)
 {
-  return m_NfsApiHandle->getAttr(exp, path, attr, err);
+  return m_NfsApiHandle->getAttr(exp, path, attr, status);
 }
 
-bool NfsConnectionGroup::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+bool NfsConnectionGroup::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status)
 {
-  return m_NfsApiHandle->fileExists(exp, path, attr, err);
+  return m_NfsApiHandle->fileExists(exp, path, attr, status);
 }
 
-bool NfsConnectionGroup::lookupPath(const std::string &exp_path, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &err)
+bool NfsConnectionGroup::lookupPath(const std::string &exp_path, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &status)
 {
-  return m_NfsApiHandle->lookupPath(exp_path, pathFromRoot, lookup_fh, lookup_attr, err);
+  return m_NfsApiHandle->lookupPath(exp_path, pathFromRoot, lookup_fh, lookup_attr, status);
 }
 
-bool NfsConnectionGroup::lookupPath(NfsFh &rootFh, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &err)
+bool NfsConnectionGroup::lookupPath(NfsFh &rootFh, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &status)
 {
-  return m_NfsApiHandle->lookupPath(rootFh, pathFromRoot, lookup_fh, lookup_attr, err);
+  return m_NfsApiHandle->lookupPath(rootFh, pathFromRoot, lookup_fh, lookup_attr, status);
 }
 
 bool NfsConnectionGroup::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)

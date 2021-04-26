@@ -45,7 +45,7 @@ class Nfs3ApiHandle : public NfsApiHandle
               const std::string  filePath,
               NfsFh             &fileFh,
               NfsAttr           &fileAttr,
-              NfsError          &err);
+              NfsError          &status);
     bool open(const std::string   filePath,
               uint32_t            access,
               uint32_t            shareAccess,
@@ -100,10 +100,10 @@ class Nfs3ApiHandle : public NfsApiHandle
     bool unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status);
     bool setattr(NfsFh &fh, NfsAttr &attr, NfsError &status);
     bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status);
-    bool getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err);
-    bool fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err);
-    bool lookupPath(const std::string &exp_path, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &err);
-    bool lookupPath(NfsFh &rootFh, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &err);
+    bool getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status);
+    bool fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status);
+    bool lookupPath(const std::string &exp_path, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &status);
+    bool lookupPath(NfsFh &rootFh, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &status);
     bool lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status);
     bool lookup(NfsFh &dirFh, const std::string &file, NfsFh &lookup_fh, NfsAttr &attr, NfsError &status);
     bool fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status);

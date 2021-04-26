@@ -64,13 +64,18 @@ bool Nfs3ApiHandle::getExports(list<string>& Exports)
 
 bool Nfs3ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
+  if (dirPath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::getDirFh directory path empty");
+    return false;
+  }
+
   NfsFh currentFH;
   currentFH = rootFH;
 
   vector<string> segments;
   NfsUtil::splitNfsPath(dirPath, segments);
 
-  vector<string>::iterator Iter = segments.begin();
   for (string CurrSegment : segments)
   {
     LOOKUP3args lkpArg = {};
@@ -118,6 +123,12 @@ bool Nfs3ApiHandle::getDirFh(const NfsFh &rootFH, const std::string &dirPath, Nf
  */
 bool Nfs3ApiHandle::getDirFh(const std::string &dirPath, NfsFh &dirFH, NfsError &status)
 {
+  if (dirPath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::getDirFh directory path is empty");
+    return false;
+  }
+
   enum clnt_stat retval;
   const char* pszPath = dirPath.c_str();
 
@@ -162,6 +173,12 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
                            NfsAttr           &outAttr,
                            NfsError          &status)
 {
+  if (fileName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::create name can not be empty");
+    return false;
+  }
+
   CREATE3args createArg = {};
 
   createArg.create3_where.dirop3_dir.fh3_data.fh3_data_len = dirFh.getLength();
@@ -234,6 +251,12 @@ bool Nfs3ApiHandle::create(NfsFh             &dirFh,
 
 bool Nfs3ApiHandle::getRootFH(const string &nfs_export, NfsFh &rootFh, NfsError &status)
 {
+  if (nfs_export.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::getRootFH export path can not be empty");
+    return false;
+  }
+
   enum clnt_stat retval;
   dirpath pszMountPoint = (dirpath) nfs_export.c_str();
   string serverIP = m_pConn->getIP();
@@ -274,13 +297,18 @@ bool Nfs3ApiHandle::getRootFH(const string &nfs_export, NfsFh &rootFh, NfsError 
 
 bool Nfs3ApiHandle::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &fileFh, NfsAttr &attr, NfsError &status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::getFileHandle path can not be empty");
+    return false;
+  }
+
   NfsFh currentFH;
   currentFH = rootFH;
 
   vector<string> segments;
   NfsUtil::splitNfsPath(path, segments);
 
-  vector<string>::iterator Iter = segments.begin();
   for (string CurrSegment : segments)
   {
     LOOKUP3args lkpArg = {};
@@ -346,10 +374,10 @@ bool Nfs3ApiHandle::getFileHandle(NfsFh &rootFH, const std::string path, NfsFh &
 }
 
 bool Nfs3ApiHandle::open(NfsFh           &rootFh,
-                       const std::string  filePath,
-                       NfsFh             &fileFh,
-                       NfsAttr           &fileAttr,
-                       NfsError          &err)
+                         const std::string  filePath,
+                         NfsFh             &fileFh,
+                         NfsAttr           &fileAttr,
+                         NfsError          &err)
 {
   return false;
 }
@@ -508,6 +536,12 @@ bool Nfs3ApiHandle::close(NfsFh &fileFh, NfsAttr &postAttr, NfsError &status)
 
 bool Nfs3ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::remove path can not be empty");
+    return false;
+  }
+
   NfsFh rootFh;
   NfsFh parentFH;
 
@@ -515,6 +549,7 @@ bool Nfs3ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
   NfsUtil::splitNfsPath(path, path_components);
 
   std::string name = path_components.back();
+  path_components.pop_back();
 
   if(!getRootFH(exp, rootFh, status))
   {
@@ -522,10 +557,20 @@ bool Nfs3ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
     return false;
   }
 
-  if (!getDirFh(rootFh, path, parentFH, status))
+  if (path_components.size() > 0)
   {
-    syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getDirFh using rootFh\n", __func__);
-    return false;
+    std::string dirPath;
+    NfsUtil::buildNfsPath(dirPath, path_components);
+
+    if(!getDirFh(rootFh, dirPath, parentFH, status))
+    {
+      syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getFileHandle using rootFh\n", __func__);
+      return false;
+    }
+  }
+  else
+  {
+    parentFH = rootFh;
   }
 
   if(!remove(parentFH, name, status))
@@ -571,6 +616,17 @@ bool Nfs3ApiHandle::rename(NfsFh &fromDirFh,
                            const std::string toName,
                            NfsError &status)
 {
+  if (fromName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::rename fromName can not be empty");
+    return false;
+  }
+  if (toName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::rename toName can not be empty");
+    return false;
+  }
+
   RENAME3args renameArg = {};
 
   renameArg.rename3_from.dirop3_dir.fh3_data.fh3_data_len = fromDirFh.getLength();
@@ -607,6 +663,17 @@ bool Nfs3ApiHandle::rename(const std::string &nfs_export,
                            const std::string &toPath,
                            NfsError          &status)
 {
+  if (fromPath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::rename fromPath can not be empty");
+    return false;
+  }
+  if (toPath.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::rename toPath can not be empty");
+    return false;
+  }
+
   NfsFh rootFh;
   NfsFh fromDirFH;
   NfsFh toDirFH;
@@ -890,6 +957,12 @@ bool Nfs3ApiHandle::mkdir(const NfsFh       &parentFH,
                           NfsFh             &dirFH,
                           NfsError          &status)
 {
+  if (dirName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::mkdir dirName can not be empty");
+    return false;
+  }
+
   MKDIR3args mkdirArgs = {};
   MKDIR3res  mkdirRes  = {};
 
@@ -952,6 +1025,12 @@ bool Nfs3ApiHandle::mkdir(const std::string &path, uint32_t mode, NfsError &stat
 
 bool Nfs3ApiHandle::rmdir(std::string &exp, const std::string &path, NfsError &status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::rmdir dir path can not be empty");
+    return false;
+  }
+
   NfsFh rootFh;
   NfsFh parentFH;
 
@@ -1186,10 +1265,16 @@ bool Nfs3ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   return true;
 }
 
-bool Nfs3ApiHandle::getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+bool Nfs3ApiHandle::getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::getAttr path can not be empty");
+    return false;
+  }
+
   NfsFh tmpFh;
-  return lookupPath(exp, path, tmpFh, attr, err);
+  return lookupPath(exp, path, tmpFh, attr, status);
 }
 
 bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
@@ -1203,6 +1288,12 @@ bool Nfs3ApiHandle::lookup(NfsFh             &dirFh,
                            NfsAttr           &attr,
                            NfsError          &status)
 {
+  if (file.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::lookup file name can not be empty");
+    return false;
+  }
+
   LOOKUP3args lkpArg = {};
 
   lkpArg.lookup3_what.dirop3_dir.fh3_data.fh3_data_len = dirFh.getLength();
@@ -1280,31 +1371,49 @@ bool Nfs3ApiHandle::lookupPath(const std::string &exp_path,
                                const std::string &pathFromRoot,
                                NfsFh             &lookup_fh,
                                NfsAttr           &lookup_attr,
-                               NfsError          &err)
+                               NfsError          &status)
 {
+  if (pathFromRoot.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::lookupPath path can not be empty");
+    return false;
+  }
+
   NfsFh rootFh;
-  if (!getRootFH(exp_path, rootFh, err))
+  if (!getRootFH(exp_path, rootFh, status))
   {
     syslog(LOG_ERR, "Nfs3ApiHandle::%s() failed for getRootFH\n", __func__);
     return false;
   }
 
-  return lookupPath(rootFh, pathFromRoot, lookup_fh, lookup_attr, err);
+  return lookupPath(rootFh, pathFromRoot, lookup_fh, lookup_attr, status);
 }
 
 bool Nfs3ApiHandle::lookupPath(NfsFh             &rootFh,
                                const std::string &pathFromRoot,
                                NfsFh             &lookup_fh,
                                NfsAttr           &lookup_attr,
-                               NfsError          &err)
+                               NfsError          &status)
 {
-  return getFileHandle(rootFh, pathFromRoot, lookup_fh, lookup_attr, err);
+  if (pathFromRoot.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::lookupPath path can not be empty");
+    return false;
+  }
+
+  return getFileHandle(rootFh, pathFromRoot, lookup_fh, lookup_attr, status);
 }
 
-bool Nfs3ApiHandle::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+bool Nfs3ApiHandle::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status)
 {
+  if (path.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::fileExists path can not be empty");
+    return false;
+  }
+
   NfsFh tmpFh;
-  return lookupPath(exp, path, tmpFh, attr, err);
+  return lookupPath(exp, path, tmpFh, attr, status);
 }
 
 bool Nfs3ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status)
@@ -1348,6 +1457,12 @@ bool Nfs3ApiHandle::link(NfsFh        &tgtFh,
                          const string &linkName,
                          NfsError     &status)
 {
+  if (linkName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::link linkName can not be empty");
+    return false;
+  }
+
   LINK3args lnkArg = {};
 
   lnkArg.link3_file.fh3_data.fh3_data_len = tgtFh.getLength();
@@ -1383,6 +1498,12 @@ bool Nfs3ApiHandle::symlink(const string &tgtPath,
                             const string &linkName,
                             NfsError     &status)
 {
+  if (linkName.empty())
+  {
+    status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs3ApiHandle::symlink linkName can not be empty");
+    return false;
+  }
+
   SYMLINK3args smlnk = {};
   sattr3 dummyAttr;
   dummyAttr.sattr3_mode.set_it             = true;

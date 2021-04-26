@@ -466,6 +466,7 @@ enum NfsECode
 
   // Internal error codes
   NFSERR_INTERNAL_NON = 50000,
+  NFSERR_INTERNAL_PATH_EMPTY = 50001,
 };
 
 class NfsError
