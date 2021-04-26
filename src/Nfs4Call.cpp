@@ -1656,7 +1656,11 @@ int COMPOUNDCall::decodeResults()
 
   RETURN_ON_ERROR(reply->xdrDecodeUint32(&status));
   res.status = (nfsstat4)status;
-  if (status == NFS4_OK)
+
+  /* The following are always received, on success or on failure.
+   * The server sends responses till the first failure including the first failure response.
+   */
+  if (true)
   {
     unsigned char* tag = NULL;
     uint32 tagLen;
@@ -1907,10 +1911,7 @@ int COMPOUNDCall::decodeResults()
       cmdReply++;
     }
   }
-  else
-  {
-    return -1;
-  }
+
   return 0;
 }
 
