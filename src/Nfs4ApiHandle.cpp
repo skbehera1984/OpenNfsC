@@ -1174,7 +1174,11 @@ bool Nfs4ApiHandle::read(NfsFh       &fileFH,
   READ4args *rdargs = &carg.nfs_argop4_u.opread;
   rdargs->offset = offset;
   rdargs->count = length;
-  NfsStateId &stid = fileFH.getOpenState();
+  NfsStateId stid;
+  if (fileFH.isLocked())
+    stid = fileFH.getLockState();
+  else
+    stid = fileFH.getOpenState();
   rdargs->stateid.seqid =stid.seqid;
   memcpy(rdargs->stateid.other, stid.other, 12);
   compCall.appendCommand(&carg);
@@ -1257,7 +1261,11 @@ bool Nfs4ApiHandle::write(NfsFh       &fileFH,
 
   carg.argop = OP_WRITE;
   WRITE4args *wargs = &carg.nfs_argop4_u.opwrite;
-  NfsStateId &Stid = fileFH.getOpenState();
+  NfsStateId Stid;
+  if (fileFH.isLocked())
+    Stid = fileFH.getLockState();
+  else
+    Stid = fileFH.getOpenState();
   wargs->stateid.seqid = Stid.seqid;
   memcpy(wargs->stateid.other, Stid.other, 12);
   wargs->offset = offset;
@@ -1323,7 +1331,11 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
 
   carg.argop = OP_WRITE;
   WRITE4args *wargs = &carg.nfs_argop4_u.opwrite;
-  NfsStateId &Stid = fileFH.getOpenState();
+  NfsStateId Stid;
+  if (fileFH.isLocked())
+    Stid = fileFH.getLockState();
+  else
+    Stid = fileFH.getOpenState();
   wargs->stateid.seqid = Stid.seqid;
   memcpy(wargs->stateid.other, Stid.other, 12);
   wargs->offset = offset;
@@ -1520,7 +1532,11 @@ bool Nfs4ApiHandle::setattr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 
   carg.argop = OP_SETATTR;
   SETATTR4args *stargs = &carg.nfs_argop4_u.opsetattr;
-  NfsStateId &stid = fh.getOpenState();
+  NfsStateId stid;
+  if (attr.bSetSize && fh.isLocked())
+    stid = fh.getLockState();
+  else
+    stid = fh.getOpenState();
   stargs->stateid.seqid = stid.seqid;
   memcpy(stargs->stateid.other, stid.other, 12);
 
@@ -1575,7 +1591,11 @@ bool Nfs4ApiHandle::truncate(NfsFh &fh, uint64_t size, NfsError &status)
 
   carg.argop = OP_SETATTR;
   SETATTR4args *stargs = &carg.nfs_argop4_u.opsetattr;
-  NfsStateId &stid = fh.getOpenState();
+  NfsStateId stid;
+  if (fh.isLocked())
+    stid = fh.getLockState();
+  else
+    stid = fh.getOpenState();
   stargs->stateid.seqid = stid.seqid;
   memcpy(stargs->stateid.other, stid.other, 12);
 
@@ -1872,6 +1892,7 @@ bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
   stateid.seqid = lck_res->lock_stateid.seqid;
   memcpy(stateid.other, lck_res->lock_stateid.other, 12);
   fh.setLockState(stateid);
+  fh.setLocked();
 
   // TODO sarat - if lock fails we need to get the failure details
 
@@ -1940,6 +1961,7 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   stateid.seqid = lck_st->seqid;
   memcpy(stateid.other, lck_st->other, 12);
   fh.setLockState(stateid);
+  fh.setUnlocked();
 
   return true;
 }

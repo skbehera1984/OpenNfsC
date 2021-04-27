@@ -46,6 +46,7 @@ void NfsFh::clear()
   memset(OSID.other, 0, 12);
   LSID.seqid = 0;
   memset(LSID.other, 0, 12);
+  locked = false;
 }
 
 NfsFh::NfsFh()
@@ -56,6 +57,7 @@ NfsFh::NfsFh()
   memset(OSID.other, 0, 12);
   LSID.seqid = 0;
   memset(LSID.other, 0, 12);
+  locked = false;
 }
 
 NfsFh::NfsFh(uint32_t len, const char *val)
@@ -70,6 +72,7 @@ NfsFh::NfsFh(uint32_t len, const char *val)
   memset(OSID.other, 0, 12);
   LSID.seqid = 0;
   memset(LSID.other, 0, 12);
+  locked = false;
 }
 
 NfsFh::NfsFh(const NfsFh &fromFH)
@@ -89,6 +92,7 @@ NfsFh::NfsFh(const NfsFh &fromFH)
   memcpy(OSID.other, fromFH.OSID.other, 12);
   LSID.seqid = fromFH.LSID.seqid;
   memcpy(LSID.other, fromFH.LSID.other, 12);
+  locked = fromFH.locked;
 }
 
 const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
@@ -111,6 +115,7 @@ const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
   memcpy(OSID.other, fromFH.OSID.other, 12);
   LSID.seqid = fromFH.LSID.seqid;
   memcpy(LSID.other, fromFH.LSID.other, 12);
+  locked = fromFH.locked;
 
   return *this;
 }

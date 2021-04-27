@@ -325,6 +325,10 @@ class NfsFh
     NfsStateId& getOpenState() { return OSID; }
     NfsStateId& getLockState() { return LSID; }
 
+    bool isLocked() { return locked; }
+    void setLocked() { locked = true; }
+    void setUnlocked() { locked = false; }
+
     char *getData() const { return fhVal; }
     uint32_t getLength() const { return fhLen; }
 
@@ -333,6 +337,7 @@ class NfsFh
     char        *fhVal;
     NfsStateId   OSID; // Open State ID
     NfsStateId   LSID; // Lock State ID
+    bool         locked;
 };
 
 enum NfsLockType
