@@ -20,6 +20,7 @@
 
 #include "NfsApiHandle.h"
 #include <nfsrpc/nfs4.h>
+#include <mutex>
 
 namespace OpenNfsC {
 
@@ -124,6 +125,8 @@ class Nfs4ApiHandle : public NfsApiHandle
   private:
     bool readDirV4(NfsFh &dirFh, uint64_t &Cookie, verifier4 &vref, NfsFiles &files, bool &eof, NfsError &status);
 
+  private:
+    std::mutex m_file_op_seqid_mutex;
 };
 
 }

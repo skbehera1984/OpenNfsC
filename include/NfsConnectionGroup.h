@@ -186,6 +186,7 @@ class NfsConnectionGroup : public SmartRef
     uint64_t getClientId() { return m_ClientId; }
     void     setClientId(uint64_t id) { m_ClientId = id; }
     uint32_t getFileOPSeqId();
+    void     incrementFileOPSeqId();
 
   private:
     /* NFSv4 specific fields */
@@ -195,7 +196,6 @@ class NfsConnectionGroup : public SmartRef
     std::string  m_ClientName;
     uint64_t     m_ClientId;
     bool         m_bConnected;
-    std::mutex   m_seqid_mutex;
     uint32_t     m_file_op_seqid;
 
     // keepalive setup

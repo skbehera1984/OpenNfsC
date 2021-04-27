@@ -550,10 +550,12 @@ bool NfsConnectionGroup::setLogLevel(unsigned int level)
 
 uint32_t NfsConnectionGroup::getFileOPSeqId()
 {
-  std::lock_guard<std::mutex> guard(m_seqid_mutex);
-  uint32_t seqid = m_file_op_seqid;
-  ++m_file_op_seqid;
-  return seqid;
+  return m_file_op_seqid;
+}
+
+void NfsConnectionGroup::incrementFileOPSeqId()
+{
+  m_file_op_seqid++;
 }
 
 bool NfsConnectionGroup::connect(std::string serverIP)

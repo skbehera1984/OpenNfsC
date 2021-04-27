@@ -756,6 +756,18 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
                            NfsAttr           &outAttr,
                            NfsError          &status)
 {
+  /*
+   * Some operations use seqid's, and these operations must be synchronized. Because if not synchronized,
+   * multiple threads may send these operations with different seqid's to server. But the order in which these
+   * will be received at the server can change. So, a higher seqid may reach before the lower seqid.
+   *
+   * In another case if the server delays the processing of the request or for failures with certain erros the client must
+   * not increment the seqid's.
+   *
+   * In order to achieve that we will have these APIs that deal with open seqid's synchronized.
+   */
+  std::lock_guard<std::mutex> guard(m_file_op_seqid_mutex); // monotonic
+
   if (fileName.empty())
   {
     status.setError(NFSERR_INTERNAL_PATH_EMPTY, "Nfs4ApiHandle::create fileName can not be empty");
@@ -836,8 +848,18 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
     status.setError4(res.status, "Nfs4ApiHandle::create OPEN failed");
     if (res.status != NFS4ERR_EXIST)
       syslog(LOG_ERR, "Nfs4ApiHandle::%s: OPEN failed. Error - %d\n", __func__, res.status);
+
+    // Section 9.1.7 of rfc 7530
+    if (res.status != NFS4ERR_STALE_CLIENTID && res.status != NFS4ERR_STALE_STATEID && res.status !=  NFS4ERR_BAD_STATEID &&
+        res.status != NFS4ERR_BAD_SEQID && res.status != NFS4ERR_BADXDR && res.status != NFS4ERR_RESOURCE &&
+        res.status != NFS4ERR_NOFILEHANDLE && res.status != NFS4ERR_MOVED)
+    {
+      m_pConn->incrementFileOPSeqId();
+    }
+
     return false;
   }
+  m_pConn->incrementFileOPSeqId();
 
   int index = compCall.findOPIndex(OP_GETFH);
   if (index == -1)
@@ -923,6 +945,8 @@ bool Nfs4ApiHandle::open(NfsFh             &rootFh,
     dirFH = rootFh;
   }
 
+  std::lock_guard<std::mutex> guard(m_file_op_seqid_mutex); // monotonic
+
   // Open the actual file
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -977,8 +1001,17 @@ bool Nfs4ApiHandle::open(NfsFh             &rootFh,
   {
     status.setError4(res.status, "NFSV4 OPEN failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: OPEN failed. Error - %d\n", __func__, res.status);
+
+    // Section 9.1.7 of rfc 7530
+    if (res.status != NFS4ERR_STALE_CLIENTID && res.status != NFS4ERR_STALE_STATEID && res.status !=  NFS4ERR_BAD_STATEID &&
+        res.status != NFS4ERR_BAD_SEQID && res.status != NFS4ERR_BADXDR && res.status != NFS4ERR_RESOURCE &&
+        res.status != NFS4ERR_NOFILEHANDLE && res.status != NFS4ERR_MOVED)
+    {
+      m_pConn->incrementFileOPSeqId();
+    }
     return false;
   }
+  m_pConn->incrementFileOPSeqId();
 
   int index = compCall.findOPIndex(OP_GETFH);
   if (index == -1)
@@ -1059,6 +1092,8 @@ bool Nfs4ApiHandle::open(const std::string filePath,
     return false;
   }
 
+  std::lock_guard<std::mutex> guard(m_file_op_seqid_mutex); // monotonic
+
   // Open the actual file
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
@@ -1113,8 +1148,17 @@ bool Nfs4ApiHandle::open(const std::string filePath,
   {
     status.setError4(res.status, "Nfs4ApiHandle::open failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call OPEN failed. NFS ERR - %ld\n", __func__, (long)res.status);
+
+    // Section 9.1.7 of rfc 7530
+    if (res.status != NFS4ERR_STALE_CLIENTID && res.status != NFS4ERR_STALE_STATEID && res.status !=  NFS4ERR_BAD_STATEID &&
+        res.status != NFS4ERR_BAD_SEQID && res.status != NFS4ERR_BADXDR && res.status != NFS4ERR_RESOURCE &&
+        res.status != NFS4ERR_NOFILEHANDLE && res.status != NFS4ERR_MOVED)
+    {
+      m_pConn->incrementFileOPSeqId();
+    }
     return false;
   }
+  m_pConn->incrementFileOPSeqId();
 
   int index = compCall.findOPIndex(OP_GETFH);
   if (index == -1)
@@ -1383,6 +1427,8 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
 
 bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &status)
 {
+  std::lock_guard<std::mutex> guard(m_file_op_seqid_mutex); // monotonic
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
 
@@ -1422,8 +1468,17 @@ bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &status)
   {
     status.setError4(res.status, "Nfs4ApiHandle::close failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call CLOSE failed. NFS ERR - %ld\n", __func__, (long)res.status);
+
+    // Section 9.1.7 of rfc 7530
+    if (res.status != NFS4ERR_STALE_CLIENTID && res.status != NFS4ERR_STALE_STATEID && res.status !=  NFS4ERR_BAD_STATEID &&
+        res.status != NFS4ERR_BAD_SEQID && res.status != NFS4ERR_BADXDR && res.status != NFS4ERR_RESOURCE &&
+        res.status != NFS4ERR_NOFILEHANDLE && res.status != NFS4ERR_MOVED)
+    {
+      m_pConn->incrementFileOPSeqId();
+    }
     return false;
   }
+  m_pConn->incrementFileOPSeqId();
 
   int index = compCall.findOPIndex(OP_GETATTR);
   if (index == -1)
@@ -1820,6 +1875,8 @@ bool Nfs4ApiHandle::rmdir(std::string &exp, const std::string &path, NfsError &s
  */
 bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t length, NfsError &status, bool reclaim)
 {
+  std::lock_guard<std::mutex> guard(m_file_op_seqid_mutex); // monotonic
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
 
@@ -1876,8 +1933,17 @@ bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
   {
     status.setError4(res.status, "Nfs4ApiHandle::lock failed");
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: NFSV4 call LOCK failed. NFS ERR - %ld\n", __func__, (long)res.status);
+
+    // Section 9.1.7 of rfc 7530
+    if (res.status != NFS4ERR_STALE_CLIENTID && res.status != NFS4ERR_STALE_STATEID && res.status !=  NFS4ERR_BAD_STATEID &&
+        res.status != NFS4ERR_BAD_SEQID && res.status != NFS4ERR_BADXDR && res.status != NFS4ERR_RESOURCE &&
+        res.status != NFS4ERR_NOFILEHANDLE && res.status != NFS4ERR_MOVED)
+    {
+      m_pConn->incrementFileOPSeqId();
+    }
     return false;
   }
+  m_pConn->incrementFileOPSeqId();
 
   int index = compCall.findOPIndex(OP_LOCK);
   if (index == -1)
