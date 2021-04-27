@@ -69,15 +69,19 @@ bool Nfs4ApiHandle::connect(std::string &serverIP)
   {
     nfs_argop4 carg;
 
-    /*set the client id to fma as client name */
+    /* Set the client id to fma_pid as client name
+     * Appending pid is a must. Because if we just have fma as name
+     * then multiple connections will perform SETCLIENTID operation using the same name.
+     * In such case all the states and locks held by previous clients will be lost/released.
+     */
     carg.argop = OP_SETCLIENTID;
     SETCLIENTID4args *sClIdargs = &carg.nfs_argop4_u.opsetclientid;
     memcpy(sClIdargs->client.verifier,
            m_pConn->getInitialClientVerifier(),
            NFS4_VERIFIER_SIZE);
-    char id[4] = "fma";
-    id[3] = 0;
-    sClIdargs->client.id.id_len = 3;
+    char id[128] = {0};
+    sprintf(id, "fma_%d", getpid());
+    sClIdargs->client.id.id_len = strlen(id);
     sClIdargs->client.id.id_val = id;
     sClIdargs->callback.cb_program = 0;
     char r_netid[4] = "tcp";
