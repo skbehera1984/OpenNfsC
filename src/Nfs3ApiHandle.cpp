@@ -531,7 +531,8 @@ bool Nfs3ApiHandle::write_unstable(NfsFh       &fileFH,
 
 bool Nfs3ApiHandle::close(NfsFh &fileFh, NfsAttr &postAttr, NfsError &status)
 {
-  return false;
+  // enable this API. just return true
+  return true;
 }
 
 bool Nfs3ApiHandle::remove(std::string &exp, std::string path, NfsError &status)
