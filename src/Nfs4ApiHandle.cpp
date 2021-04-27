@@ -834,7 +834,8 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
   if (res.status != NFS4_OK)
   {
     status.setError4(res.status, "Nfs4ApiHandle::create OPEN failed");
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: OPEN failed. Error - %d\n", __func__, res.status);
+    if (res.status != NFS4ERR_EXIST)
+      syslog(LOG_ERR, "Nfs4ApiHandle::%s: OPEN failed. Error - %d\n", __func__, res.status);
     return false;
   }
 
@@ -2191,7 +2192,9 @@ bool Nfs4ApiHandle::lookupPath(NfsFh             &rootFh,
   COMPOUND4res res = compCall.getResult();
   if (res.status != NFS4_OK)
   {
-    syslog(LOG_ERR, "Nfs4ApiHandle::%s: LOOKUP failed. Error - %d\n", __func__, res.status);
+    status.setError4(res.status);
+    if (res.status != NFS4ERR_NOENT)
+      syslog(LOG_ERR, "Nfs4ApiHandle::%s: LOOKUP failed. Error - %d\n", __func__, res.status);
     return false;
   }
 
