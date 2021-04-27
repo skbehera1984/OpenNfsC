@@ -47,6 +47,7 @@ void NfsFh::clear()
   LSID.seqid = 0;
   memset(LSID.other, 0, 12);
   locked = false;
+  m_file_lock_seqid = 0;
 }
 
 NfsFh::NfsFh()
@@ -58,6 +59,7 @@ NfsFh::NfsFh()
   LSID.seqid = 0;
   memset(LSID.other, 0, 12);
   locked = false;
+  m_file_lock_seqid = 0;
 }
 
 NfsFh::NfsFh(uint32_t len, const char *val)
@@ -73,6 +75,7 @@ NfsFh::NfsFh(uint32_t len, const char *val)
   LSID.seqid = 0;
   memset(LSID.other, 0, 12);
   locked = false;
+  m_file_lock_seqid = 0;
 }
 
 NfsFh::NfsFh(const NfsFh &fromFH)
@@ -93,6 +96,7 @@ NfsFh::NfsFh(const NfsFh &fromFH)
   LSID.seqid = fromFH.LSID.seqid;
   memcpy(LSID.other, fromFH.LSID.other, 12);
   locked = fromFH.locked;
+  m_file_lock_seqid = fromFH.m_file_lock_seqid;
 }
 
 const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
@@ -116,6 +120,7 @@ const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
   LSID.seqid = fromFH.LSID.seqid;
   memcpy(LSID.other, fromFH.LSID.other, 12);
   locked = fromFH.locked;
+  m_file_lock_seqid = fromFH.m_file_lock_seqid;
 
   return *this;
 }
@@ -130,6 +135,14 @@ void NfsFh::setLockState(NfsStateId& lkSt)
 {
   LSID.seqid = lkSt.seqid;
   memcpy(LSID.other, lkSt.other, 12);
+}
+
+uint32_t NfsFh::getFileLockSeqId()
+{
+  std::lock_guard<std::mutex> guard(m_lock_seqid_mutex);
+  uint32_t seqid = m_file_lock_seqid;
+  ++m_file_lock_seqid;
+  return seqid;
 }
 
 void NfsAttr::clear()

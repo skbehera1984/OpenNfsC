@@ -107,7 +107,6 @@ NfsConnectionGroup::NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersi
 
     m_ClientName = std::string("fma");
     m_file_op_seqid = 0;
-    m_file_lock_seqid = 0;
 
     m_NfsApiHandle = new Nfs4ApiHandle(this);
 
@@ -554,14 +553,6 @@ uint32_t NfsConnectionGroup::getFileOPSeqId()
   std::lock_guard<std::mutex> guard(m_seqid_mutex);
   uint32_t seqid = m_file_op_seqid;
   ++m_file_op_seqid;
-  return seqid;
-}
-
-uint32_t NfsConnectionGroup::getFileLockSeqId()
-{
-  std::lock_guard<std::mutex> guard(m_seqid_mutex);
-  uint32_t seqid = m_file_lock_seqid;
-  ++m_file_lock_seqid;
   return seqid;
 }
 

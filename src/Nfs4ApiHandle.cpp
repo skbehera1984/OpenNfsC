@@ -1852,7 +1852,7 @@ bool Nfs4ApiHandle::lock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64_t
     NfsStateId &stid = fh.getOpenState();
     lkargs->locker.locker4_u.open_owner.open_stateid.seqid = stid.seqid;
     memcpy(lkargs->locker.locker4_u.open_owner.open_stateid.other, stid.other, 12);
-    lkargs->locker.locker4_u.open_owner.lock_seqid = m_pConn->getFileLockSeqId();
+    lkargs->locker.locker4_u.open_owner.lock_seqid = fh.getFileLockSeqId();
     lkargs->locker.locker4_u.open_owner.lock_owner.clientid = m_pConn->getClientId();
     lkargs->locker.locker4_u.open_owner.lock_owner.owner.owner_len = m_pConn->getClientName().length();
     lkargs->locker.locker4_u.open_owner.lock_owner.owner.owner_val = const_cast<char*>(m_pConn->getClientName().c_str());
@@ -1925,7 +1925,7 @@ bool Nfs4ApiHandle::unlock(NfsFh &fh, uint32_t lockType, uint64_t offset, uint64
   carg.argop = OP_LOCKU;
   LOCKU4args *ulkargs = &carg.nfs_argop4_u.oplocku;
   ulkargs->locktype = (nfs_lock_type4)lockType;
-  ulkargs->seqid = m_pConn->getFileLockSeqId();
+  ulkargs->seqid = fh.getFileLockSeqId();
   NfsStateId stid = fh.getLockState();
   ulkargs->lock_stateid.seqid = stid.seqid;
   memcpy(ulkargs->lock_stateid.other, stid.other, 12);

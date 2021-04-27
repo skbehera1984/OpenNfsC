@@ -328,6 +328,7 @@ class NfsFh
     bool isLocked() { return locked; }
     void setLocked() { locked = true; }
     void setUnlocked() { locked = false; }
+    uint32_t getFileLockSeqId();
 
     char *getData() const { return fhVal; }
     uint32_t getLength() const { return fhLen; }
@@ -338,6 +339,9 @@ class NfsFh
     NfsStateId   OSID; // Open State ID
     NfsStateId   LSID; // Lock State ID
     bool         locked;
+
+    std::mutex   m_lock_seqid_mutex;
+    uint32_t     m_file_lock_seqid;
 };
 
 enum NfsLockType
