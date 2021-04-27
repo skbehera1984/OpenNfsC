@@ -890,10 +890,6 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
 
   // get the rflags
   uint32_t rflags = opres->rflags;
-  if (rflags & OPEN4_RESULT_CONFIRM)
-  {
-    // TODO sarat nfs send open confirmation
-  }
 
   index = compCall.findOPIndex(OP_GETATTR);
   if (index == -1)
@@ -907,6 +903,61 @@ bool Nfs4ApiHandle::create(NfsFh             &dirFh,
   {
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to decode OP_GETATTR result\n", __func__);
     return false;
+  }
+
+  if (rflags & OPEN4_RESULT_CONFIRM)
+  {
+    NFSv4::COMPOUNDCall compCall;
+    enum clnt_stat cst = RPC_SUCCESS;
+    nfs_argop4 carg;
+
+    carg.argop = OP_PUTFH;
+    PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+    pfhgargs->object.nfs_fh4_len = fh.getLength();
+    pfhgargs->object.nfs_fh4_val = fh.getData();
+    compCall.appendCommand(&carg);
+
+    carg.argop = OP_OPEN_CONFIRM;
+    OPEN_CONFIRM4args *opcargs = &carg.nfs_argop4_u.opopen_confirm;
+    opcargs->open_stateid.seqid = stateid.seqid;
+    memcpy(opcargs->open_stateid.other, stateid.other, 12);
+    opcargs->seqid = m_pConn->getFileOPSeqId();
+    compCall.appendCommand(&carg);
+
+    cst = compCall.call(m_pConn);
+    if (cst != RPC_SUCCESS)
+    {
+      status.setRpcError(cst, "Nfs4ApiHandle::create OPENCONFIRM failed - rpc error");
+      return false;
+    }
+
+    COMPOUND4res res = compCall.getResult();
+    if (res.status != NFS4_OK)
+    {
+      status.setError4(res.status, "NFSV4 OPENCONFIRM failed");
+
+      // Section 9.1.7 of rfc 7530
+      if (res.status != NFS4ERR_STALE_CLIENTID && res.status != NFS4ERR_STALE_STATEID && res.status !=  NFS4ERR_BAD_STATEID &&
+          res.status != NFS4ERR_BAD_SEQID && res.status != NFS4ERR_BADXDR && res.status != NFS4ERR_RESOURCE &&
+          res.status != NFS4ERR_NOFILEHANDLE && res.status != NFS4ERR_MOVED)
+      {
+        m_pConn->incrementFileOPSeqId();
+      }
+      return false;
+    }
+    m_pConn->incrementFileOPSeqId();
+
+    index = compCall.findOPIndex(OP_OPEN_CONFIRM);
+    if (index == -1)
+    {
+      syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_OPEN_CONFIRM\n", __func__);
+      return false;
+    }
+    stateid4 stId = res.resarray.resarray_val[index].nfs_resop4_u.opopen_confirm.OPEN_CONFIRM4res_u.resok4.open_stateid;
+    NfsStateId opcStId;
+    opcStId.seqid = stId.seqid;
+    memcpy(opcStId.other, stId.other, 12);
+    fh.setOpenState(opcStId);
   }
 
   fileFh = fh;
@@ -1042,10 +1093,6 @@ bool Nfs4ApiHandle::open(NfsFh             &rootFh,
 
   // get the rflags
   uint32_t rflags = opres->rflags;
-  if (rflags & OPEN4_RESULT_CONFIRM)
-  {
-    // TODO sarat nfs send open confirmation
-  }
 
   index = compCall.findOPIndex(OP_GETATTR);
   if (index == -1)
@@ -1059,6 +1106,61 @@ bool Nfs4ApiHandle::open(NfsFh             &rootFh,
   {
     syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to decode OP_GETATTR result\n", __func__);
     return false;
+  }
+
+  if (rflags & OPEN4_RESULT_CONFIRM)
+  {
+    NFSv4::COMPOUNDCall compCall;
+    enum clnt_stat cst = RPC_SUCCESS;
+    nfs_argop4 carg;
+
+    carg.argop = OP_PUTFH;
+    PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+    pfhgargs->object.nfs_fh4_len = fh.getLength();
+    pfhgargs->object.nfs_fh4_val = fh.getData();
+    compCall.appendCommand(&carg);
+
+    carg.argop = OP_OPEN_CONFIRM;
+    OPEN_CONFIRM4args *opcargs = &carg.nfs_argop4_u.opopen_confirm;
+    opcargs->open_stateid.seqid = stateid.seqid;
+    memcpy(opcargs->open_stateid.other, stateid.other, 12);
+    opcargs->seqid = m_pConn->getFileOPSeqId();
+    compCall.appendCommand(&carg);
+
+    cst = compCall.call(m_pConn);
+    if (cst != RPC_SUCCESS)
+    {
+      status.setRpcError(cst, "Nfs4ApiHandle::create OPENCONFIRM failed - rpc error");
+      return false;
+    }
+
+    COMPOUND4res res = compCall.getResult();
+    if (res.status != NFS4_OK)
+    {
+      status.setError4(res.status, "NFSV4 OPENCONFIRM failed");
+
+      // Section 9.1.7 of rfc 7530
+      if (res.status != NFS4ERR_STALE_CLIENTID && res.status != NFS4ERR_STALE_STATEID && res.status !=  NFS4ERR_BAD_STATEID &&
+          res.status != NFS4ERR_BAD_SEQID && res.status != NFS4ERR_BADXDR && res.status != NFS4ERR_RESOURCE &&
+          res.status != NFS4ERR_NOFILEHANDLE && res.status != NFS4ERR_MOVED)
+      {
+        m_pConn->incrementFileOPSeqId();
+      }
+      return false;
+    }
+    m_pConn->incrementFileOPSeqId();
+
+    index = compCall.findOPIndex(OP_OPEN_CONFIRM);
+    if (index == -1)
+    {
+      syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_OPEN_CONFIRM\n", __func__);
+      return false;
+    }
+    stateid4 stId = res.resarray.resarray_val[index].nfs_resop4_u.opopen_confirm.OPEN_CONFIRM4res_u.resok4.open_stateid;
+    NfsStateId opcStId;
+    opcStId.seqid = stId.seqid;
+    memcpy(opcStId.other, stId.other, 12);
+    fh.setOpenState(opcStId);
   }
 
   fileFh = fh;
@@ -1189,9 +1291,60 @@ bool Nfs4ApiHandle::open(const std::string filePath,
 
   // get the rflags
   uint32_t rflags = opres->rflags;
+
   if (rflags & OPEN4_RESULT_CONFIRM)
   {
-    // send open confirmation
+    NFSv4::COMPOUNDCall compCall;
+    enum clnt_stat cst = RPC_SUCCESS;
+    nfs_argop4 carg;
+
+    carg.argop = OP_PUTFH;
+    PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+    pfhgargs->object.nfs_fh4_len = fh.getLength();
+    pfhgargs->object.nfs_fh4_val = fh.getData();
+    compCall.appendCommand(&carg);
+
+    carg.argop = OP_OPEN_CONFIRM;
+    OPEN_CONFIRM4args *opcargs = &carg.nfs_argop4_u.opopen_confirm;
+    opcargs->open_stateid.seqid = stateid.seqid;
+    memcpy(opcargs->open_stateid.other, stateid.other, 12);
+    opcargs->seqid = m_pConn->getFileOPSeqId();
+    compCall.appendCommand(&carg);
+
+    cst = compCall.call(m_pConn);
+    if (cst != RPC_SUCCESS)
+    {
+      status.setRpcError(cst, "Nfs4ApiHandle::create OPENCONFIRM failed - rpc error");
+      return false;
+    }
+
+    COMPOUND4res res = compCall.getResult();
+    if (res.status != NFS4_OK)
+    {
+      status.setError4(res.status, "NFSV4 OPENCONFIRM failed");
+
+      // Section 9.1.7 of rfc 7530
+      if (res.status != NFS4ERR_STALE_CLIENTID && res.status != NFS4ERR_STALE_STATEID && res.status !=  NFS4ERR_BAD_STATEID &&
+          res.status != NFS4ERR_BAD_SEQID && res.status != NFS4ERR_BADXDR && res.status != NFS4ERR_RESOURCE &&
+          res.status != NFS4ERR_NOFILEHANDLE && res.status != NFS4ERR_MOVED)
+      {
+        m_pConn->incrementFileOPSeqId();
+      }
+      return false;
+    }
+    m_pConn->incrementFileOPSeqId();
+
+    index = compCall.findOPIndex(OP_OPEN_CONFIRM);
+    if (index == -1)
+    {
+      syslog(LOG_ERR, "Nfs4ApiHandle::%s: Failed to find op index for - OP_OPEN_CONFIRM\n", __func__);
+      return false;
+    }
+    stateid4 stId = res.resarray.resarray_val[index].nfs_resop4_u.opopen_confirm.OPEN_CONFIRM4res_u.resok4.open_stateid;
+    NfsStateId opcStId;
+    opcStId.seqid = stId.seqid;
+    memcpy(opcStId.other, stId.other, 12);
+    fh.setOpenState(opcStId);
   }
 
   fileFh = fh;
