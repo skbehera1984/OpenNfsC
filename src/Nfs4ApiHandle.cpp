@@ -2390,8 +2390,10 @@ bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, Nfs
 
   nfs_argop4 carg;
 
-  // using the above fh gives wrong values
-  carg.argop = OP_PUTROOTFH;
+  carg.argop = OP_PUTFH;
+  PUTFH4args *pfhgargs = &carg.nfs_argop4_u.opputfh;
+  pfhgargs->object.nfs_fh4_len = rootFh.getLength();
+  pfhgargs->object.nfs_fh4_val = rootFh.getData();
   compCall.appendCommand(&carg);
 
   carg.argop = OP_GETATTR;
