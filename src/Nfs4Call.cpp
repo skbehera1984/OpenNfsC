@@ -368,7 +368,7 @@ COMPOUNDCall::decode_OP_GETFH(RpcPacketPtr packet, GETFH4res *res)
 
   unsigned char* str = NULL;
   uint32 len = 0;
-  RETURN_ON_ERROR(packet->xdrDecodeString(str, len, true));
+  RETURN_ON_ERROR(packet->xdrDecodeString(str, len));
   res->GETFH4res_u.resok4.object.nfs_fh4_len = len;
   res->GETFH4res_u.resok4.object.nfs_fh4_val = (char*)str;
   return 0;
@@ -472,7 +472,7 @@ COMPOUNDCall::decode_OP_LOCK(RpcPacketPtr packet, LOCK4res *res)
 
     unsigned char* str = NULL;
     uint32 len = 0;
-    RETURN_ON_ERROR(packet->xdrDecodeString(str, len, true));
+    RETURN_ON_ERROR(packet->xdrDecodeString(str, len));
     res->LOCK4res_u.denied.owner.owner.owner_len = len;
     res->LOCK4res_u.denied.owner.owner.owner_val = (char*)str;
   }
@@ -520,7 +520,7 @@ COMPOUNDCall::decode_OP_LOCKT(RpcPacketPtr packet, LOCKT4res *res)
 
     unsigned char* str = NULL;
     uint32 len = 0;
-    RETURN_ON_ERROR(packet->xdrDecodeString(str, len, true));
+    RETURN_ON_ERROR(packet->xdrDecodeString(str, len));
     res->LOCKT4res_u.denied.owner.owner.owner_len = len;
     res->LOCKT4res_u.denied.owner.owner.owner_val = (char*)str;
   }
@@ -917,7 +917,7 @@ COMPOUNDCall::decode_OP_READ(RpcPacketPtr packet, READ4res *res)
 
   unsigned char* str = NULL;
   uint32 len = 0;
-  RETURN_ON_ERROR(packet->xdrDecodeString(str, len, true));
+  RETURN_ON_ERROR(packet->xdrDecodeString(str, len));
   res->READ4res_u.resok4.data.data_len = len;
   res->READ4res_u.resok4.data.data_val = (char*)str;
 
@@ -988,7 +988,7 @@ COMPOUNDCall::decode_OP_READDIR(RpcPacketPtr packet, READDIR4res *res)
 
     unsigned char* str = NULL;
     u_int len = 0;
-    RETURN_ON_ERROR(packet->xdrDecodeString(str, len, true));
+    RETURN_ON_ERROR(packet->xdrDecodeString(str, len));
     current->name.utf8string_val = (char*)str;
     current->name.utf8string_len = len;
 
@@ -1062,7 +1062,7 @@ COMPOUNDCall::decode_OP_READLINK(RpcPacketPtr packet, READLINK4res *res)
 
   unsigned char* str = NULL;
   u_int len = 0;
-  RETURN_ON_ERROR(packet->xdrDecodeString(str, len, true));
+  RETURN_ON_ERROR(packet->xdrDecodeString(str, len));
 
   res->READLINK4res_u.resok4.link.utf8string_len = len;
   res->READLINK4res_u.resok4.link.utf8string_val = (char*)str;
