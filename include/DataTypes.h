@@ -283,6 +283,8 @@ public:
   uint64_t    bytes_free;
   uint64_t    bytes_total;
   uint64_t    bytes_used;
+
+  char        m_buf[4096]; // used for encoding v4 attr
 };
 
 struct NfsAccess

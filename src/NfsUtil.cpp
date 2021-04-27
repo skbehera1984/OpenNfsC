@@ -441,14 +441,10 @@ int encode_fattr4(RpcPacketPtr packet, const fattr4 *attr)
 
 int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
 {
-
   uint32_t mask1 = attr.mask[0];
   uint32_t mask2 = attr.mask[1];
-  uint32_t buflen = 1024;
-  char * buf = (char*)calloc(1,buflen); // TODO sarat how to free this buffer??
-
-  if (buf == NULL)
-    return -1;
+  uint32_t buflen = sizeof(attr.m_buf);
+  char     *buf = attr.m_buf;
 
   fattr->attrmask.bitmap4_len = 2;
   fattr->attrmask.bitmap4_val = attr.mask;

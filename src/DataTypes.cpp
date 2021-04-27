@@ -203,6 +203,8 @@ void NfsAttr::clear()
   bytes_free = 0;
   bytes_total = 0;
   bytes_used = 0;
+
+  memset(m_buf, 0, sizeof(m_buf));
 }
 
 NfsAttr::NfsAttr()
@@ -260,6 +262,8 @@ NfsAttr::NfsAttr(const NfsAttr &obj)
   this->bytes_free = obj.bytes_free;
   this->bytes_total = obj.bytes_total;
   this->bytes_used = obj.bytes_used;
+
+  memcpy(this->m_buf, obj.m_buf, sizeof(m_buf));
 }
 
 NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
@@ -302,6 +306,8 @@ NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
   this->bytes_free = obj.bytes_free;
   this->bytes_total = obj.bytes_total;
   this->bytes_used = obj.bytes_used;
+
+  memcpy(this->m_buf, obj.m_buf, sizeof(m_buf));
 
   return (*this);
 }
