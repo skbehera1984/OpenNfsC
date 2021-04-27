@@ -53,7 +53,7 @@ std::map<std::string, NfsConnectionGroupPtr> NfsConnectionGroup::serverTable;
 TransportType NfsConnectionGroup::gTransportConfig = TRANSP_TCP;
 
 
-NfsConnectionGroup::NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersion):m_serverIP(serverIP),m_nfsTransp(TRANSP_TCP)
+NfsConnectionGroup::NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersion, bool startKeepAlive):m_serverIP(serverIP),m_nfsTransp(TRANSP_TCP)
 {
   // Open the syslog
   setlogmask(LOG_UPTO(LOG_NOTICE));
@@ -110,10 +110,13 @@ NfsConnectionGroup::NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersi
 
     m_NfsApiHandle = new Nfs4ApiHandle(this);
 
-    // start the keepalive thread
-    m_keepalive = true;
-    m_lastRenewCidTime = time(0) - 12; // -12 to immediately send an echo
-    m_nfsKeepAliveThread = std::thread([&](){this->do_keepAlive();});
+    if (startKeepAlive)
+    {
+      // start the keepalive thread
+      m_keepalive = true;
+      m_lastRenewCidTime = time(0) - 12; // -12 to immediately send an echo
+      m_nfsKeepAliveThread = std::thread([&](){this->do_keepAlive();});
+    }
   }
 }
 
@@ -124,7 +127,7 @@ NfsConnectionGroup::~NfsConnectionGroup()
   // close syslog
   closelog();
 
-  if (m_nfsVersion == NFSV4)
+  if (m_keepalive == true && m_nfsVersion == NFSV4)
   {
     // stop the keepalive thread
     m_keepalive = false;
@@ -164,6 +167,7 @@ void NfsConnectionGroup::do_keepAlive()
           m_lastRenewCidTime = time(0); //update
         }
       }
+      sleep(4);
     }
   }
 }
@@ -416,7 +420,7 @@ NfsConnectionGroupPtr NfsConnectionGroup::findNfsConnectionGroup(std::string ser
   return svr;
 }
 
-NfsConnectionGroupPtr NfsConnectionGroup::create(std::string serverIp, TransportType proto, NFSVersion version)
+NfsConnectionGroupPtr NfsConnectionGroup::create(std::string serverIp, TransportType proto, NFSVersion version, bool startKeepAlive)
 {
   NfsConnectionGroupPtr svr;
   bool bNewConnection = false;
@@ -433,7 +437,7 @@ NfsConnectionGroupPtr NfsConnectionGroup::create(std::string serverIp, Transport
 
     if ( svr.empty() )
     {
-      svr = new NfsConnectionGroup(serverIp, version);
+      svr = new NfsConnectionGroup(serverIp, version, startKeepAlive);
       serverTable[serverIp] = svr;
       bNewConnection = true;
     }
@@ -448,13 +452,13 @@ NfsConnectionGroupPtr NfsConnectionGroup::create(std::string serverIp, Transport
   return svr;
 }
 
-NfsConnectionGroupPtr NfsConnectionGroup::create(const char* serverIpStr, bool useUdp, NFSVersion version)
+NfsConnectionGroupPtr NfsConnectionGroup::create(const char* serverIpStr, bool useUdp, NFSVersion version, bool startKeepAlive)
 {
   NfsConnectionGroupPtr svr;
 
   TransportType transp = useUdp ? TRANSP_UDP : TRANSP_TCP;
   std::string srvIP=serverIpStr;
-  svr = create(srvIP, transp, version);
+  svr = create(srvIP, transp, version, startKeepAlive);
 
   return svr;
 }
@@ -462,21 +466,21 @@ NfsConnectionGroupPtr NfsConnectionGroup::create(const char* serverIpStr, bool u
 /* These forceCreate APIs are used to create on the fly connections, which are short lived.
  * These won't be saved in global serverTble
  */
-NfsConnectionGroupPtr NfsConnectionGroup::forceCreate(std::string serverIp, TransportType proto, NFSVersion version)
+NfsConnectionGroupPtr NfsConnectionGroup::forceCreate(std::string serverIp, TransportType proto, NFSVersion version, bool startKeepAlive)
 {
-  NfsConnectionGroupPtr svr = new NfsConnectionGroup(serverIp, version);
+  NfsConnectionGroupPtr svr = new NfsConnectionGroup(serverIp, version, startKeepAlive);
   svr->initNfs();
   svr->connect(serverIp);
   return svr;
 }
 
-NfsConnectionGroupPtr NfsConnectionGroup::forceCreate(const char* serverIpStr, bool useUdp, NFSVersion version)
+NfsConnectionGroupPtr NfsConnectionGroup::forceCreate(const char* serverIpStr, bool useUdp, NFSVersion version, bool startKeepAlive)
 {
   NfsConnectionGroupPtr svr;
 
   TransportType transp = useUdp ? TRANSP_UDP : TRANSP_TCP;
   std::string srvIP=serverIpStr;
-  svr = forceCreate(srvIP, transp, version);
+  svr = forceCreate(srvIP, transp, version, startKeepAlive);
 
   return svr;
 }

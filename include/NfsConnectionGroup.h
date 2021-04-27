@@ -71,19 +71,23 @@ class NfsConnectionGroup : public SmartRef
     static void fini();
     static NfsConnectionGroupPtr create(std::string   serverIP,
                                         TransportType transp,
-                                        NFSVersion    version=NFSV3);
+                                        NFSVersion    version=NFSV3,
+                                        bool          startKeepAlive = false);
 
     static NfsConnectionGroupPtr create(const char* serverIpStr,
                                         bool        useUdp,
-                                        NFSVersion  version=NFSV3);
+                                        NFSVersion  version=NFSV3,
+                                        bool        startKeepAlive = false);
 
     static NfsConnectionGroupPtr forceCreate(std::string   serverIP,
                                              TransportType transp,
-                                             NFSVersion    version=NFSV3);
+                                             NFSVersion    version=NFSV3,
+                                             bool          startKeepAlive=false);
 
     static NfsConnectionGroupPtr forceCreate(const char* serverIpStr,
                                              bool        useUdp,
-                                             NFSVersion  version=NFSV3);
+                                             NFSVersion  version=NFSV3,
+                                             bool        startKeepAlive=false);
 
     static bool addNfsConnectionGroup(std::string serverIP, TransportType transp);
     static NfsConnectionGroupPtr findNfsConnectionGroup(std::string serverIP);
@@ -96,7 +100,7 @@ class NfsConnectionGroup : public SmartRef
     NfsConnectionGroup();        // not implemented
     NfsConnectionGroup(const NfsConnectionGroup&); // not implemented
 
-    NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersion = NFSV3);
+    NfsConnectionGroup(std::string serverIP, NFSVersion nfsVersion = NFSV3, bool startKeepAlive = false);
 
     bool initNfs();
     bool updateRpcPorts(TransportType transp);
