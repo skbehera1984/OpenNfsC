@@ -318,6 +318,7 @@ class NfsFh
     NfsFh(const NfsFh &fromFH);
     ~NfsFh() { clear(); }
     const NfsFh &operator=(const NfsFh &fromFH);
+    bool operator==(const NfsFh &fromFH);
     void clear();
 
     void setOpenState(NfsStateId& opSt);
@@ -329,6 +330,9 @@ class NfsFh
     void setLocked() { locked = true; }
     void setUnlocked() { locked = false; }
     uint32_t getFileLockSeqId();
+
+    bool isOpen() { return m_opened; }
+    void close() { m_opened = false; }
 
     char *getData() const { return fhVal; }
     uint32_t getLength() const { return fhLen; }
@@ -342,6 +346,8 @@ class NfsFh
 
     std::mutex   m_lock_seqid_mutex;
     uint32_t     m_file_lock_seqid;
+
+    bool         m_opened;
 };
 
 enum NfsLockType

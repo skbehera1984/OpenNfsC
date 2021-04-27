@@ -1427,6 +1427,9 @@ bool Nfs4ApiHandle::write_unstable(NfsFh       &fileFH,
 
 bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &status)
 {
+  if (!fileFH.isOpen())
+    return true;
+
   std::lock_guard<std::mutex> guard(m_file_op_seqid_mutex); // monotonic
 
   NFSv4::COMPOUNDCall compCall;
@@ -1493,6 +1496,8 @@ bool Nfs4ApiHandle::close(NfsFh &fileFH, NfsAttr &postAttr, NfsError &status)
     syslog(LOG_ERR, "Failed to decode OP_GETATTR result\n");
     return false;
   }
+
+  fileFH.close();
 
   return true;
 }

@@ -48,6 +48,7 @@ void NfsFh::clear()
   memset(LSID.other, 0, 12);
   locked = false;
   m_file_lock_seqid = 0;
+  m_opened = false;
 }
 
 NfsFh::NfsFh()
@@ -60,6 +61,7 @@ NfsFh::NfsFh()
   memset(LSID.other, 0, 12);
   locked = false;
   m_file_lock_seqid = 0;
+  m_opened = false;
 }
 
 NfsFh::NfsFh(uint32_t len, const char *val)
@@ -76,6 +78,7 @@ NfsFh::NfsFh(uint32_t len, const char *val)
   memset(LSID.other, 0, 12);
   locked = false;
   m_file_lock_seqid = 0;
+  m_opened = false;
 }
 
 NfsFh::NfsFh(const NfsFh &fromFH)
@@ -97,6 +100,7 @@ NfsFh::NfsFh(const NfsFh &fromFH)
   memcpy(LSID.other, fromFH.LSID.other, 12);
   locked = fromFH.locked;
   m_file_lock_seqid = fromFH.m_file_lock_seqid;
+  m_opened = fromFH.m_opened;
 }
 
 const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
@@ -121,14 +125,28 @@ const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
   memcpy(LSID.other, fromFH.LSID.other, 12);
   locked = fromFH.locked;
   m_file_lock_seqid = fromFH.m_file_lock_seqid;
+  m_opened = fromFH.m_opened;
 
   return *this;
+}
+
+bool NfsFh::operator==(const NfsFh &fromFH)
+{
+  bool tRet = false;
+
+  if ( (fhLen == fromFH.fhLen) &&
+       (memcmp(fhVal,fromFH.fhVal,fromFH.fhLen) == 0 ))
+  {
+    tRet = true;
+  }
+  return tRet;
 }
 
 void NfsFh::setOpenState(NfsStateId& opSt)
 {
   OSID.seqid = opSt.seqid;
   memcpy(OSID.other, opSt.other, 12);
+  m_opened = true;
 }
 
 void NfsFh::setLockState(NfsStateId& lkSt)
