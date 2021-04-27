@@ -2306,7 +2306,13 @@ bool Nfs4ApiHandle::fileExists(const std::string& exp, const std::string& path, 
   }
 
   NfsFh tmpFh;
-  return lookupPath(exp, path, tmpFh, attr, status);
+  bool sts = lookupPath(exp, path, tmpFh, attr, status);
+
+  NfsAttr postAttr;
+  NfsError tErr;
+  close(tmpFh, postAttr, tErr);
+
+  return sts;
 }
 
 bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
@@ -2361,10 +2367,16 @@ bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   return true;
 }
 
-bool Nfs4ApiHandle::getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& err)
+bool Nfs4ApiHandle::getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status)
 {
   NfsFh tmpFh;
-  return lookupPath(exp, path, tmpFh, attr, err);
+  bool sts = lookupPath(exp, path, tmpFh, attr, status);
+
+  NfsAttr postAttr;
+  NfsError tErr;
+  close(tmpFh, postAttr, tErr);
+
+  return sts;
 }
 
 bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status)
