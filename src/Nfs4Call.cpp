@@ -99,8 +99,50 @@ void COMPOUNDCall::freeRes(nfs_resop4 *res)
 {
   int opcode = res->resop;
   res->resop = (nfs_opnum4)1; // Reset to COMPOUNDCALL
-  if (opcode ==  OP_ACCESS)
+
+  switch (opcode)
   {
+    case OP_GETATTR:
+    {
+      fattr4 *R = &res->nfs_resop4_u.opgetattr.GETATTR4res_u.resok4.obj_attributes;
+      free(R->attrmask.bitmap4_val);
+      free(R->attr_vals.attrlist4_val);
+    }
+    break;
+    case OP_READDIR:
+    {
+      entry4 *entries = res->nfs_resop4_u.opreaddir.READDIR4res_u.resok4.reply.entries;
+      entry4 *entry = entries;
+      while (entry)
+      {
+        free(entry->attrs.attrmask.bitmap4_val);
+        free(entry->attrs.attr_vals.attrlist4_val);
+        entry4 *tmp = entry;
+        entry = entry->nextentry;
+        free(tmp);
+      }
+    }
+    break;
+    case OP_CREATE:
+    {
+      bitmap4 *B = &res->nfs_resop4_u.opcreate.CREATE4res_u.resok4.attrset;
+      free(B->bitmap4_val);
+    }
+    break;
+    case OP_OPEN:
+    {
+      bitmap4 *B = &res->nfs_resop4_u.opopen.OPEN4res_u.resok4.attrset;
+      free(B->bitmap4_val);
+    }
+    break;
+    case OP_SETATTR:
+    {
+      bitmap4 *B = &res->nfs_resop4_u.opsetattr.attrsset;
+      free(B->bitmap4_val);
+    }
+    break;
+    default:
+    break;
   }
 }
 
