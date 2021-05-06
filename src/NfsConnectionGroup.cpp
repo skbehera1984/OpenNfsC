@@ -172,6 +172,14 @@ void NfsConnectionGroup::do_keepAlive()
   }
 }
 
+uint64_t NfsConnectionGroup::getRWBufferSize()
+{
+  if (m_nfsVersion == NFSV4)
+    return (512 * 1024);
+  else
+    return (32 * 1024);
+}
+
 bool NfsConnectionGroup::update()
 {
   return initNfs();
