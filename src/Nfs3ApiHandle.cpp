@@ -257,6 +257,9 @@ bool Nfs3ApiHandle::getRootFH(const string &nfs_export, NfsFh &rootFh, NfsError 
     return false;
   }
 
+  if (m_pConn->findCachedDirHandle(nfs_export, rootFh))
+    return true;
+
   enum clnt_stat retval;
   dirpath pszMountPoint = (dirpath) nfs_export.c_str();
   string serverIP = m_pConn->getIP();
@@ -280,6 +283,9 @@ bool Nfs3ApiHandle::getRootFH(const string &nfs_export, NfsFh &rootFh, NfsError 
   nfs_fh3 *fh3 = &(mntRes.mountres3_u.mount3_mountinfo.mount3_fhandle);
   NfsFh fh(fh3->fh3_data.fh3_data_len, fh3->fh3_data.fh3_data_val);
   rootFh = fh;
+
+  rootFh.setPath(nfs_export);
+  m_pConn->insertDirHandle(nfs_export, rootFh);
 
   // if mount point is "/", then dont call unmount
   if (nfs_export != "/")

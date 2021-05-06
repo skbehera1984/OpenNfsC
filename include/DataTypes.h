@@ -340,6 +340,9 @@ class NfsFh
     char *getData() const { return fhVal; }
     uint32_t getLength() const { return fhLen; }
 
+    void setPath(const std::string& path) { m_path = path; }
+    std::string& getPath() { return m_path; }
+
   private:
     uint32_t    fhLen;
     char        *fhVal;
@@ -351,6 +354,7 @@ class NfsFh
     uint32_t     m_file_lock_seqid;
 
     bool         m_opened;
+    std::string  m_path; // path for which this handle is obtained
 };
 
 enum NfsLockType

@@ -792,4 +792,43 @@ bool NfsConnectionGroup::renewCid()
   return m_NfsApiHandle->renewCid();
 }
 
+// CACHING OF HANDLES
+bool NfsConnectionGroup::findCachedDirHandle(const std::string& path, NfsFh& fh)
+{
+  std::lock_guard<std::mutex> lock(m_cachedDirHandlesMutex);
+  std::map<std::string, NfsFh>::iterator it;
+  it = m_cachedDirHandles.find(path);
+  if (it != m_cachedDirHandles.end())
+  {
+    fh = it->second;
+    return true;
+  }
+  return false;
+}
+
+bool NfsConnectionGroup::findCachedFileHandle(const std::string& path, NfsFh& fh)
+{
+  std::lock_guard<std::mutex> lock(m_cachedFileHandlesMutex);
+  std::map<std::string, NfsFh>::iterator it;
+  it = m_cachedFileHandles.find(path);
+  if (it != m_cachedFileHandles.end())
+  {
+    fh = it->second;
+    return true;
+  }
+  return false;
+}
+
+void NfsConnectionGroup::insertDirHandle(const std::string& path, NfsFh& fh)
+{
+  std::lock_guard<std::mutex> lock(m_cachedDirHandlesMutex);
+  m_cachedDirHandles[path] = fh;
+}
+
+void NfsConnectionGroup::insertFileHandle(const std::string& path, NfsFh& fh)
+{
+  std::lock_guard<std::mutex> lock(m_cachedFileHandlesMutex);
+  m_cachedFileHandles[path] = fh;
+}
+
 } //end of namespace

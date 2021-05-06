@@ -60,6 +60,7 @@ void NfsFh::clear()
   locked = false;
   m_file_lock_seqid = 0;
   m_opened = false;
+  m_path.clear();
 }
 
 NfsFh::NfsFh()
@@ -73,6 +74,7 @@ NfsFh::NfsFh()
   locked = false;
   m_file_lock_seqid = 0;
   m_opened = false;
+  m_path.clear();
 }
 
 NfsFh::NfsFh(uint32_t len, const char *val)
@@ -90,6 +92,7 @@ NfsFh::NfsFh(uint32_t len, const char *val)
   locked = false;
   m_file_lock_seqid = 0;
   m_opened = false;
+  m_path.clear();
 }
 
 NfsFh::NfsFh(const NfsFh &fromFH)
@@ -112,6 +115,7 @@ NfsFh::NfsFh(const NfsFh &fromFH)
   locked = fromFH.locked;
   m_file_lock_seqid = fromFH.m_file_lock_seqid;
   m_opened = fromFH.m_opened;
+  m_path = fromFH.m_path;
 }
 
 const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
@@ -137,6 +141,7 @@ const NfsFh& NfsFh::operator=(const NfsFh &fromFH)
   locked = fromFH.locked;
   m_file_lock_seqid = fromFH.m_file_lock_seqid;
   m_opened = fromFH.m_opened;
+  m_path = fromFH.m_path;
 
   return *this;
 }

@@ -131,6 +131,18 @@ class NfsConnectionGroup : public SmartRef
 
     NfsApiHandlePtr    m_NfsApiHandle = nullptr;;
 
+  // CACHING OF HANDLES
+  private:
+    std::map<std::string, NfsFh> m_cachedDirHandles;
+    std::mutex                   m_cachedDirHandlesMutex;
+    std::map<std::string, NfsFh> m_cachedFileHandles;
+    std::mutex                   m_cachedFileHandlesMutex;
+  public:
+    bool findCachedDirHandle(const std::string& path, NfsFh& fh);
+    bool findCachedFileHandle(const std::string& path, NfsFh& fh);
+    void insertDirHandle(const std::string& path, NfsFh& fh);
+    void insertFileHandle(const std::string& path, NfsFh& fh);
+
   public:
         /* APIs */
     bool setLogLevel(unsigned int level);

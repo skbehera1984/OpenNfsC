@@ -138,6 +138,9 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsE
   std::vector<std::string> exp_components;
   NfsUtil::splitNfsPath(nfs_export, exp_components);
 
+  if (m_pConn->findCachedDirHandle(nfs_export, rootFh))
+    return true;
+
   NFSv4::COMPOUNDCall compCall;
   enum clnt_stat cst = RPC_SUCCESS;
 
@@ -190,6 +193,9 @@ bool Nfs4ApiHandle::getRootFH(const std::string &nfs_export, NfsFh &rootFh, NfsE
   GETFH4resok *fetfhgres = &res.resarray.resarray_val[index].nfs_resop4_u.opgetfh.GETFH4res_u.resok4;
   NfsFh fh(fetfhgres->object.nfs_fh4_len, fetfhgres->object.nfs_fh4_val);
   rootFh = fh;
+
+  rootFh.setPath(nfs_export);
+  m_pConn->insertDirHandle(nfs_export, rootFh);
 
   return true;
 }
