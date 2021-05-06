@@ -322,6 +322,7 @@ class NfsFh
     const NfsFh &operator=(const NfsFh &fromFH);
     bool operator==(const NfsFh &fromFH);
     void clear();
+    void clearStates();
 
     void setOpenState(NfsStateId& opSt);
     void setLockState(NfsStateId& lkSt);

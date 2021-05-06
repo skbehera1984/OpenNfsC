@@ -33,6 +33,17 @@ bool NfsFile::isZeroByteFile()
   return false;
 }
 
+void NfsFh::clearStates()
+{
+  OSID.seqid = 0;
+  memset(OSID.other, 0, 12);
+  LSID.seqid = 0;
+  memset(LSID.other, 0, 12);
+  locked = false;
+  m_file_lock_seqid = 0;
+  m_opened = false;
+}
+
 void NfsFh::clear()
 {
   if (fhVal != NULL)
