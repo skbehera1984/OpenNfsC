@@ -735,7 +735,7 @@ int ReaddirCall::encodeArguments()
     nfs_fh3* fh = &args.readdir3_dir;
     RETURN_ON_ERROR(request->xdrEncodeVarOpaque(fh->fh3_data.fh3_data_val, fh->fh3_data.fh3_data_len));
     uint64 cookie = args.readdir3_cookie;
-    RETURN_ON_ERROR((request->xdrEncodeUint64(cookie)>=0));
+    RETURN_ON_ERROR((request->xdrEncodeUint64(cookie)));
     RETURN_ON_ERROR(ENCODEVAR(request, args.readdir3_cookieverf));
 
     uint32 count = args.readdir3_count;
