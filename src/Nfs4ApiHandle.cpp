@@ -27,7 +27,7 @@ using namespace OpenNfsC;
 
 //mask[0] = 0x00100112; mask[1] = 0x0030a03a;
 static uint32_t std_attr[2] = {
-  (1 << FATTR4_TYPE | 1 << FATTR4_SIZE | 1 << FATTR4_FSID | 1 << FATTR4_FILEID | 1 << FATTR4_ACL ),
+  (1 << FATTR4_TYPE | 1 << FATTR4_SIZE | 1 << FATTR4_FSID | 1 << FATTR4_FILEID),
   (1 << (FATTR4_MODE - 32) |
    1 << (FATTR4_NUMLINKS - 32) |
    1 << (FATTR4_OWNER - 32) |
@@ -2493,7 +2493,7 @@ bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
 
   carg.argop = OP_GETATTR;
   GETATTR4args *gargs = &carg.nfs_argop4_u.opgetattr;
-  uint32_t mask[2] = {0}; mask[0] = 0x0010011a; mask[1] = 0x00b0a23a; // TODO sarat - change the masks to match v3 attrs
+  uint32_t mask[2] = {0}; mask[0] = (0x0010011a | (1 << FATTR4_ACL)); mask[1] = 0x00b0a23a; // TODO sarat - change the masks to match v3 attrs
   gargs->attr_request.bitmap4_len = 2;
   gargs->attr_request.bitmap4_val = mask;
   compCall.appendCommand(&carg);
@@ -2521,7 +2521,10 @@ bool Nfs4ApiHandle::getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status)
   }
 
   GETATTR4resok *attr_res = &res.resarray.resarray_val[index].nfs_resop4_u.opgetattr.GETATTR4res_u.resok4;
-  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes, mask[0], mask[1], attr) < 0)
+  if (NfsUtil::decode_fattr4(&attr_res->obj_attributes,
+                             attr_res->obj_attributes.attrmask.bitmap4_val[0],
+                             attr_res->obj_attributes.attrmask.bitmap4_val[1],
+                             attr) < 0)
   {
     cout << "Failed to decode OP_GETATTR result" << endl;
     return false;
