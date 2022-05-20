@@ -208,6 +208,7 @@ void NfsAttr::clear()
   time_modify.nanosecs = 0;
   bSetMtime = false;
   mTimeHow = NFS_TIME_DONT_CHANGE;
+  bSetAcl = false;
 
   mountFid = 0;
   changeID = 0;
@@ -268,6 +269,7 @@ NfsAttr::NfsAttr(const NfsAttr &obj)
   this->time_modify.nanosecs = obj.time_modify.nanosecs;
   this->bSetMtime = obj.bSetMtime;
   this->mTimeHow = obj.mTimeHow;
+  this->bSetAcl = obj.bSetAcl;
   this->mountFid = obj.mountFid;
   this->changeID = obj.changeID;
   this->name_max = obj.name_max;
@@ -312,6 +314,7 @@ NfsAttr& NfsAttr::operator=(const NfsAttr &obj)
   this->time_modify.nanosecs = obj.time_modify.nanosecs;
   this->bSetMtime = obj.bSetMtime;
   this->mTimeHow = obj.mTimeHow;
+  this->bSetAcl = obj.bSetAcl;
   this->mountFid = obj.mountFid;
   this->changeID = obj.changeID;
   this->name_max = obj.name_max;

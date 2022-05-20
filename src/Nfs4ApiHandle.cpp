@@ -27,7 +27,7 @@ using namespace OpenNfsC;
 
 //mask[0] = 0x00100112; mask[1] = 0x0030a03a;
 static uint32_t std_attr[2] = {
-  (1 << FATTR4_TYPE | 1 << FATTR4_SIZE | 1 << FATTR4_FSID | 1 << FATTR4_FILEID),
+  (1 << FATTR4_TYPE | 1 << FATTR4_SIZE | 1 << FATTR4_FSID | 1 << FATTR4_FILEID | 1 << FATTR4_ACL ),
   (1 << (FATTR4_MODE - 32) |
    1 << (FATTR4_NUMLINKS - 32) |
    1 << (FATTR4_OWNER - 32) |

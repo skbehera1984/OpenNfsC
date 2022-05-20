@@ -1229,7 +1229,6 @@ struct SAVEFH4res {
         nfsstat4        status;
 };
 
-#if 0
 /*
  * SECINFO: Obtain Available Security Mechanisms
  */
@@ -1270,7 +1269,6 @@ union SECINFO4res switch (nfsstat4 status) {
  default:
          void;
 };
-#endif
 
 /*
  * SETATTR: Set attributes

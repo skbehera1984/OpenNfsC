@@ -810,6 +810,28 @@ int decode_fattr4(fattr4 *fattr, uint32_t mask1, uint32_t mask2, NfsAttr &attr)
     }
     if (mask1 & (1 << FATTR4_ACL))
     {
+      Nfs4ACL acl;
+      uint32 noOfAces = 0;
+      RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&noOfAces));
+      acl.no_of_aces = noOfAces;
+
+      for (uint32 i = 0; i < noOfAces; i++)
+      {
+        uint32 acetype = 0, aceflag = 0, accessmask = 0;
+        RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&acetype));
+        RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&aceflag));
+        RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&accessmask));
+        unsigned char *value = NULL;
+        uint32 value_len = 0;
+        RETURN_ON_ERROR(attrPacket->xdrDecodeString(value, value_len));
+        Nfs4ACE ace;
+        ace.ACEType = acetype;
+        ace.ACEFlag = aceflag;
+        ace.AccessMask = accessmask;
+        ace.who = std::string((char*)value, value_len);
+        acl.aces.push_back(ace);
+        cout << ace.who << endl;
+      }
     }
     if (mask1 & (1 << FATTR4_ACLSUPPORT))
     {

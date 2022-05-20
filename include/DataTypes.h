@@ -103,6 +103,20 @@ enum NfsTimeHow
   NFS_TIME_SET_TO_CLIENT_TIME = 2,
 };
 
+struct Nfs4ACE
+{
+  uint32_t    ACEType;
+  uint32_t    ACEFlag;
+  uint32_t    AccessMask;
+  std::string who;
+};
+
+struct Nfs4ACL
+{
+  uint32_t no_of_aces;
+  std::vector<Nfs4ACE> aces;
+};
+
 struct NfsAttr
 {
 public:
@@ -136,6 +150,7 @@ public:
   uint64_t    getChangeTimeSecs() { return time_metadata.seconds; }
   NfsTime     getModifyTime() { return time_modify; }
   uint64_t    getModifyTimeSecs() { return time_modify.seconds; }
+  std::string getAcl() { return acl; }
 
   // setters
   void setFileMode(uint32_t mode)
@@ -240,6 +255,19 @@ public:
     mask[1] &= ~(1 << (FATTR4_TIME_METADATA - 32));
   }
 
+  void setAcl(std::string ACL)
+  {
+    bSetAcl = true;
+    acl = ACL;
+    mask[0] |= (1 << FATTR4_ACL);
+  }
+  void unsetAcl()
+  {
+    bSetAcl = false;
+    acl.clear();
+    mask[0] &= ~(1 << FATTR4_ACL);
+  }
+
   // FSSTAT getters
   uint64_t getFilesAvailable() { return files_avail; }
   uint64_t getFilesFree() { return files_free; }
@@ -272,6 +300,10 @@ public:
   NfsTime     time_modify;
   bool        bSetMtime;
   NfsTimeHow  mTimeHow;
+
+  bool        bSetAcl;
+  std::string acl;
+  Nfs4ACL     ACL_PVT; // used to get the acl from server and it will be again encoded to acl above;
 
   uint64_t    mountFid;
   uint64_t    changeID;
