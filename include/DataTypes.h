@@ -303,7 +303,6 @@ public:
 
   bool        bSetAcl;
   std::string acl;
-  Nfs4ACL     ACL_PVT; // used to get the acl from server and it will be again encoded to acl above;
 
   uint64_t    mountFid;
   uint64_t    changeID;

@@ -267,6 +267,17 @@ int encode_fattr4(RpcPacketPtr packet, const fattr4 *attr)
     }
     if (mask1 & (1 << FATTR4_ACL))
     {
+      // get the encoded acl size
+      uint32_t *size = (uint32_t*)avals;
+      avals += sizeof(uint32_t);
+      // append the encoded acl
+      if (packet->append((unsigned char*)avals, *size) < 0)
+      {
+        cout << "Failed to append ACL encoded buffer" <<endl;
+        return -1;
+      }
+      // advance the buffer
+      avals += (*size);
     }
     if (mask1 & (1 << FATTR4_ACLSUPPORT))
     {
@@ -516,6 +527,17 @@ int NfsAttr_fattr4(NfsAttr &attr, fattr4 *fattr)
     }
     if (mask1 & (1 << FATTR4_ACL))
     {
+      // This size isn't part of encoding but a way to pass the size of encoded acl
+      // copy the acl size to buffer, advance the buffer
+      uint32_t *ptr = (uint32_t*)temp_attr;
+      *ptr = attr.acl.length();
+      temp_attr = temp_attr + 4;
+      buflen -=4;
+      // copy the encoded acl to buffer and advance the buffer
+      memcpy(temp_attr, attr.acl.c_str(), attr.acl.length());
+      fattr->attr_vals.attrlist4_len += attr.acl.length();
+      temp_attr = temp_attr + attr.acl.length();
+      buflen -= attr.acl.length();
     }
     if (mask1 & (1 << FATTR4_ACLSUPPORT))
     {
@@ -811,16 +833,22 @@ int decode_fattr4(fattr4 *fattr, uint32_t mask1, uint32_t mask2, NfsAttr &attr)
     if (mask1 & (1 << FATTR4_ACL))
     {
       Nfs4ACL acl;
+      uint32 aclSize = 0;
       uint32 noOfAces = 0;
       RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&noOfAces));
       acl.no_of_aces = noOfAces;
+      aclSize += sizeof(uint32_t);
 
       for (uint32 i = 0; i < noOfAces; i++)
       {
+        uint32 aceSize = 0;
         uint32 acetype = 0, aceflag = 0, accessmask = 0;
         RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&acetype));
+        aceSize += sizeof(uint32_t);
         RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&aceflag));
+        aceSize += sizeof(uint32_t);
         RETURN_ON_ERROR(attrPacket->xdrDecodeUint32(&accessmask));
+        aceSize += sizeof(uint32_t);
         unsigned char *value = NULL;
         uint32 value_len = 0;
         RETURN_ON_ERROR(attrPacket->xdrDecodeString(value, value_len));
@@ -830,8 +858,24 @@ int decode_fattr4(fattr4 *fattr, uint32_t mask1, uint32_t mask2, NfsAttr &attr)
         ace.AccessMask = accessmask;
         ace.who = std::string((char*)value, value_len);
         acl.aces.push_back(ace);
-        cout << ace.who << endl;
+        int padSize = 0;
+        if (value_len%4 != 0)
+          padSize = 4 - value_len%4;
+        aceSize += (sizeof(uint32_t) + value_len + padSize);
+        aclSize += aceSize;
       }
+      // encode the acl again to get raw bytes
+      // we decoded first because we never knew what was the size
+      RpcPacketPtr aclPacket = new RpcPacket(aclSize);
+      RETURN_ON_ERROR(aclPacket->xdrEncodeUint32(acl.no_of_aces));
+      for (auto &ace : acl.aces)
+      {
+        RETURN_ON_ERROR(aclPacket->xdrEncodeUint32(ace.ACEType));
+        RETURN_ON_ERROR(aclPacket->xdrEncodeUint32(ace.ACEFlag));
+        RETURN_ON_ERROR(aclPacket->xdrEncodeUint32(ace.AccessMask));
+        RETURN_ON_ERROR(aclPacket->xdrEncodeString((unsigned char*)ace.who.c_str(), ace.who.length()));
+      }
+      attr.acl = std::string((char*)aclPacket->getBuffer(), aclPacket->getSize());
     }
     if (mask1 & (1 << FATTR4_ACLSUPPORT))
     {
