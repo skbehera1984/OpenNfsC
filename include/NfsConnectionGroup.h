@@ -179,6 +179,8 @@ class NfsConnectionGroup : public SmartRef
     bool setattr(NfsFh &fh, NfsAttr &attr, NfsError &status);
     bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status);
     bool getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status);
+    bool getAcl(NfsFh &fh, std::string& acl, NfsError &err);
+    bool setAcl(NfsFh &fh, const std::string acl, NfsError &err);
     bool fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status);
     bool lookupPath(const std::string &exp_path, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &status);
     bool lookupPath(NfsFh &rootFh, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &status);

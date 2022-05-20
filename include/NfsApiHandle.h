@@ -108,6 +108,8 @@ class NfsApiHandle : public SmartRef
     virtual bool setattr(NfsFh &fh, NfsAttr &attr, NfsError &status) =0;
     virtual bool getAttr(NfsFh &fh, NfsAttr &attr, NfsError &status) = 0;
     virtual bool getAttr(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status) = 0;
+    virtual bool getAcl(NfsFh &fh, std::string& acl, NfsError &err) = 0;
+    virtual bool setAcl(NfsFh &fh, const std::string acl, NfsError &err) = 0;
     virtual bool fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status) = 0;
     virtual bool lookupPath(const std::string &exp_path, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &status) = 0;
     virtual bool lookupPath(NfsFh &rootFh, const std::string &pathFromRoot, NfsFh &lookup_fh, NfsAttr &lookup_attr, NfsError &status) = 0;

@@ -1284,6 +1284,16 @@ bool Nfs3ApiHandle::getAttr(const std::string& exp, const std::string& path, Nfs
   return lookupPath(exp, path, tmpFh, attr, status);
 }
 
+bool Nfs3ApiHandle::getAcl(NfsFh &fh, std::string& acl, NfsError &err)
+{
+  return false; // Not supported
+}
+
+bool Nfs3ApiHandle::setAcl(NfsFh &fh, const std::string acl, NfsError &err)
+{
+  return false; // Not supported
+}
+
 bool Nfs3ApiHandle::lookup(const std::string &path, NfsFh &lookup_fh, NfsError &status)
 {
   return false;

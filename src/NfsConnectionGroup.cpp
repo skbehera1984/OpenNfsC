@@ -755,6 +755,16 @@ bool NfsConnectionGroup::getAttr(const std::string& exp, const std::string& path
   return m_NfsApiHandle->getAttr(exp, path, attr, status);
 }
 
+bool NfsConnectionGroup::getAcl(NfsFh &fh, std::string& acl, NfsError &err)
+{
+  return m_NfsApiHandle->getAcl(fh, acl, err);
+}
+
+bool NfsConnectionGroup::setAcl(NfsFh &fh, const std::string acl, NfsError &err)
+{
+  return m_NfsApiHandle->setAcl(fh, acl, err);
+}
+
 bool NfsConnectionGroup::fileExists(const std::string& exp, const std::string& path, NfsAttr& attr, NfsError& status)
 {
   return m_NfsApiHandle->fileExists(exp, path, attr, status);

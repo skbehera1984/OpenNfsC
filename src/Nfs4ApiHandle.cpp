@@ -2545,6 +2545,23 @@ bool Nfs4ApiHandle::getAttr(const std::string& exp, const std::string& path, Nfs
   return sts;
 }
 
+bool Nfs4ApiHandle::getAcl(NfsFh &fh, std::string& acl, NfsError &err)
+{
+  NfsAttr attr;
+  bool sts = getAttr(fh, attr, err);
+  if (sts)
+    acl = attr.getAcl();
+
+  return sts;
+}
+
+bool Nfs4ApiHandle::setAcl(NfsFh &fh, const std::string acl, NfsError &err)
+{
+  NfsAttr attr;
+  attr.setAcl(acl);
+  return setattr(fh, attr, err);
+}
+
 bool Nfs4ApiHandle::fsstat(NfsFh &rootFh, NfsFsStat &stat, uint32 &invarSec, NfsError &status)
 {
   NFSv4::COMPOUNDCall compCall;
