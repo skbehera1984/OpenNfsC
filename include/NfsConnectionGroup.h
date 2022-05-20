@@ -95,6 +95,7 @@ class NfsConnectionGroup : public SmartRef
     static void setUdpTransport() { gTransportConfig = TRANSP_UDP; }
     static void setTcpTransport() { gTransportConfig = TRANSP_TCP; }
     void setConnected() { m_bConnected = true; } // used for nfs v4 keepalive
+    bool isConnected(){ return(m_bConnected); }
 
   private:
     NfsConnectionGroup();        // not implemented
